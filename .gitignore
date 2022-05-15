@@ -1,0 +1,7 @@
+.vs/
+obj/
+bin/
+*.user
+.idea
+builds
+.git

@@ -1,0 +1,15 @@
+{
+  "Author": "Infi",
+  "Name": "Death Roll Helper",
+  "Punchline": "Useful for when you want to quickly export marketboard transaction history.",
+  "Description": "Copies the marketboard transaction history into your clipboard with configurable options.",
+  "InternalName": "DeathRoll",
+  "RepoUrl": "https://github.com/Infiziert90/DeathRoll",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "MarketBoard",
+    "plugin",
+    "clipboard",
+    "History"
+  ]
+}
