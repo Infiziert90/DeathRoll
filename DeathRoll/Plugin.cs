@@ -1,15 +1,10 @@
 ﻿using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Game.Network.Structures;
 using Dalamud.Data;
 using Dalamud.Game.Gui;
-using Dalamud.Game.Network;
 using Dalamud.Game.ClientState;
-using ImGuiNET;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -17,7 +12,6 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 using System.Numerics;
 using DeathRoll.Attributes;
-using Lumina.Data.Parsing;
 
 
 namespace DeathRoll
@@ -115,8 +109,9 @@ namespace DeathRoll
             
             var m = reg.Match(message.ToString());
             if (!m.Success) return;
-            
-            if (clientState?.LocalPlayer == null)
+
+            var local = clientState?.LocalPlayer;
+            if (local == null || local.HomeWorld.GameData?.Name == null)
             {
                 TurnOff();
                 Chat.PrintError("Deathroll: Unable to fetch character name.");
@@ -124,22 +119,19 @@ namespace DeathRoll
             }
 
             var diceCommand = 0;
-            var playerName = clientState?.LocalPlayer.Name.ToString();
-            if (sender.ToString() != playerName || dice)
+            var playerName = $"{local.Name}\uE05D{local.HomeWorld.GameData.Name}";
+            var isLocalPlayer = sender.ToString() == local.Name.ToString(); 
+            if (!isLocalPlayer || dice)
             {
-                // add item and message part payloads
-                foreach (var payload in message.Payloads)
+                var found = isLocalPlayer;
+                foreach (var payload in message.Payloads) // try to get name and check for dice cheating
                 {
-                    if (Configuration.DebugChat)
-                    {
-                        PluginLog.Debug($"Deathroll: {payload.Type}");
-                        PluginLog.Debug($"Deathroll: {payload}");
-                    }
-
+                    if (Configuration.DebugChat) PluginLog.Debug($"Deathroll: message: {payload}");
                     switch (payload)
                     {
                         case PlayerPayload playerPayload:
                             playerName = playerPayload.DisplayedName;
+                            found = true;
                             break;
                         case IconPayload iconPayload:
                             switch (iconPayload.Icon)
@@ -153,9 +145,22 @@ namespace DeathRoll
                             break;
                     }
                 }
+
+                if (!found) // get playerName from payload
+                {
+                    foreach (var payload in sender.Payloads)
+                    {
+                        if (Configuration.DebugChat) PluginLog.Debug($"Deathroll: Sender: {payload}");
+                        playerName = payload switch
+                        {
+                            PlayerPayload playerPayload => playerPayload.DisplayedName,
+                            _ => playerName
+                        };
+                    }
+                }
+
             }
             
-            // TODO: prevent cheating
             // dice always needs the autoTranslate payload
             // if not, a player just wrote the exact string
             if (dice && diceCommand != 3)
@@ -165,24 +170,24 @@ namespace DeathRoll
             }
             
             var exists = PluginUi.Participants.Exists(x => x.name == playerName);
-            if (!Configuration.RerollAllowed && exists)
+            switch (Configuration.RerollAllowed)
             {
-                if (Configuration.DebugChat) PluginLog.Debug(($"Deathroll: Player already rolled, no overwrite allowed."));
-                return;
-            }
-
-            if (Configuration.RerollAllowed && exists)
-            {
-                PluginUi.DeleteEntry(playerName);
+                case false when exists:
+                {
+                    if (Configuration.DebugChat) PluginLog.Debug(($"Deathroll: Player already rolled, no overwrite allowed."));
+                    return;
+                }
+                case true when exists:
+                    PluginUi.DeleteEntry(playerName);
+                    break;
             }
 
             if (Configuration.DebugChat)
             {
                 PluginLog.Debug(($"Deathroll: Extracted Player Name: {playerName}."));
                 PluginLog.Debug(($"Deathroll: Add message to viewer."));
-                var testString = $"Message: {message.ToString()}\n" +
-                                 $"    Matches: 1: {m.Groups[1]} 2: {m.Groups[2]} 3: {m.Groups[3].Success} {m.Groups[3]}";
-                PluginUi.CurrentText = testString;
+                PluginLog.Debug($"Message: {message.ToString()}\n" +
+                                $"    Matches: 1: {m.Groups[1]} 2: {m.Groups[2]} 3: {m.Groups[3].Success} {m.Groups[3]}");
             }
 
             try

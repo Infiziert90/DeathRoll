@@ -3,10 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Threading;
 using Dalamud.Interface;
-using Dalamud.Logging;
-using Lumina.Excel.GeneratedSheets;
 
 namespace DeathRoll
 {
@@ -54,12 +51,12 @@ namespace DeathRoll
             set { this.settingsVisible = value; }
         }
 
-        public string CurrentText = "";
         private int _numberOfTables;
         private bool _isOutOfUsed;
         private string _newRegex = String.Empty;
-        private Vector4 _newColor = new Vector4(60,60,60,0);
-        
+        private Vector4 _newColor = new Vector4(0.6f,0.6f,0.6f,1.0f);
+        private Vector4 _defaultColor = new Vector4(1.0f,1.0f,1.0f,1.0f);
+
         public bool IsOutOfUsed
         {
             get { return this._isOutOfUsed; }
@@ -170,28 +167,23 @@ namespace DeathRoll
                     {
                         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 3.0f);
                         ImGui.TableSetupColumn("Roll");
-                        if (_isOutOfUsed)
-                        {
-                            ImGui.TableSetupColumn("Out Of");
-                        }
+                        if (_isOutOfUsed) ImGui.TableSetupColumn("Out Of");
                     
                         ImGui.TableHeadersRow();
-                        foreach (var roll in Participants) {
+                        foreach (var roll in Participants)
+                        {
+                            var hCheck = configuration.ActiveHightlighting && roll.hasHighlight;
                             ImGui.TableNextColumn();
-                            if (configuration.ActiveHightlighting && roll.hasHighlight) 
-                                ImGui.PushStyleColor(ImGuiCol.Text, roll.highlightColor);
-                            ImGui.Text(roll.name);
+                            ImGui.TextColored(hCheck ? roll.highlightColor : _defaultColor, roll.name);
                             
                             ImGui.TableNextColumn();
-                            ImGui.Text(roll.roll.ToString());
+                            ImGui.TextColored(hCheck ? roll.highlightColor : _defaultColor,roll.roll.ToString());
                             
                             if (_isOutOfUsed)
                             { 
                                 ImGui.TableNextColumn();
-                                ImGui.Text(roll.outOf != -1 ? roll.outOf.ToString() : "");
+                                ImGui.TextColored(hCheck ? roll.highlightColor : _defaultColor, roll.outOf != -1 ? roll.outOf.ToString() : "");
                             };
-                            if (configuration.ActiveHightlighting && roll.hasHighlight) 
-                                ImGui.PopStyleColor();
                         }
                         ImGui.EndTable();
                     }
@@ -205,15 +197,13 @@ namespace DeathRoll
                             ImGui.Selectable($"{roll.name}");
                             if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
                                 deletion = roll.name;
-                            
-                            if (ImGui.IsItemHovered())
-                            {
-                                ImGui.BeginTooltip();
-                                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                                ImGui.TextUnformatted("Hold Shift and right-click to delete.");
-                                ImGui.PopTextWrapPos();
-                                ImGui.EndTooltip();
-                            }
+
+                            if (!ImGui.IsItemHovered()) continue;
+                            ImGui.BeginTooltip();
+                            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
+                            ImGui.TextUnformatted("Hold Shift and right-click to delete.");
+                            ImGui.PopTextWrapPos();
+                            ImGui.EndTooltip();
                         }
                     }
 
@@ -221,18 +211,6 @@ namespace DeathRoll
                     {
                         DeleteEntry(deletion);
                     }
-                }
-                
-                if (configuration.DebugChat)
-                {
-                    ImGui.Text("Current selection:");
-                    ImGui.InputTextMultiline(
-                        "##copytext", 
-                        ref CurrentText, 
-                        99999, 
-                        new Vector2(ImGui.GetWindowWidth()-25.0f, ImGui.GetWindowHeight()-150.0f), 
-                        ImGuiInputTextFlags.ReadOnly
-                    );
                 }
             }
             ImGui.End();
