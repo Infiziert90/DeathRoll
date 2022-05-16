@@ -31,32 +31,28 @@ namespace DeathRoll
         {
             public string Regex;
             public Vector4 Color;
-            public Regex CompiledRegex;
+            private Regex? _compiled = null;
+            public Regex CompiledRegex => this._compiled ??= new Regex(this.Regex);
+            // and clear _compiled to null when Regex changes
 
+            public Highlight() { }
+            
             public Highlight(string r, Vector4 c)
             {
                 if (r == null)
                 {
-                    System.Diagnostics.StackTrace t = new System.Diagnostics.StackTrace();
                     PluginLog.Error("Regex String is null?");
-                    PluginLog.Error($"{t.ToString()}");
                     r = "";
                 }
                 this.Regex = r;
                 this.Color = c;
-                this.Compile(r);
             }
 
             public void Update(string r, Vector4 c)
             {
                 this.Regex = r;
                 this.Color = c;
-                this.Compile(r);
-            }
-
-            private void Compile(string r)
-            {
-                CompiledRegex = new Regex(r);
+                this._compiled = null;
             }
             
         }

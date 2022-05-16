@@ -298,29 +298,6 @@ namespace DeathRoll
 
                         ImGui.EndTabItem();
                     }
-
-                    if (ImGui.BeginTabItem($"History###history-tab"))
-                    {
-                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-                        ImGui.Text("Number of transactions to copy:");
-                        
-                        // ImGui.SliderInt("##s", ref this._currentNumber, 1, 20);
-                        // if (ImGui.IsItemDeactivatedAfterEdit())
-                        // {
-                        //     this._currentNumber = Math.Clamp(this._currentNumber, 1, 20); 
-                        //     if (this._currentNumber != this.configuration.NumberToCheck)
-                        //     {
-                        //         this.configuration.NumberToCheck = _currentNumber;
-                        //         this.configuration.Save();
-                        //     }
-                        // }
-                        
-                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-                        ImGui.Text("Include:");
-                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-                        
-                        ImGui.EndTabItem();
-                    }
                     
                     if (ImGui.BeginTabItem($"Highlight###highlight-tab"))
                     {

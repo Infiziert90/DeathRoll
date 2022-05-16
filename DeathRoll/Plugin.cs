@@ -103,17 +103,15 @@ namespace DeathRoll
             }
             
             var xivChatType = (ushort)type;
-            
+            var channel = (xivChatType & 0x7F);
             // 2122 = Random Roll 8266 = different Player Radom roll?
             // Dice Roll: FC, LS, CWLS, Party
-            if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType)) return;
+            if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) return;
 
-            var (reg, dice) = xivChatType switch
-            {
-                2122 => (randomRollRegex, false),
-                8266 => (randomRollRegex, false),
-                _ => (diceRollRegex, true),
-            };
+            Regex reg; bool dice;
+            if (channel == 74) (reg, dice) = (randomRollRegex, false);
+            else (reg, dice) = (diceRollRegex, true);
+            
             
             var m = reg.Match(message.ToString());
             if (!m.Success) return;
@@ -125,7 +123,7 @@ namespace DeathRoll
                 return;
             }
 
-            var autoTranslate = false;
+            var diceCommand = 0;
             var playerName = clientState?.LocalPlayer.Name.ToString();
             if (sender.ToString() != playerName || dice)
             {
@@ -136,7 +134,6 @@ namespace DeathRoll
                     {
                         PluginLog.Debug($"Deathroll: {payload.Type}");
                         PluginLog.Debug($"Deathroll: {payload}");
-                        
                     }
 
                     switch (payload)
@@ -144,9 +141,16 @@ namespace DeathRoll
                         case PlayerPayload playerPayload:
                             playerName = playerPayload.DisplayedName;
                             break;
-                        // case IconPayload:
-                        //     autoTranslate = true;
-                        //     break;
+                        case IconPayload iconPayload:
+                            switch (iconPayload.Icon)
+                            {
+                                case BitmapFontIcon.Dice:
+                                case BitmapFontIcon.AutoTranslateBegin:
+                                case BitmapFontIcon.AutoTranslateEnd:
+                                    diceCommand += 1;
+                                    break;
+                            }
+                            break;
                     }
                 }
             }
@@ -154,10 +158,11 @@ namespace DeathRoll
             // TODO: prevent cheating
             // dice always needs the autoTranslate payload
             // if not, a player just wrote the exact string
-            // if (dice && !autoTranslate)
-            // {
-            //     Chat.Print($"Deathroll: {playerName} tried to cheat~");
-            // }
+            if (dice && diceCommand != 3)
+            {
+                Chat.Print($"Deathroll: {playerName} tried to cheat~");
+                return;
+            }
             
             var exists = PluginUi.Participants.Exists(x => x.name == playerName);
             if (!Configuration.RerollAllowed && exists)
@@ -206,7 +211,7 @@ namespace DeathRoll
                 }
 
                 PluginUi.Participants.Add(hasHighlight
-                    ? new Roll(playerName, parsedRoll, parsedOutOf, hasHighlight, hightlightColor)
+                    ? new Roll(playerName, parsedRoll, parsedOutOf, true, hightlightColor)
                     : new Roll(playerName, parsedRoll, parsedOutOf));
 
                 switch(Configuration.CurrentMode)
