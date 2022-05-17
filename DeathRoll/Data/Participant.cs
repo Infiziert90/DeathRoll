@@ -1,9 +1,8 @@
 using System.Numerics;
-using System.Security.Cryptography;
 
 namespace DeathRoll;
 
-public class Roll
+public class Participant
 {
     public readonly string name;
     public readonly int roll;
@@ -11,7 +10,7 @@ public class Roll
     public bool hasHighlight;
     public Vector4 highlightColor;
 
-    public Roll(string name, int roll, int outOf, bool hasHighlight, Vector4 highlightColor)
+    public Participant(string name, int roll, int outOf, bool hasHighlight, Vector4 highlightColor)
     {
         this.name = name;
         this.roll = roll;
@@ -20,7 +19,7 @@ public class Roll
         this.highlightColor = highlightColor;
     }    
     
-    public Roll(string name, int roll, int outOf)
+    public Participant(string name, int roll, int outOf)
     {
         this.name = name;
         this.roll = roll;

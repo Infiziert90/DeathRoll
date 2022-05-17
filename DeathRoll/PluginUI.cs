@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
+using DeathRoll.Gui;
 
 namespace DeathRoll
 {
@@ -12,7 +13,9 @@ namespace DeathRoll
     class PluginUI : IDisposable
     {
         private Configuration configuration;
-        public List<Roll> Participants = new List<Roll>();
+        private Blocklist Blocklist { get; init; }
+        
+        public List<Participant> Participants = new List<Participant>();
 
         public void UpdateParticipants()
         {
@@ -67,6 +70,7 @@ namespace DeathRoll
         public PluginUI(Configuration configuration)
         {
             this.configuration = configuration;
+            this.Blocklist = new Blocklist(configuration);
             _numberOfTables = configuration.NumberOfTables;
         }
 
@@ -310,7 +314,7 @@ namespace DeathRoll
                             
                                 ImGui.TableNextColumn();
                                 ImGui.PushFont(UiBuilder.IconFont);
-                                if (ImGui.Button(FontAwesomeIcon.Trash.ToIconString()))
+                                if (ImGui.Button($"{FontAwesomeIcon.Trash.ToIconString()}##highlight_delbtn{idx}"))
                                 {
                                     deletionIdx = idx;
                                 }
@@ -352,11 +356,11 @@ namespace DeathRoll
                         // new highlight last
                         ImGui.TableNextColumn();
                         ImGui.PushFont(UiBuilder.IconFont);
-                        if (ImGui.Button(FontAwesomeIcon.Check.ToIconString()))
+                        if (ImGui.Button($"{FontAwesomeIcon.Check.ToIconString()}##highlight_plusbtn"))
                         {
                             _newColor.W = 1; // fix alpha being 0
                             
-                            configuration.SavedHighlights?.Add(new Configuration.Highlight(_newRegex, _newColor));
+                            configuration.SavedHighlights?.Add(new Highlight(_newRegex, _newColor));
                             configuration.Save();
                             RestoreDefaults();
                             UpdateParticipants();
@@ -374,6 +378,8 @@ namespace DeathRoll
                         
                         ImGui.EndTabItem();
                     }
+                    this.Blocklist.RenderBlocklistTab();
+                    
                     ImGui.EndTabBar();
                 }
             }

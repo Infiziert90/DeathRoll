@@ -2,9 +2,6 @@
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Text.RegularExpressions;
-using Dalamud.Logging;
 
 namespace DeathRoll
 {
@@ -23,39 +20,11 @@ namespace DeathRoll
         public int Nearest { get; set; } = 1;
         public int NumberOfTables { get; set; } = 1;
 
+        public bool ActiveBlocklist { get; set; } = false;
+        public List<string> SavedBlocklist { get; set; } = new();
         public bool ActiveHightlighting { get; set; } = false;
         
         public List<Highlight> SavedHighlights { get; set; } = new();
-        
-        public class Highlight
-        {
-            public string Regex;
-            public Vector4 Color;
-            private Regex? _compiled = null;
-            public Regex CompiledRegex => this._compiled ??= new Regex(this.Regex);
-            // and clear _compiled to null when Regex changes
-
-            public Highlight() { }
-            
-            public Highlight(string r, Vector4 c)
-            {
-                if (r == null)
-                {
-                    PluginLog.Error("Regex String is null?");
-                    r = "";
-                }
-                this.Regex = r;
-                this.Color = c;
-            }
-
-            public void Update(string r, Vector4 c)
-            {
-                this.Regex = r;
-                this.Color = c;
-                this._compiled = null;
-            }
-            
-        }
         // the below exist just to make saving less cumbersome
 
         [NonSerialized]

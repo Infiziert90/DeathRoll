@@ -160,6 +160,13 @@ namespace DeathRoll
                 }
 
             }
+
+            if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
+            {
+                if (Configuration.DebugChat) PluginLog.Debug($"Deathroll: Blocked player tried to roll.");
+                return;
+            }
+            
             
             // dice always needs the autoTranslate payload
             // if not, a player just wrote the exact string
@@ -216,8 +223,8 @@ namespace DeathRoll
                 }
 
                 PluginUi.Participants.Add(hasHighlight
-                    ? new Roll(playerName, parsedRoll, parsedOutOf, true, hightlightColor)
-                    : new Roll(playerName, parsedRoll, parsedOutOf));
+                    ? new Participant(playerName, parsedRoll, parsedOutOf, true, hightlightColor)
+                    : new Participant(playerName, parsedRoll, parsedOutOf));
 
                 switch(Configuration.CurrentMode)
                 {
