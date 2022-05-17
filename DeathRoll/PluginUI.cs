@@ -4,17 +4,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Logging;
 using DeathRoll.Gui;
 
 namespace DeathRoll
 {
     // It is good to have this be disposable in general, in case you ever need it
     // to do any cleanup
-    class PluginUI : IDisposable
+    public class PluginUI : IDisposable
     {
-        private Configuration configuration;
+        public Configuration configuration;
         private Blocklist Blocklist { get; init; }
         private GeneralSettings GeneralSettings { get; init; }
+        public RollTable RollTable { get; init; }
         
         public List<Participant> Participants = new List<Participant>();
 
@@ -56,16 +58,9 @@ namespace DeathRoll
         }
 
         private int _numberOfTables;
-        private bool _isOutOfUsed;
         private string _newRegex = String.Empty;
         private Vector4 _newColor = new Vector4(0.6f,0.6f,0.6f,1.0f);
-        private Vector4 _defaultColor = new Vector4(1.0f,1.0f,1.0f,1.0f);
-
-        public bool IsOutOfUsed
-        {
-            get { return this._isOutOfUsed; }
-            set { this._isOutOfUsed = value; }
-        }
+        private Vector4 _greenColor = new Vector4(0.0f, 1.0f, 0.0f,1.0f);
 
         // passing in the image here just for simplicityw
         public PluginUI(Configuration configuration)
@@ -73,6 +68,7 @@ namespace DeathRoll
             this.configuration = configuration;
             this.Blocklist = new Blocklist(configuration);
             this.GeneralSettings = new GeneralSettings(configuration);
+            this.RollTable = new RollTable(this);
             _numberOfTables = configuration.NumberOfTables;
         }
 
@@ -109,8 +105,9 @@ namespace DeathRoll
                 {
                     SettingsVisible = true;
                 }
-                
-                ImGui.SameLine(ImGui.GetWindowWidth()-50.0f);
+
+                var spacing = ImGui.GetScrollY() == 0 ? 45.0f : 70.0f;
+                ImGui.SameLine(ImGui.GetWindowWidth()-spacing);
                 
                 if (ImGui.Button("Clear"))
                 {
@@ -169,54 +166,9 @@ namespace DeathRoll
                 
                 if (Participants.Count > 0)
                 {
-                    if (ImGui.BeginTable("##rolls",  _isOutOfUsed ? 3 : 2))
-                    {
-                        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 3.0f);
-                        ImGui.TableSetupColumn("Roll");
-                        if (_isOutOfUsed) ImGui.TableSetupColumn("Out Of");
-                    
-                        ImGui.TableHeadersRow();
-                        foreach (var participant in Participants)
-                        {
-                            var hCheck = configuration.ActiveHightlighting && participant.hasHighlight;
-                            ImGui.TableNextColumn();
-                            ImGui.TextColored(hCheck ? participant.highlightColor : _defaultColor, participant.GetReadableName());
-                            
-                            ImGui.TableNextColumn();
-                            ImGui.TextColored(hCheck ? participant.highlightColor : _defaultColor,participant.roll.ToString());
-                            
-                            if (_isOutOfUsed)
-                            { 
-                                ImGui.TableNextColumn();
-                                ImGui.TextColored(hCheck ? participant.highlightColor : _defaultColor, participant.outOf != -1 ? participant.outOf.ToString() : "");
-                            };
-                        }
-                        ImGui.EndTable();
-                    }
-
-                    var deletion = "";
-                    ImGui.Dummy(new Vector2(0.0f, 30.0f));
-                    if (ImGui.CollapsingHeader("Remove Player from List"))
-                    {
-                        foreach (var participant in Participants)
-                        {
-                            ImGui.Selectable($"{participant.GetReadableName()}");
-                            if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                                deletion = participant.name;
-
-                            if (!ImGui.IsItemHovered()) continue;
-                            ImGui.BeginTooltip();
-                            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                            ImGui.TextUnformatted("Hold Shift and right-click to delete.");
-                            ImGui.PopTextWrapPos();
-                            ImGui.EndTooltip();
-                        }
-                    }
-
-                    if (deletion != "")
-                    {
-                        DeleteEntry(deletion);
-                    }
+                    RollTable.RenderRollTable();
+                    ImGui.Dummy(new Vector2(0.0f, 60.0f));
+                    RollTable.RenderDeletionDropdown();
                 }
             }
             ImGui.End();
@@ -229,9 +181,9 @@ namespace DeathRoll
                 return;
             }
             
-            ImGui.SetNextWindowSize(new Vector2(205, 280), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(260, 310), ImGuiCond.Always);
             if (ImGui.Begin("DeathRoll Helper Config", ref this.settingsVisible,
-                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse ))
             {
 
                 if (ImGui.BeginTabBar("##settings-tabs"))
@@ -242,7 +194,7 @@ namespace DeathRoll
                     if (ImGui.BeginTabItem($"Highlight###highlight-tab"))
                     {
                         var activeHightlighting = this.configuration.ActiveHightlighting;
-                        if (ImGui.Checkbox("Hightlighting active", ref activeHightlighting))
+                        if (ImGui.Checkbox("Highlighting active", ref activeHightlighting))
                         {
                             this.configuration.ActiveHightlighting = activeHightlighting;
                             this.configuration.Save();
@@ -253,9 +205,9 @@ namespace DeathRoll
                         if (!ImGui.BeginTable("##highlighttable", 3, ImGuiTableFlags.None))
                             return;
 
-                        ImGui.TableSetupColumn("##plusbutton", ImGuiTableColumnFlags.None, 0.15f);
+                        ImGui.TableSetupColumn("##plusbutton", ImGuiTableColumnFlags.None, 0.12f);
                         ImGui.TableSetupColumn("##regexheader");
-                        ImGui.TableSetupColumn("##colorheader", ImGuiTableColumnFlags.None, 0.15f);
+                        ImGui.TableSetupColumn("##colorheader", ImGuiTableColumnFlags.None, 0.12f);
                         //ImGui.TableHeadersRow();
 
                         if (configuration.SavedHighlights?.Count > 0)
@@ -278,7 +230,7 @@ namespace DeathRoll
                                 ImGui.PopFont();
                             
                                 ImGui.TableNextColumn();
-                                ImGui.PushItemWidth(150.0f);
+                                ImGui.PushItemWidth(200.0f);
                                 ImGui.InputTextWithHint($"##regex{idx}", "", ref _currentRegex, 255);
                             
                                 ImGui.TableNextColumn();
@@ -325,13 +277,14 @@ namespace DeathRoll
                         ImGui.PopFont();
                         
                         ImGui.TableNextColumn();
-                        ImGui.PushItemWidth(150.0f);
+                        ImGui.PushItemWidth(200.0f);
                         ImGui.InputTextWithHint("##regex", "Regex...", ref _newRegex, 255);
                         
                         ImGui.TableNextColumn();
                         ImGui.ColorEdit4("##hightlightcolor", ref _newColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoAlpha);
 
                         ImGui.EndTable();
+                        ImGui.TextColored(_greenColor, "Simple number matching:\n^YourNumber$");
                         
                         ImGui.EndTabItem();
                     }
@@ -347,7 +300,7 @@ namespace DeathRoll
         public void RestoreDefaults()
         {
             _newRegex = string.Empty;
-            _newColor = new Vector4(60,60,60,0);
+            _newColor = new Vector4(0.6f,0.6f,0.6f,1.0f);
         }
         
         public void DeleteEntry(string name)

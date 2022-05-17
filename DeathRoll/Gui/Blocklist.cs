@@ -32,7 +32,7 @@ public class Blocklist
         if (!ImGui.BeginTable("##highlighttable", 2, ImGuiTableFlags.None))
             return;
 
-        ImGui.TableSetupColumn("##block_plusbutton", ImGuiTableColumnFlags.None, 0.15f);
+        ImGui.TableSetupColumn("##block_plusbutton", ImGuiTableColumnFlags.None, 0.10f);
         ImGui.TableSetupColumn("##block_nameheader");
         //ImGui.TableHeadersRow();
 
@@ -54,7 +54,7 @@ public class Blocklist
                 ImGui.PopFont();
             
                 ImGui.TableNextColumn();
-                ImGui.PushItemWidth(150.0f);
+                ImGui.PushItemWidth(220.0f);
                 ImGui.InputTextWithHint($"##blocklistname{idx}", "", ref _currentBlocklistEntry, 255);
                     
                 if ( _currentBlocklistEntry != item)
@@ -89,7 +89,7 @@ public class Blocklist
         ImGui.PopFont();
         
         ImGui.TableNextColumn();
-        ImGui.PushItemWidth(150.0f);
+        ImGui.PushItemWidth(220.0f);
         ImGui.InputTextWithHint("##playername", "Name...", ref _newBlocklistEntry, 255);
 
         ImGui.EndTable();

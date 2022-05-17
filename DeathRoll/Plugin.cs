@@ -105,7 +105,9 @@ namespace DeathRoll
             Regex reg; bool dice;
             if (channel == 74) (reg, dice) = (randomRollRegex, false);
             else (reg, dice) = (diceRollRegex, true);
-            
+
+            if (dice && Configuration.OnlyRandom) return; // only /random is accepted
+            if (!dice && Configuration.OnlyDice) return; // only /dice is accepted
             
             var m = reg.Match(message.ToString());
             if (!m.Success) return;
@@ -169,8 +171,8 @@ namespace DeathRoll
             
             
             // dice always needs the autoTranslate payload
-            // if not, a player just wrote the exact string
-            if (dice && diceCommand != 3)
+            // if not has a player just written the exact string
+            if (dice && !Configuration.DebugAllowDiceCheat && diceCommand != 3)
             {
                 Chat.Print($"Deathroll: {playerName} tried to cheat~");
                 return;
@@ -241,7 +243,7 @@ namespace DeathRoll
                 return;
             }
 
-            PluginUi.IsOutOfUsed = PluginUi.Participants.Exists(x => x.outOf > -1);
+            PluginUi.RollTable.IsOutOfUsed = PluginUi.Participants.Exists(x => x.outOf > -1);
             
             return;
         }

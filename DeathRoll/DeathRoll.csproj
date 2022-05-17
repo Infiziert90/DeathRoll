@@ -5,7 +5,7 @@
     <AssemblyName>DeathRoll</AssemblyName>
     <AssemblyVersion>0.0.1.0</AssemblyVersion>
     <Version>0.0.1.0</Version>
-    <Description>Copies the marketboard transaction history into your clipboard with configurable options.</Description>
+    <Description>Easy to use deathroll/roll game helper with functions to hightlight or block players.</Description>
     <PackageProjectUrl>https://github.com/Infiziert90/DeathRoll</PackageProjectUrl>
   </PropertyGroup>
 

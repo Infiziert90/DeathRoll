@@ -14,8 +14,10 @@ namespace DeathRoll
         
         public bool ActiveRound { get; set; } = false;
         public bool DeactivateOnClear { get; set; } = false;
-        
         public bool RerollAllowed { get; set; } = false;
+        public bool OnlyRandom { get; set; } = false;
+        public bool OnlyDice { get; set; } = false;
+
         public int CurrentMode { get; set; } = 0;
         public int Nearest { get; set; } = 1;
         public int NumberOfTables { get; set; } = 1;
@@ -30,6 +32,10 @@ namespace DeathRoll
         [NonSerialized]
         private DalamudPluginInterface? pluginInterface;
 
+        [NonSerialized]
+        public bool DebugRandomizedPlayerNames = false;
+        public bool DebugAllowDiceCheat = false;
+        
         public void Initialize(DalamudPluginInterface pluginInterface)
         {
             this.pluginInterface = pluginInterface;

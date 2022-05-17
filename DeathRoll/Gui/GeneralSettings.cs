@@ -26,10 +26,9 @@ public class GeneralSettings
 
             ImGui.Dummy(new Vector2(0.0f, 5.0f));
             ImGui.Text("Options:");
-
-            // TODO implement multiple tables (allows min, max, nearest at the same time)
             ImGui.Dummy(new Vector2(0.0f, 5.0f));
             
+            // TODO implement multiple tables (allows min, max, nearest at the same time)
             //ImGui.Text("Number of tables:");
             // ImGui.SliderInt("##numberoftables", ref this._numberOfTables, 1, 3);
             // if (ImGui.IsItemDeactivatedAfterEdit())
@@ -49,12 +48,48 @@ public class GeneralSettings
                 this.configuration.Save();
             }
             
-            ImGui.Dummy(new Vector2(0.0f, 40.0f));
+            var onlyRandom = this.configuration.OnlyRandom;
+            if (ImGui.Checkbox("Accept only /random", ref onlyRandom))
+            {
+                this.configuration.OnlyRandom = onlyRandom;
+                this.configuration.OnlyDice = false;
+                this.configuration.Save();
+            }
+            
+            var onlyDice = this.configuration.OnlyDice;
+            if (ImGui.Checkbox("Accept only /dice", ref onlyDice))
+            {
+                this.configuration.OnlyDice = onlyDice;
+                this.configuration.OnlyRandom = false;
+                this.configuration.Save();
+            }
+            
             var verboseChatlog = this.configuration.DebugChat;
             if (ImGui.Checkbox("Debug", ref verboseChatlog))
             {
                 this.configuration.DebugChat = verboseChatlog;
+                this.configuration.DebugRandomizedPlayerNames = false;
+                this.configuration.DebugAllowDiceCheat = false;
                 this.configuration.Save();
+            }
+            
+            if (verboseChatlog)
+            {
+                ImGui.Dummy(new Vector2(15.0f,0.0f));
+                ImGui.SameLine();
+                var randomizePlayers = configuration.DebugRandomizedPlayerNames;
+                if (ImGui.Checkbox("Randomize names", ref randomizePlayers))
+                {
+                    this.configuration.DebugRandomizedPlayerNames = randomizePlayers;
+                }
+                
+                ImGui.Dummy(new Vector2(15.0f,0.0f));
+                ImGui.SameLine();
+                var allowDiceCheat = configuration.DebugAllowDiceCheat;
+                if (ImGui.Checkbox("Allow dice cheat", ref allowDiceCheat))
+                {
+                    this.configuration.DebugAllowDiceCheat = allowDiceCheat;
+                }
             }
 
             ImGui.EndTabItem();
