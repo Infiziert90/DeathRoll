@@ -27,4 +27,9 @@ public class Participant
         this.hasHighlight = false;
         this.highlightColor = new Vector4(0, 0, 0, 0);
     }
+
+    public string GetReadableName()
+    {
+        return name.Replace("\uE05D", "\uE05D ");
+    }
 }

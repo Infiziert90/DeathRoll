@@ -14,6 +14,7 @@ namespace DeathRoll
     {
         private Configuration configuration;
         private Blocklist Blocklist { get; init; }
+        private GeneralSettings GeneralSettings { get; init; }
         
         public List<Participant> Participants = new List<Participant>();
 
@@ -71,6 +72,7 @@ namespace DeathRoll
         {
             this.configuration = configuration;
             this.Blocklist = new Blocklist(configuration);
+            this.GeneralSettings = new GeneralSettings(configuration);
             _numberOfTables = configuration.NumberOfTables;
         }
 
@@ -174,33 +176,33 @@ namespace DeathRoll
                         if (_isOutOfUsed) ImGui.TableSetupColumn("Out Of");
                     
                         ImGui.TableHeadersRow();
-                        foreach (var roll in Participants)
+                        foreach (var participant in Participants)
                         {
-                            var hCheck = configuration.ActiveHightlighting && roll.hasHighlight;
+                            var hCheck = configuration.ActiveHightlighting && participant.hasHighlight;
                             ImGui.TableNextColumn();
-                            ImGui.TextColored(hCheck ? roll.highlightColor : _defaultColor, roll.name);
+                            ImGui.TextColored(hCheck ? participant.highlightColor : _defaultColor, participant.GetReadableName());
                             
                             ImGui.TableNextColumn();
-                            ImGui.TextColored(hCheck ? roll.highlightColor : _defaultColor,roll.roll.ToString());
+                            ImGui.TextColored(hCheck ? participant.highlightColor : _defaultColor,participant.roll.ToString());
                             
                             if (_isOutOfUsed)
                             { 
                                 ImGui.TableNextColumn();
-                                ImGui.TextColored(hCheck ? roll.highlightColor : _defaultColor, roll.outOf != -1 ? roll.outOf.ToString() : "");
+                                ImGui.TextColored(hCheck ? participant.highlightColor : _defaultColor, participant.outOf != -1 ? participant.outOf.ToString() : "");
                             };
                         }
                         ImGui.EndTable();
                     }
 
                     var deletion = "";
-                    ImGui.Dummy(new Vector2(0.0f, 15.0f));
+                    ImGui.Dummy(new Vector2(0.0f, 30.0f));
                     if (ImGui.CollapsingHeader("Remove Player from List"))
                     {
-                        foreach (var roll in Participants)
+                        foreach (var participant in Participants)
                         {
-                            ImGui.Selectable($"{roll.name}");
+                            ImGui.Selectable($"{participant.GetReadableName()}");
                             if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                                deletion = roll.name;
+                                deletion = participant.name;
 
                             if (!ImGui.IsItemHovered()) continue;
                             ImGui.BeginTooltip();
@@ -234,56 +236,11 @@ namespace DeathRoll
 
                 if (ImGui.BeginTabBar("##settings-tabs"))
                 {
-                    if (ImGui.BeginTabItem($"General###general-tab"))
-                    {
-                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-                        var on = this.configuration.On;
-                        if (ImGui.Checkbox("On", ref on))
-                        {
-                            this.configuration.On = on;
-                            this.configuration.Save();
-                        }
-                
-                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-                        ImGui.Text("Options:");
-                        
-                        // TODO implement multiple tables (allows min, max, nearest at the same time)
-                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-                        ImGui.Text("Number of tables:");
-                        
-                        ImGui.SliderInt("##numberoftables", ref this._numberOfTables, 1, 3);
-                        if (ImGui.IsItemDeactivatedAfterEdit())
-                        {
-                            this._numberOfTables = Math.Clamp(this._numberOfTables, 1, 3); 
-                            if (this._numberOfTables != this.configuration.NumberOfTables)
-                            {
-                                this.configuration.NumberOfTables = _numberOfTables;
-                                this.configuration.Save();
-                            }
-                        }
-                        
-                        var deactivateOnClear = this.configuration.DeactivateOnClear;
-                        if (ImGui.Checkbox("Deactivate Active Round on Clear", ref deactivateOnClear))
-                        {
-                            this.configuration.DeactivateOnClear = deactivateOnClear;
-                            this.configuration.Save();
-                        }
-
-                        
-                        ImGui.Dummy(new Vector2(0.0f, 40.0f));
-                        var verboseChatlog = this.configuration.DebugChat;
-                        if (ImGui.Checkbox("Debug", ref verboseChatlog))
-                        {
-                            this.configuration.DebugChat = verboseChatlog;
-                            this.configuration.Save();
-                        }
-
-                        ImGui.EndTabItem();
-                    }
+                    // Renders General Settings UI
+                    this.GeneralSettings.RenderGeneralSettings();
                     
                     if (ImGui.BeginTabItem($"Highlight###highlight-tab"))
                     {
-                        
                         var activeHightlighting = this.configuration.ActiveHightlighting;
                         if (ImGui.Checkbox("Hightlighting active", ref activeHightlighting))
                         {
@@ -378,6 +335,7 @@ namespace DeathRoll
                         
                         ImGui.EndTabItem();
                     }
+                    // Renders Blocklist UI
                     this.Blocklist.RenderBlocklistTab();
                     
                     ImGui.EndTabBar();
