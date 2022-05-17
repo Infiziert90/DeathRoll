@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using System.Text.RegularExpressions;
 
@@ -8,7 +9,7 @@ public class Highlight
     public string Regex;
     public Vector4 Color;
     private Regex? _compiled = null;
-    public Regex CompiledRegex => this._compiled ??= new Regex(this.Regex);
+    public Regex CompiledRegex => this._compiled ??= Compile();
     // and clear _compiled to null when Regex changes
 
     public Highlight() { }
@@ -25,5 +26,10 @@ public class Highlight
         this.Color = c;
         this._compiled = null;
     }
-            
+
+    private Regex Compile()
+    {
+        try { return new Regex(this.Regex); }
+        catch (RegexParseException) { return new Regex(@"\A(?!x)x"); } // unmatchable regex
+    }
 }
