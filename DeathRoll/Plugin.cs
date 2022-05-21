@@ -54,28 +54,34 @@ namespace DeathRoll
             this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
         }
         
-        [Command("/dr")]
+        [Command("/drh")]
         [HelpMessage("Toggles UI\nArguments:\non - Turns on\noff - Turns off\nconfig - Opens config")]
         public void PluginCommand(string command, string args)
         {
-            if (args == "on")
+            switch (args)
             {
-                Configuration.On = true;
-                Configuration.Save();
-            } 
-            else if (args == "off")
-            {
-                Configuration.On = false;
-                Configuration.Save();
-            }            
-            else if (args == "config")
-            {
-                this.PluginUi.SettingsVisible = true;
+                case "on":
+                    Configuration.On = true;
+                    Configuration.Save();
+                    break;
+                case "off":
+                    Configuration.On = false;
+                    Configuration.Save();
+                    break;
+                case "config":
+                    this.PluginUi.SettingsVisible = true;
+                    break;
+                default:
+                    this.PluginUi.Visible = true;
+                    break;
             }
-            else
-            {
-                this.PluginUi.Visible = true;
-            }
+        }
+        
+        [Command("/deathroll")]
+        [HelpMessage("  ")]
+        public void PluginCommandFallback(string command, string args)
+        {
+            PluginCommand(command, args);
         }
         
         public void Dispose()
