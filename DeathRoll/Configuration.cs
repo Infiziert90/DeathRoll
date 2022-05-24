@@ -27,6 +27,13 @@ namespace DeathRoll
         public bool ActiveHightlighting { get; set; } = false;
         
         public List<Highlight> SavedHighlights { get; set; } = new();
+        
+        public bool UseTimer { get; set; } = false;
+        public int DefaultHour { get; set; } = 0;
+        public int DefaultMin { get; set; } = 0;
+        public int DefaultSec { get; set; } = 0;
+        
+        
         // the below exist just to make saving less cumbersome
 
         [NonSerialized]

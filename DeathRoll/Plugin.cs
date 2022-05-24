@@ -11,6 +11,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 using System.Numerics;
+using Dalamud.Game;
 using DeathRoll.Attributes;
 
 
@@ -20,6 +21,7 @@ namespace DeathRoll
     {
         [PluginService] public static DataManager Data { get; private set; } = null!;
         [PluginService] public static ChatGui Chat { get; private set; } = null!;
+        [PluginService] public static Framework Framework { get; private set; } = null!;
         
         public string Name => "Death Roll Helper";
         

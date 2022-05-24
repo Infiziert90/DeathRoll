@@ -1,23 +1,93 @@
-using System.Collections.Generic;
+using System;
 using System.Numerics;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
 
-public class RollTable
+public partial class RollTable
 {
     private PluginUI pluginUi;
     private Configuration configuration;
+    public Timers Timers;
     
     public bool IsOutOfUsed;
     private Vector4 _defaultColor = new Vector4(1.0f,1.0f,1.0f,1.0f);
-    
+
     public RollTable(PluginUI pluginUi)
     {
         this.pluginUi = pluginUi;
-        configuration = pluginUi.configuration;
+        this.configuration = pluginUi.configuration;
+        this.Timers = new Timers(pluginUi);
     }
-    
+
+    public void RenderControlPanel()
+    {
+        if (ImGui.Button("Show Settings"))
+        {
+            this.pluginUi.SettingsVisible = true;
+        }
+
+        var spacing = ImGui.GetScrollY() == 0 ? 45.0f : 70.0f;
+        ImGui.SameLine(ImGui.GetWindowWidth()-spacing);
+        
+        if (ImGui.Button("Clear"))
+        {
+            if (configuration.DeactivateOnClear) configuration.ActiveRound = false;
+            this.pluginUi.Participants.Clear();
+        }
+
+        if (configuration.UseTimer)
+        {
+            this.Timers.RenderTimer();  
+        }
+        
+        var activeRound = this.configuration.ActiveRound;
+        if (ImGui.Checkbox("Active Round", ref activeRound))
+        {
+            this.configuration.ActiveRound = activeRound;
+            this.configuration.Save();
+        }
+        
+        ImGui.SameLine();
+        
+        var allowReroll = this.configuration.RerollAllowed;
+        if (ImGui.Checkbox("Rerolling is allowed", ref allowReroll))
+        {
+            this.configuration.RerollAllowed = allowReroll;
+            this.configuration.Save();
+        }
+        
+        var current = configuration.CurrentMode;
+        var nearest = configuration.Nearest;
+        ImGui.RadioButton("min", ref current, 0); ImGui.SameLine();
+        ImGui.RadioButton("max", ref current, 1); ImGui.SameLine();
+        ImGui.RadioButton("nearest to", ref current, 2);
+        if (current == 2)
+        {
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(40.0f);
+            if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0))
+            {
+                nearest = Math.Clamp(nearest, 1, 999);
+            }
+        }
+
+        if (current != configuration.CurrentMode || nearest != configuration.Nearest)
+        {
+            configuration.CurrentMode = current;
+            configuration.Nearest = nearest;
+            
+            switch(current)
+            {
+                case 0: this.pluginUi.Min();break;
+                case 1: this.pluginUi.Max();break;
+                case 2: this.pluginUi.Nearest();break;
+            }
+            
+            configuration.Save();
+        }
+    }
+
     public void RenderRollTable()
     {
         if (!ImGui.BeginTable("##rolls", IsOutOfUsed ? 3 : 2)) return;

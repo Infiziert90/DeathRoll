@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface;
-using Dalamud.Logging;
 using DeathRoll.Gui;
 
 namespace DeathRoll
@@ -17,6 +16,7 @@ namespace DeathRoll
         private Blocklist Blocklist { get; init; }
         private GeneralSettings GeneralSettings { get; init; }
         public RollTable RollTable { get; init; }
+        public TimerSetting TimerSetting { get; init; }
         
         public List<Participant> Participants = new List<Participant>();
 
@@ -69,6 +69,10 @@ namespace DeathRoll
             this.Blocklist = new Blocklist(configuration);
             this.GeneralSettings = new GeneralSettings(configuration);
             this.RollTable = new RollTable(this);
+            
+            // needs RollTable
+            this.TimerSetting = new TimerSetting(configuration, RollTable);
+            
             _numberOfTables = configuration.NumberOfTables;
         }
 
@@ -101,66 +105,7 @@ namespace DeathRoll
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 480), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin("DeathRoll Helper", ref this.visible))
             {
-                if (ImGui.Button("Show Settings"))
-                {
-                    SettingsVisible = true;
-                }
-
-                var spacing = ImGui.GetScrollY() == 0 ? 45.0f : 70.0f;
-                ImGui.SameLine(ImGui.GetWindowWidth()-spacing);
-                
-                if (ImGui.Button("Clear"))
-                {
-                    if (configuration.DeactivateOnClear) configuration.ActiveRound = false;
-                    Participants.Clear();
-                }
-                
-                
-                var activeRound = this.configuration.ActiveRound;
-                if (ImGui.Checkbox("Active Round", ref activeRound))
-                {
-                    this.configuration.ActiveRound = activeRound;
-                    this.configuration.Save();
-                }
-                
-                ImGui.SameLine();
-                
-                var allowReroll = this.configuration.RerollAllowed;
-                if (ImGui.Checkbox("Rerolling is allowed", ref allowReroll))
-                {
-                    this.configuration.RerollAllowed = allowReroll;
-                    this.configuration.Save();
-                }
-                
-                var current = configuration.CurrentMode;
-                var nearest = configuration.Nearest;
-                ImGui.RadioButton("min", ref current, 0); ImGui.SameLine();
-                ImGui.RadioButton("max", ref current, 1); ImGui.SameLine();
-                ImGui.RadioButton("nearest to", ref current, 2);
-                if (current == 2)
-                {
-                    ImGui.SameLine();
-                    ImGui.SetNextItemWidth(40.0f);
-                    if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0))
-                    {
-                        nearest = Math.Clamp(nearest, 1, 999);
-                    }
-                }
-
-                if (current != configuration.CurrentMode || nearest != configuration.Nearest)
-                {
-                    configuration.CurrentMode = current;
-                    configuration.Nearest = nearest;
-                    
-                    switch(current)
-                    {
-                        case 0: Min();break;
-                        case 1: Max();break;
-                        case 2: Nearest();break;
-                    }
-                    
-                    configuration.Save();
-                }
+                RollTable.RenderControlPanel();
 
                 ImGui.Spacing();
                 
@@ -191,6 +136,10 @@ namespace DeathRoll
                     // Renders General Settings UI
                     this.GeneralSettings.RenderGeneralSettings();
                     
+                    // Renders Timer Settings Tab
+                    this.TimerSetting.RenderTimerSettings();
+                    
+                    // Renders Highlight Settings Tab
                     if (ImGui.BeginTabItem($"Highlight###highlight-tab"))
                     {
                         var activeHightlighting = this.configuration.ActiveHightlighting;
