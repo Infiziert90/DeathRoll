@@ -54,8 +54,8 @@ public class Timers : IDisposable
             }
             
             ImGui.SameLine(88.0f);
-            ImGui.Text("hms");
-            ImGui.SameLine(115.0f);
+            ImGui.Text("h|m|s");
+            ImGui.SameLine(125.0f);
         
             if (ImGui.Button("Start Timer"))
             {
