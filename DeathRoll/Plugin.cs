@@ -219,7 +219,7 @@ namespace DeathRoll
 
                 var hasHighlight = false;
                 Vector4 hightlightColor = new Vector4();
-                if (Configuration.ActiveHightlighting && Configuration.SavedHighlights.Count > 0)
+                if (Configuration.ActiveHighlighting && Configuration.SavedHighlights.Count > 0)
                 {
                     foreach (var highlight in Configuration.SavedHighlights)
                     {

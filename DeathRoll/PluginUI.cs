@@ -22,7 +22,7 @@ namespace DeathRoll
 
         public void UpdateParticipants()
         {
-            if (!configuration.ActiveHightlighting || Participants.Count == 0) return;
+            if (!configuration.ActiveHighlighting || Participants.Count == 0) return;
 
             foreach (var roll in Participants)
             {
@@ -61,7 +61,8 @@ namespace DeathRoll
         private string _newRegex = String.Empty;
         private Vector4 _newColor = new Vector4(0.6f,0.6f,0.6f,1.0f);
         private Vector4 _greenColor = new Vector4(0.0f, 1.0f, 0.0f,1.0f);
-
+        private ImGuiColorEditFlags _flags = ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoAlpha;
+        
         // passing in the image here just for simplicityw
         public PluginUI(Configuration configuration)
         {
@@ -142,14 +143,48 @@ namespace DeathRoll
                     // Renders Highlight Settings Tab
                     if (ImGui.BeginTabItem($"Highlight###highlight-tab"))
                     {
-                        var activeHightlighting = this.configuration.ActiveHightlighting;
+                        var activeHightlighting = this.configuration.ActiveHighlighting;
                         if (ImGui.Checkbox("Highlighting active", ref activeHightlighting))
                         {
-                            this.configuration.ActiveHightlighting = activeHightlighting;
+                            this.configuration.ActiveHighlighting = activeHightlighting;
                             this.configuration.Save();
                         }
                         
                         ImGui.Dummy(new Vector2(0.0f, 5.0f));
+                        ImGui.Text("Default Highlights:");
+                        
+                        var firstPlaceColor = configuration.FirstPlaceColor;
+                        ImGui.ColorEdit4($"##firstplacecolor", ref firstPlaceColor, _flags);
+                        ImGui.SameLine();
+                        var useFirstPlace = this.configuration.UseFirstPlace;
+                        if (ImGui.Checkbox("First place", ref useFirstPlace))
+                        {
+                            this.configuration.UseFirstPlace = useFirstPlace;
+                            this.configuration.Save();
+                        }
+                        
+                        var lastPlaceColor = configuration.LastPlaceColor;
+                        ImGui.ColorEdit4($"##lastplacecolor", ref lastPlaceColor, _flags);
+                        ImGui.SameLine();
+                        var useLastPlace = this.configuration.UseLastPlace;
+                        if (ImGui.Checkbox("Last place", ref useLastPlace))
+                        {
+                            this.configuration.UseLastPlace = useLastPlace;
+                            this.configuration.Save();
+                        }
+
+                        if (firstPlaceColor != configuration.FirstPlaceColor || lastPlaceColor != configuration.LastPlaceColor)
+                        {
+                            firstPlaceColor.W = 1; // fix alpha
+                            lastPlaceColor.W = 1; // fix alpha
+                            
+                            this.configuration.FirstPlaceColor = firstPlaceColor;
+                            this.configuration.LastPlaceColor = lastPlaceColor;
+                            this.configuration.Save();
+                        }
+                        
+                        ImGui.Dummy(new Vector2(0.0f, 5.0f));
+                        ImGui.Text("Custom Highlights:");
                         
                         if (!ImGui.BeginTable("##highlighttable", 3, ImGuiTableFlags.None))
                             return;
@@ -183,8 +218,7 @@ namespace DeathRoll
                                 ImGui.InputTextWithHint($"##regex{idx}", "", ref _currentRegex, 255);
                             
                                 ImGui.TableNextColumn();
-                                ImGui.ColorEdit4($"##hightlightcolor{idx}", ref _currentColor,
-                                    ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoAlpha);
+                                ImGui.ColorEdit4($"##hightlightcolor{idx}", ref _currentColor, _flags);
                                     
                                 if (_currentRegex != item.Regex || _currentColor != item.Color)
                                 {
@@ -230,7 +264,7 @@ namespace DeathRoll
                         ImGui.InputTextWithHint("##regex", "Regex...", ref _newRegex, 255);
                         
                         ImGui.TableNextColumn();
-                        ImGui.ColorEdit4("##hightlightcolor", ref _newColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoAlpha);
+                        ImGui.ColorEdit4("##hightlightcolor", ref _newColor, _flags);
 
                         ImGui.EndTable();
                         ImGui.TextColored(_greenColor, "Simple number matching:\n^YourNumber$");

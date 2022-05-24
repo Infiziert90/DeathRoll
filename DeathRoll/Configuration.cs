@@ -2,6 +2,7 @@
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace DeathRoll
 {
@@ -24,7 +25,12 @@ namespace DeathRoll
 
         public bool ActiveBlocklist { get; set; } = false;
         public List<string> SavedBlocklist { get; set; } = new();
-        public bool ActiveHightlighting { get; set; } = false;
+        
+        public bool ActiveHighlighting { get; set; } = false;
+        public bool UseFirstPlace { get; set; } = false;
+        public Vector4 FirstPlaceColor { get; set; } = new Vector4(0.586f, 0.996f, 0.586f,1.0f);
+        public bool UseLastPlace { get; set; } = false;
+        public Vector4 LastPlaceColor { get; set; } = new Vector4(0.980f, 0.245f, 0.245f,1.0f);
         
         public List<Highlight> SavedHighlights { get; set; } = new();
         
@@ -40,7 +46,7 @@ namespace DeathRoll
         private DalamudPluginInterface? pluginInterface;
 
         [NonSerialized]
-        public bool DebugRandomizedPlayerNames = false;
+        public bool DebugRandomPn = false;
         public bool DebugAllowDiceCheat = false;
         
         public void Initialize(DalamudPluginInterface pluginInterface)

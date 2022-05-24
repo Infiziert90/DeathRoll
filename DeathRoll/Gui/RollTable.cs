@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using ImGuiNET;
 
@@ -96,13 +97,21 @@ public partial class RollTable
         if (IsOutOfUsed) ImGui.TableSetupColumn("Out Of");
                     
         ImGui.TableHeadersRow();
-        foreach (var participant in pluginUi.Participants)
+        foreach (var (participant, idx) in pluginUi.Participants.Select((value, i) => ( value, i )))
         {
-            var hCheck = configuration.ActiveHightlighting && participant.hasHighlight;
-            var color = hCheck ? participant.highlightColor : _defaultColor;
-            var name = !configuration.DebugRandomizedPlayerNames
-                ? participant.GetReadableName()
-                : participant.randomName;
+            var last = pluginUi.Participants.Count - 1;
+            var color = _defaultColor;
+            if (configuration.ActiveHighlighting)
+            {   
+                if (participant.hasHighlight)
+                    color = participant.highlightColor;
+                else if (idx == 0 && configuration.UseFirstPlace) 
+                    color = configuration.FirstPlaceColor;
+                else if (idx == last && configuration.UseLastPlace) 
+                    color = configuration.LastPlaceColor;
+            }
+            var name = !configuration.DebugRandomPn ? participant.GetReadableName() : participant.randomName;
+            
             ImGui.TableNextColumn();
             ImGui.TextColored(color, name);
                             
@@ -125,9 +134,7 @@ public partial class RollTable
         {
             foreach (var participant in pluginUi.Participants)
             {
-                var name = !configuration.DebugRandomizedPlayerNames
-                    ? participant.GetReadableName()
-                    : participant.randomName;
+                var name = !configuration.DebugRandomPn ? participant.GetReadableName() : participant.randomName;
                 ImGui.Selectable($"{name}");
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
                     deletion = participant.name;
