@@ -36,7 +36,7 @@ public class TimerSetting
         int _h = configuration.DefaultHour;
         if (ImGui.InputInt("Hour##defaulthourinput", ref _h, 0))
         {
-            _h = Math.Clamp(_h, 0, 24);
+            _h = Math.Clamp(_h, 0, 23);
             if (_h != configuration.DefaultHour)
             {
                 configuration.DefaultHour = _h;
@@ -50,7 +50,7 @@ public class TimerSetting
         int _m = configuration.DefaultMin;
         if (ImGui.InputInt("Minute##defaultmininput", ref _m, 0))
         {
-            _m = Math.Clamp(_m, 0, 60);
+            _m = Math.Clamp(_m, 0, 59);
             if (_m != configuration.DefaultMin)
             {
                 configuration.DefaultMin = _m;
@@ -64,7 +64,7 @@ public class TimerSetting
         int _s = configuration.DefaultSec;
         if (ImGui.InputInt("Second##defaultsecinput", ref _s, 0))
         {
-            _s = Math.Clamp(_s, 0, 60);
+            _s = Math.Clamp(_s, 0, 59);
             if (_s != configuration.DefaultSec)
             {
                 configuration.DefaultSec = _s;

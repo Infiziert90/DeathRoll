@@ -33,29 +33,33 @@ public class Timers : IDisposable
     {
         if (!stopwatch.IsRunning)
         {
-            ImGui.SetNextItemWidth(25.0f);
+            ImGui.SetNextItemWidth(20.0f);
             if (ImGui.InputInt("##hourinput", ref _h, 0))
             {
-                _h = Math.Clamp(_h, 0, 24);
+                _h = Math.Clamp(_h, 0, 23);
             }
             
-            ImGui.SameLine(35.0f);
-            ImGui.SetNextItemWidth(25.0f);
+            ImGui.SameLine(30.0f);
+            ImGui.Text("h");
+            ImGui.SameLine(40.0f);
+            ImGui.SetNextItemWidth(20.0f);
             if (ImGui.InputInt("##mininput", ref _m, 0))
             {
-                _m = Math.Clamp(_m, 0, 60);
-            }
-        
-            ImGui.SameLine(62.0f);
-            ImGui.SetNextItemWidth(25.0f);
-            if (ImGui.InputInt("##secinput", ref _s, 0))
-            {
-                _s = Math.Clamp(_s, 0, 60);
+                _m = Math.Clamp(_m, 0, 59);
             }
             
-            ImGui.SameLine(88.0f);
-            ImGui.Text("h|m|s");
-            ImGui.SameLine(125.0f);
+            ImGui.SameLine(62.0f);
+            ImGui.Text("m");
+            ImGui.SameLine(76.0f);
+            ImGui.SetNextItemWidth(20.0f);
+            if (ImGui.InputInt("##secinput", ref _s, 0))
+            {
+                _s = Math.Clamp(_s, 0, 59);
+            }
+            
+            ImGui.SameLine(98.0f);
+            ImGui.Text("s");
+            ImGui.SameLine(110.0f);
         
             if (ImGui.Button("Start Timer"))
             {
