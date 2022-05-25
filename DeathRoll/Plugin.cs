@@ -57,6 +57,7 @@ namespace DeathRoll
         }
         
         [Command("/drh")]
+        [Aliases("/deathroll")]
         [HelpMessage("Toggles UI\nArguments:\non - Turns on\noff - Turns off\nconfig - Opens config")]
         public void PluginCommand(string command, string args)
         {
@@ -77,13 +78,6 @@ namespace DeathRoll
                     this.PluginUi.Visible = true;
                     break;
             }
-        }
-        
-        [Command("/deathroll")]
-        [HelpMessage("  ")]
-        public void PluginCommandFallback(string command, string args)
-        {
-            PluginCommand(command, args);
         }
         
         public void Dispose()
