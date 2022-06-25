@@ -13,6 +13,7 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using DeathRoll.Attributes;
+using DeathRoll.Process;
 
 namespace DeathRoll;
 
@@ -25,6 +26,17 @@ public sealed class Plugin : IDalamudPlugin
         new(@"^Random! ([a-zA-Z'-]+ [a-zA-Z'-]*|You) roll[s]? a (\d+)(?: \(out of (\d+)\))?.");
 
     public Participants Participants;
+    
+    [PluginService] public static DataManager Data { get; private set; } = null!;
+    [PluginService] public static ChatGui Chat { get; private set; } = null!;
+    [PluginService] public static Framework Framework { get; private set; } = null!;
+
+    public string Name => "Death Roll Helper";
+
+    private DalamudPluginInterface PluginInterface { get; init; }
+    private Configuration Configuration { get; init; }
+    private PluginUI PluginUi { get; init; }
+    private Rolls Rolls { get; init; }
     
     public Plugin(
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
@@ -42,21 +54,12 @@ public sealed class Plugin : IDalamudPlugin
         PluginUi = new PluginUI(Configuration, Participants);
         commandManager = new PluginCommandManager<Plugin>(this, commands);
 
+        Rolls = new Rolls(Configuration, Participants);
+
         Chat.ChatMessage += OnChatMessage;
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
     }
-
-    [PluginService] public static DataManager Data { get; } = null!;
-    [PluginService] public static ChatGui Chat { get; } = null!;
-    [PluginService] public static Framework Framework { get; } = null!;
-
-
-    private DalamudPluginInterface PluginInterface { get; }
-    private Configuration Configuration { get; }
-    private PluginUI PluginUi { get; }
-
-    public string Name => "Death Roll Helper";
 
     public void Dispose()
     {
@@ -176,21 +179,8 @@ public sealed class Plugin : IDalamudPlugin
         // if not has a player just written the exact string
         if (dice && !Configuration.DebugAllowDiceCheat && diceCommand != 3)
         {
-            Chat.Print($"Deathroll: {playerName} tried to cheat~");
+            Chat.Print($"{playerName} tried to cheat~");
             return;
-        }
-
-        var exists = Participants.PList.Exists(x => x.name == playerName);
-        switch (Configuration.RerollAllowed)
-        {
-            case false when exists:
-            {
-                if (Configuration.DebugChat) PluginLog.Debug("Player already rolled, no overwrite allowed.");
-                return;
-            }
-            case true when exists:
-                Participants.DeleteEntry(playerName);
-                break;
         }
 
         if (Configuration.DebugChat)
@@ -200,53 +190,7 @@ public sealed class Plugin : IDalamudPlugin
             PluginLog.Debug($"Message: {message}\n    Matches: 1: {m.Groups[1]} 2: {m.Groups[2]} 3: {m.Groups[3].Success} {m.Groups[3]}");
         }
 
-        try
-        {
-            var parsedRoll = int.Parse(m.Groups[2].Value);
-            var parsedOutOf = m.Groups[3].Success ? int.Parse(m.Groups[3].Value) : -1;
-            if (dice)
-                // adjusting to different reqex
-                parsedOutOf = m.Groups[1].Success ? int.Parse(m.Groups[1].Value) : -1;
-
-            var hasHighlight = false;
-            var hightlightColor = new Vector4();
-            if (Configuration.ActiveHighlighting && Configuration.SavedHighlights.Count > 0)
-                foreach (var highlight in Configuration.SavedHighlights)
-                {
-                    if (highlight.CompiledRegex.Match(m.Groups[2].Value).Success)
-                    {
-                        hasHighlight = true;
-                        hightlightColor = highlight.Color;
-                        break;
-                    }
-                }
-
-            Participants.PList.Add(hasHighlight
-                ? new Participant(playerName, parsedRoll, parsedOutOf, true, hightlightColor)
-                : new Participant(playerName, parsedRoll, parsedOutOf));
-
-            switch (Configuration.CurrentMode)
-            {
-                case 0:
-                    Participants.Min();
-                    break;
-                case 1:
-                    Participants.Max();
-                    break;
-                case 2:
-                    Participants.Nearest(Configuration.Nearest);
-                    break;
-            }
-        }
-        catch (FormatException e)
-        {
-            Chat.PrintError("Deathroll: Unable to parse rolls, turning plugin off.");
-            PluginLog.Error(e.ToString());
-            TurnOff();
-            return;
-        }
-
-        PluginUi.RollTable.IsOutOfUsed = Participants.PList.Exists(x => x.outOf > -1);
+        Rolls.ParseRoll(dice, m, playerName);
     }
 
     private void TurnOff()

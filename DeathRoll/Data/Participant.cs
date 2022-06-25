@@ -9,9 +9,28 @@ public class Participants
 {
     public List<Participant> PList = new();
     
+    public List<string> PlayerNameList = new();
+    
+    public bool IsOutOfUsed = false;
+    public bool RoundDone = false;
+
+    public Participant Last;
+
+    public void Add(Participant p)
+    {
+        PList.Add(p);
+        Last = p;
+    }
+    
+    public Participant FindPlayer(string playerName)
+    {
+        return PList.Find(x => x.name == playerName);
+    }
+    
     public void DeleteEntry(string name)
     {
         PList.RemoveAll(x => x.name == name);
+        PlayerNameList.RemoveAll(x => x == name);
     }
 
     public void Min()
@@ -44,6 +63,14 @@ public class Participants
             }
         }
     }
+
+    public void Reset()
+    {
+        PList.Clear();
+        PlayerNameList.Clear();
+        IsOutOfUsed = false;
+        RoundDone = false;
+    }
 }
 
 public class Participant
@@ -61,12 +88,12 @@ public class Participant
     private readonly List<string> Surnames = new()
         {"Fake", "Sus", "Imposter", "Pseudo"};
 
-    public Participant(string name, int roll, int outOf, bool hasHighlight, Vector4 highlightColor)
+    public Participant(string name, int roll, int outOf, Vector4 highlightColor)
     {
         this.name = name;
         this.roll = roll;
         this.outOf = outOf;
-        this.hasHighlight = hasHighlight;
+        this.hasHighlight = true;
         this.highlightColor = highlightColor;
 
         randomName = GetRandomizedName();
@@ -103,5 +130,10 @@ public class Participant
     {
         var random = new Random();
         return $"{FirstName[random.Next(FirstName.Count)]} {Surnames[random.Next(Surnames.Count)]}";
+    }
+
+    public string GetUsedName(bool randomPn)
+    {
+        return !randomPn ? GetReadableName() : randomName;
     }
 }

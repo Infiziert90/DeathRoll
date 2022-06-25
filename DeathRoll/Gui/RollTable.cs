@@ -11,7 +11,6 @@ public class RollTable
     private readonly Configuration configuration;
     private readonly Participants participants;
 
-    public bool IsOutOfUsed;
     private readonly PluginUI pluginUi;
     public Timers Timers;
 
@@ -23,11 +22,23 @@ public class RollTable
         Timers = new Timers(configuration);
     }
 
+    public void MainRender()
+    {
+        RenderControlPanel();
+        
+        if (participants.PList.Count <= 0) return;
+        
+        ImGui.Spacing();
+        RenderRollTable();
+        ImGui.Dummy(new Vector2(0.0f, 60.0f));
+        RenderDeletionDropdown();
+    }
+    
     public void RenderControlPanel()
     {
         if (ImGui.Button("Show Settings")) pluginUi.SettingsVisible = true;
 
-        var spacing = ImGui.GetScrollY() == 0 ? 45.0f : 70.0f;
+        var spacing = ImGui.GetScrollMaxY() == 0 ? 45.0f : 70.0f;
         ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
 
         if (ImGui.Button("Clear"))
@@ -68,34 +79,31 @@ public class RollTable
             if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0)) nearest = Math.Clamp(nearest, 1, 999);
         }
 
-        if (current != configuration.CurrentMode || nearest != configuration.Nearest)
+        if (current == configuration.CurrentMode && nearest == configuration.Nearest) return;
+        configuration.CurrentMode = current;
+        configuration.Nearest = nearest;
+        configuration.Save();
+        
+        switch (current)
         {
-            configuration.CurrentMode = current;
-            configuration.Nearest = nearest;
-
-            switch (current)
-            {
-                case 0:
-                    participants.Min();
-                    break;
-                case 1:
-                    participants.Max();
-                    break;
-                case 2:
-                    participants.Nearest(configuration.Nearest);
-                    break;
-            }
-
-            configuration.Save();
+            case 0:
+                participants.Min();
+                break;
+            case 1:
+                participants.Max();
+                break;
+            case 2:
+                participants.Nearest(configuration.Nearest);
+                break;
         }
     }
 
     public void RenderRollTable()
     {
-        if (!ImGui.BeginTable("##rolls", IsOutOfUsed ? 3 : 2)) return;
+        if (!ImGui.BeginTable("##rolls", participants.IsOutOfUsed ? 3 : 2)) return;
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 3.0f);
         ImGui.TableSetupColumn("Roll");
-        if (IsOutOfUsed) ImGui.TableSetupColumn("Out Of");
+        if (participants.IsOutOfUsed) ImGui.TableSetupColumn("Out Of");
 
         ImGui.TableHeadersRow();
         foreach (var (participant, idx) in participants.PList.Select((value, i) => (value, i)))
@@ -112,7 +120,7 @@ public class RollTable
                     color = configuration.LastPlaceColor;
             }
 
-            var name = !configuration.DebugRandomPn ? participant.GetReadableName() : participant.randomName;
+            var name = participant.GetUsedName(configuration.DebugRandomPn);
 
             ImGui.TableNextColumn();
             ImGui.TextColored(color, name);
@@ -120,13 +128,11 @@ public class RollTable
             ImGui.TableNextColumn();
             ImGui.TextColored(color, participant.roll.ToString());
 
-            if (IsOutOfUsed)
+            if (participants.IsOutOfUsed)
             {
                 ImGui.TableNextColumn();
                 ImGui.TextColored(color, participant.outOf != -1 ? participant.outOf.ToString() : "");
             }
-
-            ;
         }
 
         ImGui.EndTable();
@@ -135,10 +141,10 @@ public class RollTable
     public void RenderDeletionDropdown()
     {
         var deletion = "";
-        if (ImGui.CollapsingHeader("Remove Player from List"))
+        if (ImGui.CollapsingHeader("Player List"))
             foreach (var participant in participants.PList)
             {
-                var name = !configuration.DebugRandomPn ? participant.GetReadableName() : participant.randomName;
+                var name = participant.GetUsedName(configuration.DebugRandomPn);
                 ImGui.Selectable($"{name}");
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
                     deletion = participant.name;

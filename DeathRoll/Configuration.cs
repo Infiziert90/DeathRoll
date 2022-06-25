@@ -11,7 +11,9 @@ public class Configuration : IPluginConfiguration
 {
     public bool On { get; set; } = false;
     public bool DebugChat { get; set; } = false;
-
+    
+    public int GameMode { get; set; } = 0;
+    
     public bool ActiveRound { get; set; } = false;
     public bool DeactivateOnClear { get; set; } = false;
     public bool RerollAllowed { get; set; } = false;
@@ -41,7 +43,8 @@ public class Configuration : IPluginConfiguration
     [NonSerialized] private DalamudPluginInterface? pluginInterface;
     [NonSerialized] public bool DebugRandomPn = false;
     [NonSerialized] public bool DebugAllowDiceCheat = false;
-    
+    [NonSerialized] public bool AcceptNewPlayers = false;
+
     public void Initialize(DalamudPluginInterface pluginInterface)
     {
         this.pluginInterface = pluginInterface;

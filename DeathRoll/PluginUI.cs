@@ -27,6 +27,7 @@ public class PluginUI : IDisposable
         GeneralSettings = new GeneralSettings(configuration);
         Highlights = new Highlights(this);
         RollTable = new RollTable(this);
+        DeathRollMode = new DeathRollMode(this);
 
         // needs RollTable
         TimerSetting = new TimerSetting(configuration, RollTable);
@@ -36,6 +37,7 @@ public class PluginUI : IDisposable
     private GeneralSettings GeneralSettings { get; }
     private Highlights Highlights { get; }
     public RollTable RollTable { get; }
+    public DeathRollMode DeathRollMode { get; }
     public TimerSetting TimerSetting { get; }
 
     public bool Visible
@@ -75,15 +77,14 @@ public class PluginUI : IDisposable
         ImGui.SetNextWindowSizeConstraints(new Vector2(375, 480), new Vector2(float.MaxValue, float.MaxValue));
         if (ImGui.Begin("DeathRoll Helper", ref visible))
         {
-            RollTable.RenderControlPanel();
-
-            ImGui.Spacing();
-
-            if (Participants.PList.Count > 0)
+            switch (Configuration.GameMode)
             {
-                RollTable.RenderRollTable();
-                ImGui.Dummy(new Vector2(0.0f, 60.0f));
-                RollTable.RenderDeletionDropdown();
+                case 0:
+                    RollTable.MainRender();
+                    break;
+                case 1:
+                    DeathRollMode.MainRender();
+                    break;
             }
         }
 
