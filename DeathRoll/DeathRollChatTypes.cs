@@ -5,7 +5,7 @@ public enum DeathRollChatTypes : ushort
     // Random
     RandomRoll = 2122,
     OtherRandomRoll = 8266,
-    
+
     // Dice
     Party = 14,
     Ls1 = 16,
@@ -25,5 +25,5 @@ public enum DeathRollChatTypes : ushort
     CrossLinkShell5 = 104,
     CrossLinkShell6 = 105,
     CrossLinkShell7 = 106,
-    CrossLinkShell8 = 107,
+    CrossLinkShell8 = 107
 }

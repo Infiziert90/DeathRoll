@@ -5,86 +5,87 @@ using ImGuiNET;
 
 namespace DeathRoll.Gui;
 
-public partial class RollTable
+public class RollTable
 {
-    private PluginUI pluginUi;
-    private Configuration configuration;
-    public Timers Timers;
-    
+    private readonly Vector4 _defaultColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+    private readonly Configuration configuration;
+    private readonly Participants participants;
+
     public bool IsOutOfUsed;
-    private Vector4 _defaultColor = new Vector4(1.0f,1.0f,1.0f,1.0f);
+    private readonly PluginUI pluginUi;
+    public Timers Timers;
 
     public RollTable(PluginUI pluginUi)
     {
         this.pluginUi = pluginUi;
-        this.configuration = pluginUi.configuration;
-        this.Timers = new Timers(pluginUi);
+        configuration = pluginUi.Configuration;
+        participants = pluginUi.Participants;
+        Timers = new Timers(configuration);
     }
 
     public void RenderControlPanel()
     {
-        if (ImGui.Button("Show Settings"))
-        {
-            this.pluginUi.SettingsVisible = true;
-        }
+        if (ImGui.Button("Show Settings")) pluginUi.SettingsVisible = true;
 
         var spacing = ImGui.GetScrollY() == 0 ? 45.0f : 70.0f;
-        ImGui.SameLine(ImGui.GetWindowWidth()-spacing);
-        
+        ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
+
         if (ImGui.Button("Clear"))
         {
             if (configuration.DeactivateOnClear) configuration.ActiveRound = false;
-            this.pluginUi.Participants.Clear();
+            participants.PList.Clear();
         }
 
-        if (configuration.UseTimer)
-        {
-            this.Timers.RenderTimer();  
-        }
-        
-        var activeRound = this.configuration.ActiveRound;
+        if (configuration.UseTimer) Timers.RenderTimer();
+
+        var activeRound = configuration.ActiveRound;
         if (ImGui.Checkbox("Active Round", ref activeRound))
         {
-            this.configuration.ActiveRound = activeRound;
-            this.configuration.Save();
+            configuration.ActiveRound = activeRound;
+            configuration.Save();
         }
-        
+
         ImGui.SameLine();
-        
-        var allowReroll = this.configuration.RerollAllowed;
-        if (ImGui.Checkbox("Rerolling is allowed", ref allowReroll))
+
+        var allowReroll = configuration.RerollAllowed;
+        if (ImGui.Checkbox("Reroll allowed", ref allowReroll))
         {
-            this.configuration.RerollAllowed = allowReroll;
-            this.configuration.Save();
+            configuration.RerollAllowed = allowReroll;
+            configuration.Save();
         }
-        
+
         var current = configuration.CurrentMode;
         var nearest = configuration.Nearest;
-        ImGui.RadioButton("min", ref current, 0); ImGui.SameLine();
-        ImGui.RadioButton("max", ref current, 1); ImGui.SameLine();
+        ImGui.RadioButton("min", ref current, 0);
+        ImGui.SameLine();
+        ImGui.RadioButton("max", ref current, 1);
+        ImGui.SameLine();
         ImGui.RadioButton("nearest to", ref current, 2);
         if (current == 2)
         {
             ImGui.SameLine();
             ImGui.SetNextItemWidth(40.0f);
-            if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0))
-            {
-                nearest = Math.Clamp(nearest, 1, 999);
-            }
+            if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0)) nearest = Math.Clamp(nearest, 1, 999);
         }
 
         if (current != configuration.CurrentMode || nearest != configuration.Nearest)
         {
             configuration.CurrentMode = current;
             configuration.Nearest = nearest;
-            
-            switch(current)
+
+            switch (current)
             {
-                case 0: this.pluginUi.Min();break;
-                case 1: this.pluginUi.Max();break;
-                case 2: this.pluginUi.Nearest();break;
+                case 0:
+                    participants.Min();
+                    break;
+                case 1:
+                    participants.Max();
+                    break;
+                case 2:
+                    participants.Nearest(configuration.Nearest);
+                    break;
             }
-            
+
             configuration.Save();
         }
     }
@@ -95,35 +96,39 @@ public partial class RollTable
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 3.0f);
         ImGui.TableSetupColumn("Roll");
         if (IsOutOfUsed) ImGui.TableSetupColumn("Out Of");
-                    
+
         ImGui.TableHeadersRow();
-        foreach (var (participant, idx) in pluginUi.Participants.Select((value, i) => ( value, i )))
+        foreach (var (participant, idx) in participants.PList.Select((value, i) => (value, i)))
         {
-            var last = pluginUi.Participants.Count - 1;
+            var last = participants.PList.Count - 1;
             var color = _defaultColor;
             if (configuration.ActiveHighlighting)
-            {   
+            {
                 if (participant.hasHighlight)
                     color = participant.highlightColor;
-                else if (idx == 0 && configuration.UseFirstPlace) 
+                else if (idx == 0 && configuration.UseFirstPlace)
                     color = configuration.FirstPlaceColor;
-                else if (idx == last && configuration.UseLastPlace) 
+                else if (idx == last && configuration.UseLastPlace)
                     color = configuration.LastPlaceColor;
             }
+
             var name = !configuration.DebugRandomPn ? participant.GetReadableName() : participant.randomName;
-            
+
             ImGui.TableNextColumn();
             ImGui.TextColored(color, name);
-                            
+
             ImGui.TableNextColumn();
-            ImGui.TextColored(color,participant.roll.ToString());
-                            
+            ImGui.TextColored(color, participant.roll.ToString());
+
             if (IsOutOfUsed)
-            { 
+            {
                 ImGui.TableNextColumn();
                 ImGui.TextColored(color, participant.outOf != -1 ? participant.outOf.ToString() : "");
-            };
+            }
+
+            ;
         }
+
         ImGui.EndTable();
     }
 
@@ -131,8 +136,7 @@ public partial class RollTable
     {
         var deletion = "";
         if (ImGui.CollapsingHeader("Remove Player from List"))
-        {
-            foreach (var participant in pluginUi.Participants)
+            foreach (var participant in participants.PList)
             {
                 var name = !configuration.DebugRandomPn ? participant.GetReadableName() : participant.randomName;
                 ImGui.Selectable($"{name}");
@@ -146,11 +150,7 @@ public partial class RollTable
                 ImGui.PopTextWrapPos();
                 ImGui.EndTooltip();
             }
-        }
 
-        if (deletion != "")
-        {
-            pluginUi.DeleteEntry(deletion);
-        }
+        if (deletion != "") participants.DeleteEntry(deletion);
     }
 }

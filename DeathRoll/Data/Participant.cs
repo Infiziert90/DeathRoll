@@ -1,17 +1,49 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace DeathRoll;
 
+public class Participants
+{
+    public List<Participant> PList = new();
+    
+    public void DeleteEntry(string name)
+    {
+        PList.RemoveAll(x => x.name == name);
+    }
+
+    public void Min()
+    {
+        PList = PList.OrderBy(x => x.roll).ToList();
+    }
+
+    public void Max()
+    {
+        PList = PList.OrderByDescending(x => x.roll).ToList();
+    }
+
+    public void Nearest(int nearest)
+    {
+        PList = PList.OrderBy(x => Math.Abs(nearest - x.roll)).ToList();
+    }
+}
+
 public class Participant
 {
     public readonly string name;
-    public readonly int roll;
     public readonly int outOf;
+    public readonly int roll;
+
     public bool hasHighlight;
     public Vector4 highlightColor;
     public string randomName;
+
+    private readonly List<string> FirstName = new()
+        {"Absolutely", "Completely", "Undoubtedly", "More or less", "Assuredly", "Utterly", "Kind of"};
+    private readonly List<string> Surnames = new()
+        {"Fake", "Sus", "Imposter", "Pseudo"};
 
     public Participant(string name, int roll, int outOf, bool hasHighlight, Vector4 highlightColor)
     {
@@ -22,16 +54,16 @@ public class Participant
         this.highlightColor = highlightColor;
 
         randomName = GetRandomizedName();
-    }    
-    
+    }
+
     public Participant(string name, int roll, int outOf)
     {
         this.name = name;
         this.roll = roll;
         this.outOf = outOf;
-        this.hasHighlight = false;
-        this.highlightColor = new Vector4(0, 0, 0, 0);
-        
+        hasHighlight = false;
+        highlightColor = new Vector4(0, 0, 0, 0);
+
         randomName = GetRandomizedName();
     }
 
@@ -40,10 +72,6 @@ public class Participant
         return name.Replace("\uE05D", "\uE05D ");
     }
 
-    private List<string> FirstName = new()
-        {"Absolutely", "Completely", "Undoubtedly", "More or less", "Assuredly", "Utterly", "Kind of"};
-    private List<string> Surnames = new()
-        {"Fake", "Sus", "Imposter", "Pseudo"};
     public string GetRandomizedName()
     {
         var random = new Random();

@@ -1,62 +1,54 @@
-﻿using Dalamud.Configuration;
-using Dalamud.Plugin;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Dalamud.Configuration;
+using Dalamud.Plugin;
 
-namespace DeathRoll
+namespace DeathRoll;
+
+[Serializable]
+public class Configuration : IPluginConfiguration
 {
-    [Serializable]
-    public class Configuration : IPluginConfiguration
+    public bool On { get; set; } = false;
+    public bool DebugChat { get; set; } = false;
+
+    public bool ActiveRound { get; set; } = false;
+    public bool DeactivateOnClear { get; set; } = false;
+    public bool RerollAllowed { get; set; } = false;
+    public bool OnlyRandom { get; set; } = false;
+    public bool OnlyDice { get; set; } = false;
+
+    public int CurrentMode { get; set; } = 0;
+    public int Nearest { get; set; } = 1;
+
+    public bool ActiveBlocklist { get; set; } = false;
+    public List<string> SavedBlocklist { get; set; } = new();
+
+    public bool ActiveHighlighting { get; set; } = false;
+    public bool UseFirstPlace { get; set; } = false;
+    public Vector4 FirstPlaceColor { get; set; } = new(0.586f, 0.996f, 0.586f, 1.0f);
+    public bool UseLastPlace { get; set; } = false;
+    public Vector4 LastPlaceColor { get; set; } = new(0.980f, 0.245f, 0.245f, 1.0f);
+
+    public List<Highlight> SavedHighlights { get; set; } = new();
+
+    public bool UseTimer { get; set; } = false;
+    public int DefaultHour { get; set; } = 0;
+    public int DefaultMin { get; set; } = 0;
+    public int DefaultSec { get; set; } = 0;
+    public int Version { get; set; } = 0;
+
+    [NonSerialized] private DalamudPluginInterface? pluginInterface;
+    [NonSerialized] public bool DebugRandomPn = false;
+    [NonSerialized] public bool DebugAllowDiceCheat = false;
+    
+    public void Initialize(DalamudPluginInterface pluginInterface)
     {
-        public int Version { get; set; } = 0;
-        public bool On { get; set; } = false;
-        public bool DebugChat { get; set; } = false;
-        
-        public bool ActiveRound { get; set; } = false;
-        public bool DeactivateOnClear { get; set; } = false;
-        public bool RerollAllowed { get; set; } = false;
-        public bool OnlyRandom { get; set; } = false;
-        public bool OnlyDice { get; set; } = false;
+        this.pluginInterface = pluginInterface;
+    }
 
-        public int CurrentMode { get; set; } = 0;
-        public int Nearest { get; set; } = 1;
-        public int NumberOfTables { get; set; } = 1;
-
-        public bool ActiveBlocklist { get; set; } = false;
-        public List<string> SavedBlocklist { get; set; } = new();
-        
-        public bool ActiveHighlighting { get; set; } = false;
-        public bool UseFirstPlace { get; set; } = false;
-        public Vector4 FirstPlaceColor { get; set; } = new Vector4(0.586f, 0.996f, 0.586f,1.0f);
-        public bool UseLastPlace { get; set; } = false;
-        public Vector4 LastPlaceColor { get; set; } = new Vector4(0.980f, 0.245f, 0.245f,1.0f);
-        
-        public List<Highlight> SavedHighlights { get; set; } = new();
-        
-        public bool UseTimer { get; set; } = false;
-        public int DefaultHour { get; set; } = 0;
-        public int DefaultMin { get; set; } = 0;
-        public int DefaultSec { get; set; } = 0;
-        
-        
-        // the below exist just to make saving less cumbersome
-
-        [NonSerialized]
-        private DalamudPluginInterface? pluginInterface;
-
-        [NonSerialized]
-        public bool DebugRandomPn = false;
-        public bool DebugAllowDiceCheat = false;
-        
-        public void Initialize(DalamudPluginInterface pluginInterface)
-        {
-            this.pluginInterface = pluginInterface;
-        }
-
-        public void Save()
-        {
-            this.pluginInterface!.SavePluginConfig(this);
-        }
+    public void Save()
+    {
+        pluginInterface!.SavePluginConfig(this);
     }
 }
