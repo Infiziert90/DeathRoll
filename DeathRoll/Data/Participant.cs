@@ -28,6 +28,22 @@ public class Participants
     {
         PList = PList.OrderBy(x => Math.Abs(nearest - x.roll)).ToList();
     }
+    
+    public void Update(Configuration configuration)
+    {
+        if (!configuration.ActiveHighlighting || PList.Count == 0) return;
+
+        foreach (var roll in PList)
+        {
+            roll.UpdateColor(false);
+            foreach (var hl in configuration.SavedHighlights.Where(hl =>
+                         hl.CompiledRegex.Match(roll.roll.ToString()).Success))
+            {
+                roll.UpdateColor(true, hl.Color);
+                break;
+            }
+        }
+    }
 }
 
 public class Participant
@@ -65,6 +81,17 @@ public class Participant
         highlightColor = new Vector4(0, 0, 0, 0);
 
         randomName = GetRandomizedName();
+    }
+    
+    public void UpdateColor(bool hasHl)
+    {
+        hasHighlight = hasHl;
+    }
+    
+    public void UpdateColor(bool hasHl, Vector4 hlColor)
+    {
+        hasHighlight = hasHl;
+        highlightColor = hlColor;
     }
 
     public string GetReadableName()

@@ -197,8 +197,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             PluginLog.Debug($"Extracted Player Name: {playerName}.");
             PluginLog.Debug("Add message to viewer.");
-            PluginLog.Debug($"Message: {message}\n" +
-                            $"    Matches: 1: {m.Groups[1]} 2: {m.Groups[2]} 3: {m.Groups[3].Success} {m.Groups[3]}");
+            PluginLog.Debug($"Message: {message}\n    Matches: 1: {m.Groups[1]} 2: {m.Groups[2]} 3: {m.Groups[3].Success} {m.Groups[3]}");
         }
 
         try
@@ -220,8 +219,6 @@ public sealed class Plugin : IDalamudPlugin
                         hightlightColor = highlight.Color;
                         break;
                     }
-
-                    ;
                 }
 
             Participants.PList.Add(hasHighlight
