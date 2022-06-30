@@ -110,7 +110,7 @@ public class Highlights
             {
                 configuration.SavedHighlights.RemoveAt(deletionIdx);
                 configuration.Save();
-                participants.Update(configuration);
+                participants.Update();
             }
 
             if (updateIdx != -1)
@@ -119,7 +119,7 @@ public class Highlights
 
                 configuration.SavedHighlights[updateIdx].Update(_newReg, _newCol);
                 configuration.Save();
-                participants.Update(configuration);
+                participants.Update();
             }
         }
 
@@ -134,7 +134,7 @@ public class Highlights
             configuration.SavedHighlights?.Add(new Highlight(_newRegex, _newColor));
             configuration.Save();
             RestoreDefaults();
-            participants.Update(configuration);
+            participants.Update();
         }
         ImGui.PopFont();
 

@@ -10,11 +10,13 @@ public class Rolls
 {
     private readonly Configuration configuration;
     private readonly Participants participants;
+    public SimpleTournament simpleTournament;
     
     public Rolls(Configuration configuration, Participants participants)
     {
         this.configuration = configuration;
         this.participants = participants;
+        this.simpleTournament = new SimpleTournament(configuration, participants);
     }
     
     public void ParseRoll(bool dice, Match m, string playerName)
@@ -33,6 +35,9 @@ public class Rolls
                     break;
                 case 1:
                     DeathRollGameMode(playerName, parsedRoll, parsedOutOf);
+                    break;                
+                case 2:
+                    simpleTournament.Parser(playerName, parsedRoll, parsedOutOf);
                     break;
             }
         }
@@ -103,6 +108,7 @@ public class Rolls
         {
             if (parsedOutOf == -1) parsedOutOf = 1000;
             participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
+            return;
         }
         
         // check if same player and check if OutOf is correct

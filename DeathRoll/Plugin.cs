@@ -45,16 +45,15 @@ public sealed class Plugin : IDalamudPlugin
     {
         PluginInterface = pluginInterface;
         this.clientState = clientState;
-        
-        Participants = new Participants();
-        
+
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.Initialize(PluginInterface);
         
-        PluginUi = new PluginUI(Configuration, Participants);
-        commandManager = new PluginCommandManager<Plugin>(this, commands);
-
+        Participants = new Participants(Configuration);
         Rolls = new Rolls(Configuration, Participants);
+        
+        PluginUi = new PluginUI(Configuration, Participants, Rolls);
+        commandManager = new PluginCommandManager<Plugin>(this, commands);
 
         Chat.ChatMessage += OnChatMessage;
         PluginInterface.UiBuilder.Draw += DrawUI;

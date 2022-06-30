@@ -40,7 +40,7 @@ public class DeathRollMode
         OrderListRender();
     }
 
-    private void RenderWinnerPanel()
+    public void RenderWinnerPanel()
     {
         var loser = participants.PList.Last();
         ImGui.TextColored(_redColor, $"{loser.name} lost!!!");

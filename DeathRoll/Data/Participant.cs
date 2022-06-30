@@ -7,24 +7,45 @@ namespace DeathRoll;
 
 public class Participants
 {
-    public List<Participant> PList = new();
+    private readonly Configuration configuration;
     
+    public List<Participant> PList = new();
     public List<string> PlayerNameList = new();
+    public List<string> NextRound = new();
     
     public bool IsOutOfUsed = false;
+    
+    // deathroll
     public bool RoundDone = false;
-
     public Participant Last;
+    public Participant Winner;
+
+    public Participants(Configuration configuration)
+    {
+        this.configuration = configuration;
+    }
 
     public void Add(Participant p)
     {
         PList.Add(p);
+        PlayerNameList.Add(p.name);
         Last = p;
+        if (PList.Count == 1)
+        {
+            Winner = p;
+            return;
+        }
+        Winner = PList[^2];
     }
     
     public Participant FindPlayer(string playerName)
     {
-        return PList.Find(x => x.name == playerName);
+        return PList.Find(x => x.name == playerName) ?? PList.Find(x => x.fName == playerName);
+    }
+
+    public Participant GetWithIndex(int idx)
+    {
+        return FindPlayer(PlayerNameList[idx]);
     }
     
     public void DeleteEntry(string name)
@@ -48,7 +69,7 @@ public class Participants
         PList = PList.OrderBy(x => Math.Abs(nearest - x.roll)).ToList();
     }
     
-    public void Update(Configuration configuration)
+    public void Update()
     {
         if (!configuration.ActiveHighlighting || PList.Count == 0) return;
 
@@ -68,6 +89,7 @@ public class Participants
     {
         PList.Clear();
         PlayerNameList.Clear();
+        NextRound.Clear();
         IsOutOfUsed = false;
         RoundDone = false;
     }
@@ -82,6 +104,7 @@ public class Participant
     public bool hasHighlight;
     public Vector4 highlightColor;
     public string randomName;
+    public string fName;
 
     private readonly List<string> FirstName = new()
         {"Absolutely", "Completely", "Undoubtedly", "More or less", "Assuredly", "Utterly", "Kind of"};
@@ -95,8 +118,8 @@ public class Participant
         this.outOf = outOf;
         this.hasHighlight = true;
         this.highlightColor = highlightColor;
-
-        randomName = GetRandomizedName();
+        
+        Init();
     }
 
     public Participant(string name, int roll, int outOf)
@@ -107,7 +130,13 @@ public class Participant
         hasHighlight = false;
         highlightColor = new Vector4(0, 0, 0, 0);
 
+        Init();
+    }
+
+    private void Init()
+    {
         randomName = GetRandomizedName();
+        fName = GetReadableName();
     }
     
     public void UpdateColor(bool hasHl)

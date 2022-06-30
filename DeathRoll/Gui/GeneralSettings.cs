@@ -25,10 +25,14 @@ public class GeneralSettings
             configuration.Save();
         }
         
+        ImGui.Dummy(new Vector2(0.0f, 5.0f));
+        ImGui.Text("Game Mode:");
+        
         var gameMode = configuration.GameMode;
         ImGui.RadioButton("Normal", ref gameMode, 0);
         ImGui.SameLine();
         ImGui.RadioButton("DeathRoll", ref gameMode, 1);
+        ImGui.RadioButton("Simple Tournament", ref gameMode, 2);
 
         if (gameMode != configuration.GameMode)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using DeathRoll.Gui;
+using DeathRoll.Process;
 using ImGuiNET;
 
 namespace DeathRoll;
@@ -11,6 +12,7 @@ public class PluginUI : IDisposable
 {
     public Participants Participants;
     public Configuration Configuration;
+    public Rolls Rolls;
 
     private bool settingsVisible;
 
@@ -18,16 +20,18 @@ public class PluginUI : IDisposable
     private bool visible;
 
     // passing in the image here just for simplicityw
-    public PluginUI(Configuration configuration, Participants p)
+    public PluginUI(Configuration configuration, Participants participants, Rolls rolls)
     {
         this.Configuration = configuration;
-        this.Participants = p;
+        this.Participants = participants;
+        this.Rolls = rolls;
         
         Blocklist = new Blocklist(configuration);
         GeneralSettings = new GeneralSettings(configuration);
         Highlights = new Highlights(this);
         RollTable = new RollTable(this);
         DeathRollMode = new DeathRollMode(this);
+        SimpleTournamentMode = new SimpleTournamentMode(this);
 
         // needs RollTable
         TimerSetting = new TimerSetting(configuration, RollTable);
@@ -38,6 +42,7 @@ public class PluginUI : IDisposable
     private Highlights Highlights { get; }
     public RollTable RollTable { get; }
     public DeathRollMode DeathRollMode { get; }
+    public SimpleTournamentMode SimpleTournamentMode { get; }
     public TimerSetting TimerSetting { get; }
 
     public bool Visible
@@ -67,6 +72,8 @@ public class PluginUI : IDisposable
 
         DrawMainWindow();
         DrawSettingsWindow();
+        SimpleTournamentMode.DrawBracket();
+        SimpleTournamentMode.DrawMatch();
     }
 
     public void DrawMainWindow()
@@ -84,6 +91,9 @@ public class PluginUI : IDisposable
                     break;
                 case 1:
                     DeathRollMode.MainRender();
+                    break;
+                case 2:
+                    SimpleTournamentMode.MainRender();
                     break;
             }
         }
