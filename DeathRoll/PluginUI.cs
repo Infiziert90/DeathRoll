@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using DeathRoll.Gui;
-using DeathRoll.Process;
+using DeathRoll.Logic;
 using ImGuiNET;
 
 namespace DeathRoll;

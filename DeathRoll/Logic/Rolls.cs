@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Text.RegularExpressions;
 using Dalamud.Logging;
 
-namespace DeathRoll.Process;
+namespace DeathRoll.Logic;
 
 public class Rolls
 {
@@ -19,14 +19,12 @@ public class Rolls
         this.simpleTournament = new SimpleTournament(configuration, participants);
     }
     
-    public void ParseRoll(bool dice, Match m, string playerName)
+    public void ParseRoll(Match m, string playerName)
     {
         try
         {
-            var parsedRoll = int.Parse(m.Groups[2].Value);
-            var parsedOutOf = m.Groups[3].Success ? int.Parse(m.Groups[3].Value) : -1;
-            if (dice) // adjusting to different reqex
-                parsedOutOf = m.Groups[1].Success ? int.Parse(m.Groups[1].Value) : -1;
+            var parsedRoll = int.Parse(m.Groups["roll"].Value);
+            var parsedOutOf = m.Groups["out"].Success ? int.Parse(m.Groups["out"].Value) : -1;
 
             switch (configuration.GameMode)
             {
@@ -55,7 +53,7 @@ public class Rolls
         {
             case false when exists:
             {
-                if (configuration.DebugChat) PluginLog.Debug("Player already rolled, no overwrite allowed.");
+                if (configuration.DebugChat) PluginLog.Debug("Player already rolled, no reroll allowed.");
                 return;
             }
             case true when exists:

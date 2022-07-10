@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Numerics;
-using System.Text.RegularExpressions;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
@@ -13,7 +11,7 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using DeathRoll.Attributes;
-using DeathRoll.Process;
+using DeathRoll.Logic;
 
 namespace DeathRoll;
 
@@ -21,10 +19,7 @@ public sealed class Plugin : IDalamudPlugin
 {
     private readonly PluginCommandManager<Plugin> commandManager;
     private readonly ClientState clientState;
-    private readonly Regex diceRollRegex = new(@"^Random! (?:\(1-(\d+)\) )?(\d+)");
-    private readonly Regex randomRollRegex =
-        new(@"^Random! ([a-zA-Z'-]+ [a-zA-Z'-]*|You) roll[s]? a (\d+)(?: \(out of (\d+)\))?.");
-
+    private readonly Reg reg = new();
     public Participants Participants;
     
     [PluginService] public static DataManager Data { get; private set; } = null!;
@@ -104,25 +99,27 @@ public sealed class Plugin : IDalamudPlugin
 
         var xivChatType = (ushort) type;
         var channel = xivChatType & 0x7F;
-        // 2122 = Random Roll 8266 = different Player Radom roll?
+        // 2122 = Random Roll 8266 = different Player Random roll?
         // Dice Roll: FC, LS, CWLS, Party
         if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) return;
 
-        Regex reg; bool dice;
-        if (channel == 74) (reg, dice) = (randomRollRegex, false);
-        else (reg, dice) = (diceRollRegex, true);
+        var dice = channel != 74;
 
-        if (dice && Configuration.OnlyRandom) return; // only /random is accepted
-        if (!dice && Configuration.OnlyDice) return; // only /dice is accepted
+        switch (dice)
+        {
+            case true when Configuration.OnlyRandom: // only /random is accepted
+            case false when Configuration.OnlyDice: // only /dice is accepted
+                return;
+        }
 
-        var m = reg.Match(message.ToString());
+
+        var m = reg.Match(message.ToString(), clientState.ClientLanguage, dice);
         if (!m.Success) return;
 
         var local = clientState?.LocalPlayer;
         if (local == null || local.HomeWorld.GameData?.Name == null)
         {
-            TurnOff();
-            Chat.PrintError("Deathroll: Unable to fetch character name.");
+            PluginLog.Information("Unable to fetch character name.");
             return;
         }
 
@@ -185,17 +182,10 @@ public sealed class Plugin : IDalamudPlugin
         if (Configuration.DebugChat)
         {
             PluginLog.Debug($"Extracted Player Name: {playerName}.");
-            PluginLog.Debug("Add message to viewer.");
-            PluginLog.Debug($"Message: {message}\n    Matches: 1: {m.Groups[1]} 2: {m.Groups[2]} 3: {m.Groups[3].Success} {m.Groups[3]}");
+            PluginLog.Debug($"Message: {message}\n    Matches: 1: {m.Groups["player"]} 2: {m.Groups["roll"]} 3: {m.Groups["out"].Success} {m.Groups["out"]}");
         }
 
-        Rolls.ParseRoll(dice, m, playerName);
-    }
-
-    private void TurnOff()
-    {
-        Configuration.On = false;
-        Configuration.Save();
+        Rolls.ParseRoll(m, playerName);
     }
 
     private void DrawUI()

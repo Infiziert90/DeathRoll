@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Logging;
-using Newtonsoft.Json.Serialization;
 
-namespace DeathRoll.Process;
+namespace DeathRoll.Logic;
 
 public enum TournamentStates
 {
