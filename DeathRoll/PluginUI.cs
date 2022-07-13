@@ -72,7 +72,7 @@ public class PluginUI : IDisposable
 
         DrawMainWindow();
         DrawSettingsWindow();
-        SimpleTournamentMode.DrawBracket();
+        SimpleTournamentMode.DrawGeneratedBracket();
         SimpleTournamentMode.DrawMatch();
     }
 

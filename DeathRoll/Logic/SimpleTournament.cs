@@ -10,10 +10,11 @@ public enum TournamentStates
     NotRunning = 0,
     Registration = 1,
     Shuffling = 2,
-    Prepare = 3,
-    NextStage = 4,
-    Match = 5,
-    Done = 6,
+    FirstPrepare = 3,
+    Prepare = 4,
+    NextStage = 5,
+    Match = 6,
+    Done = 7,
     Crash = 99,
 }
 
@@ -25,12 +26,13 @@ public class SimpleTournament
     public Participants TParticipants;
     public TournamentStates TS = TournamentStates.NotRunning;
     
-    public List<List<string>> TestBrackets = new ();
+    public List<List<string>> InternalBrackets = new();
+    public List<List<string>> FilledBrackets = new();
 
     private int currentIndex = 0;
     private int currentStage = 0;
     public int LastStage = 1;
-    public List<int> StageDepth = new List<int>();
+    public List<int> StageDepth = new();
     
     public Participant Player1;
     public Participant Player2;
@@ -51,6 +53,10 @@ public class SimpleTournament
         
         switch (newState)
         {
+            case TournamentStates.FirstPrepare:
+                GenerateBrackets();
+                SwitchState(TournamentStates.Prepare);
+                break;
             case TournamentStates.Prepare:
                 CalculateNextMatch();
                 break;
@@ -97,7 +103,6 @@ public class SimpleTournament
     private void MatchGameMode(string playerName, int parsedRoll, int parsedOutOf)
     {
         // check if player is in playerList, if not, check if new players get accepted
-        PluginLog.Debug($"New Roll: PN {playerName} Roll {parsedRoll} OutOf {parsedOutOf}");
         if (!participants.PlayerNameList.Exists(x => x == playerName)) return;
         
         if (participants.PList.Count == 0)
@@ -107,10 +112,8 @@ public class SimpleTournament
             return;
         }
         
-        PluginLog.Debug($"New Roll: Last PN {participants.Last.name} Last Roll {participants.Last.roll}");
         if (playerName == participants.Last.name || participants.Last.roll != parsedOutOf) return;
         
-        PluginLog.Debug($"Got Past it.");
         if (parsedRoll >= 2)
         {
             participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
@@ -145,7 +148,6 @@ public class SimpleTournament
 
         TParticipants.PList = new List<Participant>(participants.PList);
         TParticipants.PlayerNameList = new List<string>(participants.PlayerNameList);
-        GenerateBrackets();
     }
 
     public void GenerateBrackets()
@@ -157,7 +159,7 @@ public class SimpleTournament
         
         for (var i = 0; i < stages; i++)
         {
-            TestBrackets.Add(new List<string>());
+            InternalBrackets.Add(new List<string>());
         }
         
         // fill with byes if need
@@ -168,29 +170,27 @@ public class SimpleTournament
         
         foreach (var (name, idx) in TParticipants.PlayerNameList.Select((value, i) => (value, i)))
         {
-            TestBrackets[currentStage].Add(TParticipants.GetWithIndex(idx).fName);
-            TestBrackets[currentStage].Add(TParticipants.GetWithIndex(magicNumber-idx).fName);
+            InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(idx).fName);
+            InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(magicNumber-idx).fName);
             if (idx == neededPlayers / 2 - 1) break;
         }
         
         // Set LastStage for later
         LastStage = stages;
         CalculateDepth();
+        FillBracketTable();
     }
 
     public void FillCurrentStageBrackets()
     {
-        TestBrackets[currentStage+1] = new List<string>();
-
-        foreach (var name in TParticipants.NextRound)
-        {
-            PluginLog.Debug($"Next Round PN {name}");
-        }
+        InternalBrackets[currentStage+1] = new List<string>();
         
         foreach (var name in TParticipants.NextRound)
         {
-            TestBrackets[currentStage+1].Add(TParticipants.FindPlayer(name).fName);
+            InternalBrackets[currentStage+1].Add(TParticipants.FindPlayer(name).fName);
         }
+
+        FillBracketTable();
     }
     
     public void CalculateNextMatch()
@@ -199,15 +199,15 @@ public class SimpleTournament
         {
             CalculationDone = false;
             
-            if (currentIndex >= TestBrackets[currentStage].Count)
+            if (currentIndex >= InternalBrackets[currentStage].Count)
             {
                 SwitchState(TournamentStates.NextStage);
                 return;  
             }
             
             (Player1, Player2) = (
-                TParticipants.FindPlayer(TestBrackets[currentStage][currentIndex]), 
-                TParticipants.FindPlayer(TestBrackets[currentStage][currentIndex+1])
+                TParticipants.FindPlayer(InternalBrackets[currentStage][currentIndex]), 
+                TParticipants.FindPlayer(InternalBrackets[currentStage][currentIndex+1])
                 );
             
             participants.Reset();
@@ -257,7 +257,7 @@ public class SimpleTournament
         TS = TournamentStates.NotRunning;
         participants.Reset();
         TParticipants.Reset();
-        TestBrackets.Clear();
+        InternalBrackets.Clear();
 
         currentIndex = 0;
         currentStage = 0;
@@ -288,6 +288,56 @@ public class SimpleTournament
         }
     }
     
+    public void FillBracketTable()
+    {
+        FilledBrackets.Clear();
+        var nestedIDX = new List<int>();
+        for (var i = 0; i < LastStage; i++) nestedIDX.Add(i == 0 ? -1 : 0);
+
+        for (var idx = 0; idx < InternalBrackets[0].Count * 2; idx++)
+        {
+            FilledBrackets.Add(new List<string>());
+            for (var stage = 0; stage < LastStage; stage++)
+            {
+                if (nestedIDX[stage] >= InternalBrackets[stage].Count) break;
+                switch (stage)
+                {
+                    case 0 when idx % 2 == 0:
+                        FilledBrackets[idx].Add(InternalBrackets[stage][idx / 2]);
+                        break;
+                    case 0 when idx % 2 == 1:
+                        // fill the cell with spaces to give it font height
+                        FilledBrackets[idx].Add("    ");
+                        break;
+                    case 1 when idx != 1 && idx % 4 != 1:
+                        // skip this cell later
+                        FilledBrackets[idx].Add("x");
+                        break;
+                    case 1:
+                        FilledBrackets[idx].Add(InternalBrackets[stage][nestedIDX[stage]]);
+                        nestedIDX[stage]++;
+                        break;
+                    default:
+                    {
+                        var stageDepth = StageDepth[stage];
+                        if (idx != stageDepth && idx != (stageDepth * 2 + 2) * nestedIDX[stage] + stageDepth)
+                        {
+                            // skip this cell later
+                            FilledBrackets[idx].Add("x");
+                            break;
+                        }
+                        
+                        FilledBrackets[idx].Clear();
+                        for (var s = 0; s < stage; s++) FilledBrackets[idx].Add("  ");
+                        FilledBrackets[idx].Add(InternalBrackets[stage][nestedIDX[stage]]);
+                        nestedIDX[stage]++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
     // Code for testing
     public void AutoWin()
     {
@@ -297,9 +347,9 @@ public class SimpleTournament
         NextMatch();
     }
     
-    public void AutoRegistration()
+    public void AutoRegistration(int n)
     {
-        for (var i = 1; i <= 8; i++)
+        for (var i = 1; i <= n; i++)
         {
             participants.Add(new Participant($"Real Player {i}", 1000, 1000));
         }

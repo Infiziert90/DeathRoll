@@ -88,30 +88,32 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnChatMessage(XivChatType type, uint id, ref SeString sender, ref SeString message, ref bool handled)
     {
+        // TODO check makes no sense with Tournament Mode
         if (!Configuration.On || !Configuration.ActiveRound) return;
+        var xivChatType = (ushort) type;
+        var channel = xivChatType & 0x7F;
         if (Configuration.DebugChat)
         {
             PluginLog.Debug("Chat Event fired.");
             PluginLog.Debug($"Sender: {sender}.");
             PluginLog.Debug($"ID: {id}.");
             PluginLog.Debug($"ChatType: {type}.");
+            PluginLog.Debug($"Channel: {channel}.");
+            PluginLog.Debug($"Content: {message}.");
+            PluginLog.Debug($"Language: {clientState.ClientLanguage}.");
         }
-
-        var xivChatType = (ushort) type;
-        var channel = xivChatType & 0x7F;
         // 2122 = Random Roll 8266 = different Player Random roll?
         // Dice Roll: FC, LS, CWLS, Party
         if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) return;
 
         var dice = channel != 74;
-
+        
         switch (dice)
         {
             case true when Configuration.OnlyRandom: // only /random is accepted
             case false when Configuration.OnlyDice: // only /dice is accepted
                 return;
         }
-
 
         var m = reg.Match(message.ToString(), clientState.ClientLanguage, dice);
         if (!m.Success) return;

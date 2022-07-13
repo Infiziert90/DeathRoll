@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Numerics;
 using DeathRoll.Logic;
@@ -18,6 +18,7 @@ public class SimpleTournamentMode
     private readonly PluginUI pluginUi;
 
     private bool shuffled = false;
+    private int debugNumber = 8;
 
     private bool bracketVisible = false;
     private bool matchVisible = false;
@@ -72,6 +73,13 @@ public class SimpleTournamentMode
         ImGui.TextColored(_yellowColor, $"DINNER");
         ImGui.SetCursorPosX((windowWidth - textWidth4) * 0.5f);
         ImGui.TextColored(_yellowColor, $"{participants.Winner.fName}");
+        
+        ImGui.Dummy(new Vector2(0.0f, 210.0f));
+        
+        if (ImGui.Button("Show Bracket"))
+        {
+            bracketVisible = true;
+        }
     }
 
     public void RenderControlPanel()
@@ -146,7 +154,7 @@ public class SimpleTournamentMode
         }
     }
 
-    public void DrawBracket()
+    public void DrawGeneratedBracket()
     {
         if (!bracketVisible) return;
         if (spTourn.TS is TournamentStates.NotRunning or TournamentStates.Crash) return;
@@ -155,73 +163,26 @@ public class SimpleTournamentMode
         ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(float.MaxValue, float.MaxValue));
         if (ImGui.Begin("DeathRoll Tournament Bracket", ref bracketVisible))
         {
-            if (!ImGui.BeginTable("##Bracket", spTourn.LastStage)) return;
+            if (!ImGui.BeginTable("##Brackets", spTourn.LastStage)) return;
             foreach (var idx in Enumerable.Range(0, spTourn.LastStage))
             {
-                ImGui.TableSetupColumn($"Stage{idx+1}");
+                ImGui.TableSetupColumn($"Stage {idx+1}");
             }
-
+            
             ImGui.TableHeadersRow();
-
-            var nestedIdxList = new List<int>();
-            nestedIdxList.Add(-1);
-            for (var i = 1; i < spTourn.LastStage; i++)
-            {
-                nestedIdxList.Add(0);
-            }
-
-            for (var idx = 0; idx < spTourn.TestBrackets[0].Count*2; idx++)
+            for (var idx = 0; idx < spTourn.InternalBrackets[0].Count*2-1; idx++)
             {
                 for (var stage = 0; stage < spTourn.LastStage; stage++)
                 {
-                    if (nestedIdxList[stage] >= spTourn.TestBrackets[stage].Count) break;
-                    switch (stage)
-                    {
-                        case 0 when idx % 2 == 0:
-                            ImGui.TableNextColumn();
-                            ImGui.Text(spTourn.TestBrackets[stage][idx/2]);
-                            break;
-                        case 0 when idx % 2 == 1:
-                            ImGui.TableNextColumn();  
-                            ImGui.Dummy(new Vector2(0.0f, 10.0f));
-                            break;
-                        case 1 when idx != 1 && idx % 4 != 1:
-                            continue;
-                        case 1:
-                            ImGui.TableNextColumn();
-                            ImGui.Text(spTourn.TestBrackets[stage][nestedIdxList[stage]]);
-                            nestedIdxList[stage]++;
-                            break;
-                        default:
-                        {
-                            if (stage + 1 == spTourn.LastStage)
-                            {
-                                if (idx != spTourn.StageDepth[stage]) continue;
-                                var n = 0;
-                                for (; n < stage; n++) ImGui.TableNextColumn();
-                                ImGui.Text(spTourn.TestBrackets[stage][nestedIdxList[stage]]);
-                                nestedIdxList[stage]++;
-                            }
-                            else
-                            {
-                                var stageDepth = spTourn.StageDepth[stage];
-                                if (idx != stageDepth && idx != (stageDepth * 2 + 2) * nestedIdxList[stage] + stageDepth)
-                                    continue;
-                                for (var n = 0; n < stage; n++) ImGui.TableNextColumn();
-                                ImGui.Text(spTourn.TestBrackets[stage][nestedIdxList[stage]]);
-                                nestedIdxList[stage]++;
-                            }
-
-                            break;
-                        }
-                    }
+                    if (stage >= spTourn.FilledBrackets[idx].Count) break;
+                    if (spTourn.FilledBrackets[idx][stage] == "x") break;
+                    ImGui.TableNextColumn();
+                    if (spTourn.FilledBrackets[idx][stage] != "  ") ImGui.Text(spTourn.FilledBrackets[idx][stage]);
                 }
                 ImGui.TableNextRow();
             }
-
             ImGui.EndTable();
         }
-
         ImGui.End();
     }
     
@@ -295,7 +256,7 @@ public class SimpleTournamentMode
         if (ImGui.Button("Begin Tournament"))
         {
             shuffled = false;
-            spTourn.SwitchState(TournamentStates.Prepare);
+            spTourn.SwitchState(TournamentStates.FirstPrepare);
             return;
         }  
             
@@ -333,15 +294,28 @@ public class SimpleTournamentMode
 
         if (configuration.DebugChat)
         {
+            ImGui.Dummy(new Vector2(0.0f, 5.0f));
+            ImGui.Text("Number of players to generate:");
+                        
+            ImGui.SliderInt("##s", ref debugNumber, 3, 128);
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                debugNumber = Math.Clamp(debugNumber, 3, 128);
+            }
+                        
+            ImGui.Dummy(new Vector2(0.0f, 5.0f));
             if (ImGui.Button("Auto"))
             {
-                spTourn.AutoRegistration();
+                spTourn.AutoRegistration(debugNumber);
                 spTourn.SwitchState(TournamentStates.Shuffling);
             }
         }
 
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        ImGui.TextColored(_greenColor, $"Awaiting more players ...");
+        ImGui.TextColored(_greenColor,
+            participants.PlayerNameList.Count <= 2
+                ? $"{3 - participants.PlayerNameList.Count} more players are necessary ..."
+                : $"Awaiting more players ...");
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ImGui.Text($"Players can enter by rolling /random or /dice once.");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
