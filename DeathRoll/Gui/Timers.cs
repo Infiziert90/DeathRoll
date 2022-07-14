@@ -33,48 +33,44 @@ public class Timers : IDisposable
 
     public void RenderTimer()
     {
+        ImGui.Dummy(new Vector2(0.0f, 1.0f));
+        
         if (!stopwatch.IsRunning)
         {
-            ImGui.SetNextItemWidth(20.0f);
-            if (ImGui.InputInt("##hourinput", ref _h, 0)) _h = Math.Clamp(_h, 0, 23);
-
-            ImGui.SameLine(30.0f);
-            ImGui.Text("h");
-            ImGui.SameLine(40.0f);
-            ImGui.SetNextItemWidth(20.0f);
-            if (ImGui.InputInt("##mininput", ref _m, 0)) _m = Math.Clamp(_m, 0, 59);
-
-            ImGui.SameLine(62.0f);
-            ImGui.Text("m");
-            ImGui.SameLine(76.0f);
-            ImGui.SetNextItemWidth(20.0f);
-            if (ImGui.InputInt("##secinput", ref _s, 0)) _s = Math.Clamp(_s, 0, 59);
-
-            ImGui.SameLine(98.0f);
-            ImGui.Text("s");
-            ImGui.SameLine(110.0f);
-
+            ImGui.SetNextItemWidth(35.0f);
+            if (ImGui.DragInt("##drag_hour", ref _h, 1, 0, 23)) _h = Math.Clamp(_h, 0, 23);
+            ImGui.SameLine(0.0f, 3.0f);
+            ImGui.Text(":");
+            ImGui.SameLine(0.0f, 3.0f);
+            ImGui.SetNextItemWidth(35.0f);
+            if (ImGui.DragInt("##drag_min", ref _m, 1, 0, 59)) _m = Math.Clamp(_m, 0, 59);
+            ImGui.SameLine(0.0f, 3.0f);
+            ImGui.Text(":");
+            ImGui.SameLine(0.0f, 3.0f);
+            ImGui.SetNextItemWidth(35.0f);
+            if (ImGui.DragInt("##drag_sec", ref _s, 1, 0, 59)) _s = Math.Clamp(_s, 0, 59);
+            ImGui.SameLine(0.0f, 3.0f);
+            Helper.ShowHelpMarker("Hours : Minutes : Seconds\nHold ALT for slower edit.\nDouble-click to input value.");
+            
+            ImGui.SameLine(155.0f);
             if (ImGui.Button("Start Timer"))
             {
                 wantedTime = new TimeSpan(_h, _m, _s);
                 StartTimer();
             }
+            return;
         }
+        
+        var time = $"{(wantedTime - timeElapsed).Duration():hh\\:mm\\:ss}";
 
-        if (stopwatch.IsRunning)
-        {
-            var time = $"{(wantedTime - timeElapsed).Duration():hh\\:mm\\:ss}";
-
-            //remove hours if not present
-            if (time.StartsWith("00:")) time = time.Remove(0, 3);
-
-            ImGui.TextColored(_greenColor, time);
-            var textLength = ImGui.CalcTextSize(time);
-
-            ImGui.SameLine(textLength.X + 15.0f);
-
-            if (ImGui.Button("Stop Timer")) StopTimer();
-        }
+        //remove hours if not present
+        if (time.StartsWith("00:")) time = time.Remove(0, 3);
+        time += time.Length < 6 ? " min" : " hr";
+        
+        ImGui.TextColored(_greenColor, time);
+        
+        ImGui.SameLine(ImGui.CalcTextSize(time).X + 15.0f);
+        if (ImGui.Button("Stop Timer")) StopTimer();
     }
 
     private void StartTimer()
@@ -90,7 +86,7 @@ public class Timers : IDisposable
         if (configuration.DebugChat) PluginLog.Debug("Timer started.");
     }
 
-    private void StopTimer()
+    public void StopTimer()
     {
         stopwatch.Reset();
         Plugin.Framework.Update -= OnFrameworkUpdate;

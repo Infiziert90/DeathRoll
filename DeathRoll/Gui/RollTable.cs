@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Timers;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
@@ -45,10 +46,13 @@ public class RollTable
         {
             if (configuration.DeactivateOnClear) configuration.ActiveRound = false;
             participants.PList.Clear();
+            Timers.StopTimer();
         }
 
         if (configuration.UseTimer) Timers.RenderTimer();
-
+        
+        ImGui.Dummy(new Vector2(0.0f, 1.0f));
+        
         var activeRound = configuration.ActiveRound;
         if (ImGui.Checkbox("Active Round", ref activeRound))
         {
@@ -64,7 +68,7 @@ public class RollTable
             configuration.RerollAllowed = allowReroll;
             configuration.Save();
         }
-
+        
         var current = configuration.CurrentMode;
         var nearest = configuration.Nearest;
         ImGui.RadioButton("min", ref current, 0);
