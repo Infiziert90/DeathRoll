@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
-using System.Timers;
+using DeathRoll.Logic;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
@@ -39,35 +39,31 @@ public class RollTable
     {
         if (ImGui.Button("Show Settings")) pluginUi.SettingsVisible = true;
 
-        var spacing = ImGui.GetScrollMaxY() == 0 ? 45.0f : 70.0f;
+        var spacing = ImGui.GetScrollMaxY() == 0 ? 85.0f : 120.0f;
         ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
 
-        if (ImGui.Button("Clear"))
+        if (Plugin.State is GameState.Match)
         {
-            if (configuration.DeactivateOnClear) configuration.ActiveRound = false;
-            participants.PList.Clear();
-            Timers.StopTimer();
+            if (ImGui.Button("Stop Round"))
+            {
+                Timers.StopTimer();
+                Plugin.SwitchState(GameState.Done);
+            }
+        } 
+        else
+        {
+            if (ImGui.Button("Start Round"))
+            {
+                participants.Reset();
+                Plugin.SwitchState(GameState.Match);
+            }
         }
+        
+        ImGui.Dummy(new Vector2(0.0f, 1.0f));
 
         if (configuration.UseTimer) Timers.RenderTimer();
         
-        ImGui.Dummy(new Vector2(0.0f, 1.0f));
-        
-        var activeRound = configuration.ActiveRound;
-        if (ImGui.Checkbox("Active Round", ref activeRound))
-        {
-            configuration.ActiveRound = activeRound;
-            configuration.Save();
-        }
-
-        ImGui.SameLine();
-
-        var allowReroll = configuration.RerollAllowed;
-        if (ImGui.Checkbox("Reroll allowed", ref allowReroll))
-        {
-            configuration.RerollAllowed = allowReroll;
-            configuration.Save();
-        }
+        ImGui.TextUnformatted("Sorting:");
         
         var current = configuration.CurrentMode;
         var nearest = configuration.Nearest;

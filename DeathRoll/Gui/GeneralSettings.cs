@@ -1,4 +1,5 @@
 using System.Numerics;
+using DeathRoll.Logic;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
@@ -27,29 +28,40 @@ public class GeneralSettings
         
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         ImGui.Text("Game Mode:");
+        ImGui.SameLine();
+        Helper.ShowHelpMarker("Venue: For games like Truth and Dare\nTournament: DeathRoll with a bracket system");
         
         var gameMode = configuration.GameMode;
-        ImGui.RadioButton("Normal", ref gameMode, 0);
+        ImGui.RadioButton("Venue", ref gameMode, 0);
         ImGui.SameLine();
         ImGui.RadioButton("DeathRoll", ref gameMode, 1);
         ImGui.RadioButton("Simple Tournament", ref gameMode, 2);
 
         if (gameMode != configuration.GameMode)
         {
+            Plugin.SwitchState(GameState.NotRunning);
+            
             configuration.GameMode = gameMode;
             configuration.Save();
+        }
+        
+        if (configuration.GameMode == 0)
+        {
+            ImGui.Dummy(new Vector2(0.0f, 5.0f));
+            ImGui.Text("Game Mode Options:");
+            ImGui.Dummy(new Vector2(0.0f, 5.0f));
+            
+            var allowReroll = configuration.RerollAllowed;
+            if (ImGui.Checkbox("Reroll allowed", ref allowReroll))
+            {
+                configuration.RerollAllowed = allowReroll;
+                configuration.Save();
+            }
         }
 
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         ImGui.Text("Options:");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
-
-        var deactivateOnClear = configuration.DeactivateOnClear;
-        if (ImGui.Checkbox("Clear ends active round", ref deactivateOnClear))
-        {
-            configuration.DeactivateOnClear = deactivateOnClear;
-            configuration.Save();
-        }
 
         var onlyRandom = configuration.OnlyRandom;
         if (ImGui.Checkbox("Accept only /random", ref onlyRandom))

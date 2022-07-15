@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using DeathRoll.Logic;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
@@ -9,23 +10,20 @@ public class DeathRollMode
     private readonly Vector4 _redColor = new(0.980f, 0.245f, 0.245f, 1.0f);
     private readonly Configuration configuration;
     private readonly Participants participants;
-
     private readonly PluginUI pluginUi;
-    public Timers Timers;
 
     public DeathRollMode(PluginUI pluginUi)
     {
         this.pluginUi = pluginUi;
         configuration = pluginUi.Configuration;
         participants = pluginUi.Participants;
-        Timers = new Timers(configuration);
     }
 
     public void MainRender()
     {
         RenderControlPanel();
 
-        if (participants.RoundDone)
+        if (Plugin.State is GameState.Done)
         {
             ImGui.Dummy(new Vector2(0.0f, 10.0f));
             RenderWinnerPanel();  
@@ -55,18 +53,10 @@ public class DeathRollMode
 
         if (ImGui.Button("New Round"))
         {
-            configuration.ActiveRound = true;
             configuration.AcceptNewPlayers = true;
             participants.Reset();
+            Plugin.SwitchState(GameState.Match);
         }
-        
-        var activeRound = configuration.ActiveRound;
-        if (ImGui.Checkbox("Active Round", ref activeRound))
-        {
-            configuration.ActiveRound = activeRound;
-            configuration.Save();
-        }        
-        ImGui.SameLine();
         
         var acceptNewPlayers = configuration.AcceptNewPlayers;
         if (ImGui.Checkbox("Accept New Players", ref acceptNewPlayers))

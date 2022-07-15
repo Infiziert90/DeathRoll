@@ -20,7 +20,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly PluginCommandManager<Plugin> commandManager;
     private readonly ClientState clientState;
     private readonly Reg reg = new();
-    public Participants Participants;
+    public static Participants Participants;
+    public static GameState State = GameState.NotRunning;
     
     [PluginService] public static DataManager Data { get; private set; } = null!;
     [PluginService] public static ChatGui Chat { get; private set; } = null!;
@@ -89,9 +90,10 @@ public sealed class Plugin : IDalamudPlugin
     private void OnChatMessage(XivChatType type, uint id, ref SeString sender, ref SeString message, ref bool handled)
     {
         // TODO check makes no sense with Tournament Mode
-        if (!Configuration.On || !Configuration.ActiveRound) return;
+        if (!Configuration.On || State is GameState.NotRunning or GameState.Done or GameState.Crash) return;
         var xivChatType = (ushort) type;
         var channel = xivChatType & 0x7F;
+        
         if (Configuration.DebugChat)
         {
             PluginLog.Debug("Chat Event fired.");
@@ -102,12 +104,12 @@ public sealed class Plugin : IDalamudPlugin
             PluginLog.Debug($"Content: {message}.");
             PluginLog.Debug($"Language: {clientState.ClientLanguage}.");
         }
+        
         // 2122 = Random Roll 8266 = different Player Random roll?
         // Dice Roll: FC, LS, CWLS, Party
         if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) return;
 
         var dice = channel != 74;
-        
         switch (dice)
         {
             case true when Configuration.OnlyRandom: // only /random is accepted
@@ -190,6 +192,12 @@ public sealed class Plugin : IDalamudPlugin
         Rolls.ParseRoll(m, playerName);
     }
 
+    public static void SwitchState(GameState newState)
+    {
+        State = newState;
+        if (newState is GameState.NotRunning) Participants.Reset();
+    }
+    
     private void DrawUI()
     {
         PluginUi.Draw();

@@ -41,7 +41,7 @@ public class Rolls
         }
         catch (FormatException e)
         {
-            Plugin.Chat.PrintError("Unable to parse rolls.");
+            Plugin.Chat.PrintError("Unable to parse roll.");
             PluginLog.Error(e.ToString());
         }
     }
@@ -121,8 +121,7 @@ public class Rolls
         else // player lost this round
         {
             participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-            participants.RoundDone = true;
-            configuration.ActiveRound = false;
+            Plugin.SwitchState(GameState.Done);
             configuration.AcceptNewPlayers = false;
             configuration.Save();
         }

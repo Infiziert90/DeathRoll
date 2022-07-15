@@ -5,26 +5,12 @@ using Dalamud.Logging;
 
 namespace DeathRoll.Logic;
 
-public enum TournamentStates
-{
-    NotRunning = 0,
-    Registration = 1,
-    Shuffling = 2,
-    FirstPrepare = 3,
-    Prepare = 4,
-    NextStage = 5,
-    Match = 6,
-    Done = 7,
-    Crash = 99,
-}
-
 public class SimpleTournament
 {
     private readonly Configuration configuration;
     private readonly Participants participants;
     
     public Participants TParticipants;
-    public TournamentStates TS = TournamentStates.NotRunning;
     
     public List<List<string>> InternalBrackets = new();
     public List<List<string>> FilledBrackets = new();
@@ -47,33 +33,14 @@ public class SimpleTournament
         TParticipants = new Participants(configuration);
     }
 
-    public void SwitchState(TournamentStates newState)
-    {
-        TS = newState;
-        
-        switch (newState)
-        {
-            case TournamentStates.FirstPrepare:
-                GenerateBrackets();
-                SwitchState(TournamentStates.Prepare);
-                break;
-            case TournamentStates.Prepare:
-                CalculateNextMatch();
-                break;
-            case TournamentStates.NextStage:
-                PrepareNextStage();
-                break;
-        }
-    }
-    
     public void Parser(string playerName, int parsedRoll, int parsedOutOf)
     {
-        switch (TS)
+        switch (Plugin.State)
         {
-            case TournamentStates.Registration:
+            case GameState.Registration:
                 Registration(playerName, parsedRoll, parsedOutOf);
                 break;
-            case TournamentStates.Match:
+            case GameState.Match:
                 MatchGameMode(playerName, parsedRoll, parsedOutOf);
                 return;
             default:
@@ -87,7 +54,7 @@ public class SimpleTournament
         FillCurrentStageBrackets();
         
         currentIndex += 2;
-        SwitchState(TournamentStates.Prepare);
+        CalculateNextMatch();
     }
     
     public void ForfeitWin(Participant winner)
@@ -97,7 +64,7 @@ public class SimpleTournament
         FillCurrentStageBrackets();
         
         currentIndex += 2;
-        SwitchState(TournamentStates.Prepare);
+        CalculateNextMatch();
     }
 
     private void MatchGameMode(string playerName, int parsedRoll, int parsedOutOf)
@@ -195,13 +162,15 @@ public class SimpleTournament
     
     public void CalculateNextMatch()
     {
+        Plugin.SwitchState(GameState.Prepare);
+        
         try
         {
             CalculationDone = false;
             
             if (currentIndex >= InternalBrackets[currentStage].Count)
             {
-                SwitchState(TournamentStates.NextStage);
+                PrepareNextStage();
                 return;  
             }
             
@@ -231,7 +200,7 @@ public class SimpleTournament
             currentIndex = 0;
             if (currentIndex + 1 == TParticipants.NextRound.Count)
             {
-                SwitchState(TournamentStates.Done);
+                Plugin.SwitchState(GameState.Done);
                 return;
             }
             
@@ -239,25 +208,26 @@ public class SimpleTournament
             TParticipants.NextRound.Clear();
             participants.PList.Clear();
             participants.PlayerNameList.Clear();
-
+            
             currentStage += 1;
-            SwitchState(TournamentStates.Prepare);
+            CalculateNextMatch();
         } 
         catch (Exception e)
         {
             PluginLog.Error("Exception triggered.");
             PluginLog.Error($"{e}");
             Reset();
-            TS = TournamentStates.Crash;
+            Plugin.SwitchState(GameState.Crash);
         }
     }
 
     public void Reset()
     {
-        TS = TournamentStates.NotRunning;
+        Plugin.SwitchState(GameState.NotRunning);
         participants.Reset();
         TParticipants.Reset();
         InternalBrackets.Clear();
+        FilledBrackets.Clear();
 
         currentIndex = 0;
         currentStage = 0;

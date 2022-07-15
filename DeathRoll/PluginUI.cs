@@ -105,7 +105,7 @@ public class PluginUI : IDisposable
     {
         if (!SettingsVisible) return;
 
-        ImGui.SetNextWindowSize(new Vector2(260, 310), ImGuiCond.Always);
+        ImGui.SetNextWindowSize(new Vector2(260, 380), ImGuiCond.Always);
         if (ImGui.Begin("DRH Config", ref settingsVisible, ImGuiWindowFlags.NoResize))
             if (ImGui.BeginTabBar("##settings-tabs"))
             {

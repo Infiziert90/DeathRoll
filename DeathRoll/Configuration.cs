@@ -14,8 +14,6 @@ public class Configuration : IPluginConfiguration
     
     public int GameMode { get; set; } = 0;
     
-    public bool ActiveRound { get; set; } = false;
-    public bool DeactivateOnClear { get; set; } = false;
     public bool RerollAllowed { get; set; } = false;
     public bool OnlyRandom { get; set; } = false;
     public bool OnlyDice { get; set; } = false;
@@ -36,7 +34,7 @@ public class Configuration : IPluginConfiguration
 
     public bool UseTimer { get; set; } = false;
     public int DefaultHour { get; set; } = 0;
-    public int DefaultMin { get; set; } = 0;
+    public int DefaultMin { get; set; } = 30;
     public int DefaultSec { get; set; } = 0;
     public int Version { get; set; } = 0;
 

@@ -36,18 +36,18 @@ public class SimpleTournamentMode
         RenderControlPanel();
         ImGui.Dummy(new Vector2(0.0f, 10.0f));   
         
-        switch (spTourn.TS)
+        switch (Plugin.State)
         {
-            case TournamentStates.Registration:
+            case GameState.Registration:
                 RegistrationPanel();
                 break;
-            case TournamentStates.Shuffling:
+            case GameState.Shuffling:
                 ShufflingPreviewPanel();
                 break;
-            case TournamentStates.Prepare:
+            case GameState.Prepare:
                 PreparePhaseRender();
                 break;
-            case TournamentStates.Done:
+            case GameState.Done:
                 RenderWinnerPanel();
                 break;
         }
@@ -89,18 +89,18 @@ public class SimpleTournamentMode
         var spacing = ImGui.GetScrollMaxY() == 0 ? 120.0f : 135.0f;
         ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
 
-        switch (spTourn.TS)
+        switch (Plugin.State)
         {
-            case TournamentStates.NotRunning:
+            case GameState.NotRunning:
                 if (!ImGui.Button("Start Tournament")) return;
-                spTourn.SwitchState(TournamentStates.Registration);
-                participants.Reset();
+                spTourn.Reset();
+                Plugin.SwitchState(GameState.Registration);
                 return;            
-            case TournamentStates.Crash:
+            case GameState.Crash:
                 if (!ImGui.Button("Force Stop Tournament")) return;
+                spTourn.Reset();
                 bracketVisible = false;
                 matchVisible = false;
-                spTourn.SwitchState(TournamentStates.NotRunning);
                 return;
             default:
                 if (!ImGui.Button("Stop Tournament")) return;
@@ -132,7 +132,7 @@ public class SimpleTournamentMode
                 if (ImGui.Button("Begin Match"))
                 {
                     matchVisible = true;
-                    spTourn.SwitchState(TournamentStates.Match);
+                    Plugin.SwitchState(GameState.Match);
                 }
 
                 if (!configuration.DebugChat) return;
@@ -157,7 +157,7 @@ public class SimpleTournamentMode
     public void DrawGeneratedBracket()
     {
         if (!bracketVisible) return;
-        if (spTourn.TS is TournamentStates.NotRunning or TournamentStates.Crash) return;
+        if (Plugin.State is GameState.NotRunning or GameState.Crash) return;
         
         ImGui.SetNextWindowSize(new Vector2(600, 600), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(float.MaxValue, float.MaxValue));
@@ -189,7 +189,7 @@ public class SimpleTournamentMode
     public void DrawMatch()
     {
         if (!matchVisible) return;
-        if (spTourn.TS is TournamentStates.NotRunning or TournamentStates.Crash) return;
+        if (Plugin.State is GameState.NotRunning or GameState.Crash) return;
 
         ImGui.SetNextWindowSize(new Vector2(385, 400), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Vector2(385, 400), new Vector2(float.MaxValue, float.MaxValue));
@@ -256,7 +256,8 @@ public class SimpleTournamentMode
         if (ImGui.Button("Begin Tournament"))
         {
             shuffled = false;
-            spTourn.SwitchState(TournamentStates.FirstPrepare);
+            spTourn.GenerateBrackets();
+            spTourn.CalculateNextMatch();
             return;
         }  
             
@@ -288,7 +289,7 @@ public class SimpleTournamentMode
         {
             if (ImGui.Button("Close Registration"))
             {
-                spTourn.SwitchState(TournamentStates.Shuffling);
+                Plugin.SwitchState(GameState.Shuffling);
             }
         }
 
@@ -307,7 +308,7 @@ public class SimpleTournamentMode
             if (ImGui.Button("Auto"))
             {
                 spTourn.AutoRegistration(debugNumber);
-                spTourn.SwitchState(TournamentStates.Shuffling);
+                Plugin.SwitchState(GameState.Shuffling);
             }
         }
 
