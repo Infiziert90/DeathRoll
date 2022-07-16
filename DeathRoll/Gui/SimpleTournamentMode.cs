@@ -324,6 +324,7 @@ public class SimpleTournamentMode
         var deletion = "";
         if (ImGui.CollapsingHeader("Entry List", ImGuiTreeNodeFlags.DefaultOpen))
             foreach (var playerName in participants.PlayerNameList)
+                
             {
                 var participant = participants.FindPlayer(playerName);
                 var name = participant.GetUsedName(configuration.DebugRandomPn);

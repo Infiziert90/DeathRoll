@@ -29,7 +29,7 @@ public class GeneralSettings
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         ImGui.Text("Game Mode:");
         ImGui.SameLine();
-        Helper.ShowHelpMarker("Venue: For games like Truth and Dare\nTournament: DeathRoll with a bracket system");
+        Helper.ShowHelpMarker("Venue: Useful for games like Truth&Dare\nTournament: 1 vs 1 DeathRoll with a bracket system");
         
         var gameMode = configuration.GameMode;
         ImGui.RadioButton("Venue", ref gameMode, 0);
@@ -57,6 +57,8 @@ public class GeneralSettings
                 configuration.RerollAllowed = allowReroll;
                 configuration.Save();
             }
+            ImGui.SameLine();
+            Helper.ShowHelpMarker("Player can roll as often as they want,\noverwriting there previous roll in the process.");
         }
 
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
