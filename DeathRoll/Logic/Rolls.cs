@@ -53,7 +53,7 @@ public class Rolls
         {
             case false when exists:
             {
-                if (configuration.DebugChat) PluginLog.Debug("Player already rolled, no reroll allowed.");
+                if (configuration.Debug) PluginLog.Debug("Player already rolled, no reroll allowed.");
                 return;
             }
             case true when exists:
@@ -97,8 +97,7 @@ public class Rolls
         // check if player is in playerList, if not, check if new players get accepted
         if (!participants.PlayerNameList.Exists(x => x == playerName))
         {
-            if (!configuration.AcceptNewPlayers) return; 
-            participants.PlayerNameList.Add(playerName);
+            if (!configuration.AcceptNewPlayers) return;
         }
         
         // check if rolls exists, if not, add first roll with OutOf 1000
@@ -121,9 +120,9 @@ public class Rolls
         else // player lost this round
         {
             participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-            Plugin.SwitchState(GameState.Done);
             configuration.AcceptNewPlayers = false;
             configuration.Save();
+            Plugin.SwitchState(GameState.Done);
         }
     }
 }

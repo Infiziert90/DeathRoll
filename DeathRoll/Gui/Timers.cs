@@ -93,7 +93,7 @@ public class Timers : IDisposable
         configuration.Save();
         Plugin.SwitchState(GameState.Match);
 
-        if (configuration.DebugChat) PluginLog.Debug("Timer started.");
+        if (configuration.Debug) PluginLog.Debug("Timer started.");
     }
 
     public void StopTimer()
@@ -103,7 +103,7 @@ public class Timers : IDisposable
 
         Plugin.SwitchState(GameState.Done);
 
-        if (configuration.DebugChat) PluginLog.Debug("Timer stopped.");
+        if (configuration.Debug) PluginLog.Debug("Timer stopped.");
     }
 
     private void OnFrameworkUpdate(Framework _)

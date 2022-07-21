@@ -10,7 +10,7 @@ namespace DeathRoll;
 public class Configuration : IPluginConfiguration
 {
     public bool On { get; set; } = false;
-    public bool DebugChat { get; set; } = false;
+    public bool Debug { get; set; } = false;
     
     public int GameMode { get; set; } = 0;
     

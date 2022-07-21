@@ -20,8 +20,8 @@ public class SimpleTournament
     public int LastStage = 1;
     public List<int> StageDepth = new();
     
-    public Participant Player1;
-    public Participant Player2;
+    public Participant Player1 = new("Unknown", 1000, 1000);
+    public Participant Player2 = new("Unknown", 1000, 1000);
     
     public bool CalculationDone = false;
     

@@ -20,7 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly PluginCommandManager<Plugin> commandManager;
     private readonly ClientState clientState;
     private readonly Reg reg = new();
-    public static Participants Participants;
+    public static Participants? Participants;
     public static GameState State = GameState.NotRunning;
     
     [PluginService] public static DataManager Data { get; private set; } = null!;
@@ -94,7 +94,7 @@ public sealed class Plugin : IDalamudPlugin
         var xivChatType = (ushort) type;
         var channel = xivChatType & 0x7F;
         
-        if (Configuration.DebugChat)
+        if (Configuration.Debug)
         {
             PluginLog.Debug("Chat Event fired.");
             PluginLog.Debug($"Sender: {sender}.");
@@ -135,7 +135,7 @@ public sealed class Plugin : IDalamudPlugin
             var found = isLocalPlayer;
             foreach (var payload in message.Payloads) // try to get name and check for dice cheating
             {
-                if (Configuration.DebugChat) PluginLog.Debug($"message: {payload}");
+                if (Configuration.Debug) PluginLog.Debug($"message: {payload}");
                 switch (payload)
                 {
                     case PlayerPayload playerPayload:
@@ -159,7 +159,7 @@ public sealed class Plugin : IDalamudPlugin
             if (!found) // get playerName from payload
                 foreach (var payload in sender.Payloads)
                 {
-                    if (Configuration.DebugChat) PluginLog.Debug($"Sender: {payload}");
+                    if (Configuration.Debug) PluginLog.Debug($"Sender: {payload}");
                     playerName = payload switch
                     {
                         PlayerPayload playerPayload => playerPayload.DisplayedName,
@@ -170,7 +170,7 @@ public sealed class Plugin : IDalamudPlugin
 
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
         {
-            if (Configuration.DebugChat) PluginLog.Debug("Blocked player tried to roll.");
+            if (Configuration.Debug) PluginLog.Debug("Blocked player tried to roll.");
             return;
         }
 
@@ -183,7 +183,7 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        if (Configuration.DebugChat)
+        if (Configuration.Debug)
         {
             PluginLog.Debug($"Extracted Player Name: {playerName}.");
             PluginLog.Debug($"Message: {message}\n    Matches: 1: {m.Groups["player"]} 2: {m.Groups["roll"]} 3: {m.Groups["out"].Success} {m.Groups["out"]}");
@@ -195,7 +195,7 @@ public sealed class Plugin : IDalamudPlugin
     public static void SwitchState(GameState newState)
     {
         State = newState;
-        if (newState is GameState.NotRunning) Participants.Reset();
+        if (newState is GameState.NotRunning) Participants?.Reset();
     }
     
     private void DrawUI()

@@ -32,7 +32,7 @@ public class DeathRollMode
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ParticipantRender();
 
-        if (participants.PList.Count == 0) return;
+        if (participants.PList.Count == 0 || Plugin.State is GameState.Done) return;
         
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         OrderListRender();
@@ -93,24 +93,8 @@ public class DeathRollMode
     
     public void OrderListRender()
     {
-        var deletion = "";
-        if (ImGui.CollapsingHeader("Player List"))
-            foreach (var playerName in participants.PlayerNameList)
-            {
-                var participant = participants.FindPlayer(playerName);
-                var name = participant.GetUsedName(configuration.DebugRandomPn);
-                ImGui.Selectable($"{name}");
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                    deletion = participant.name;
-
-                if (!ImGui.IsItemHovered()) continue;
-                ImGui.BeginTooltip();
-                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                ImGui.TextUnformatted("Hold Shift and right-click to delete.");
-                ImGui.PopTextWrapPos();
-                ImGui.EndTooltip();
-            }
-
-        if (deletion != "") participants.DeleteEntry(deletion);
+        if (!Helper.PlayerListRender("Player List", configuration.DebugRandomPn, participants, ImGuiTreeNodeFlags.None)) return;
+        ImGui.Dummy(new Vector2(0.0f, 10.0f));
+        ImGui.Text("Removing players is currently not working as intended."); 
     }
 }

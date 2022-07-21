@@ -140,23 +140,6 @@ public class RollTable
 
     public void RenderDeletionDropdown()
     {
-        var deletion = "";
-        if (ImGui.CollapsingHeader("Player List"))
-            foreach (var participant in participants.PList)
-            {
-                var name = participant.GetUsedName(configuration.DebugRandomPn);
-                ImGui.Selectable($"{name}");
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                    deletion = participant.name;
-
-                if (!ImGui.IsItemHovered()) continue;
-                ImGui.BeginTooltip();
-                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                ImGui.TextUnformatted("Hold Shift and right-click to delete.");
-                ImGui.PopTextWrapPos();
-                ImGui.EndTooltip();
-            }
-
-        if (deletion != "") participants.DeleteEntry(deletion);
+        Helper.PlayerListRender("Player List", configuration.DebugRandomPn, participants, ImGuiTreeNodeFlags.None);
     }
 }

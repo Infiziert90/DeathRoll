@@ -135,7 +135,7 @@ public class SimpleTournamentMode
                     Plugin.SwitchState(GameState.Match);
                 }
 
-                if (!configuration.DebugChat) return;
+                if (!configuration.Debug) return;
                 if (ImGui.Button("Auto Win Match"))
                 {
                     spTourn.AutoWin();
@@ -262,25 +262,12 @@ public class SimpleTournamentMode
         }  
             
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        var deletion = "";
-        if (ImGui.CollapsingHeader("Shuffled Entry List", ImGuiTreeNodeFlags.DefaultOpen))
-            foreach (var playerName in spTourn.TParticipants.PlayerNameList)
-            {
-                var participant = spTourn.TParticipants.FindPlayer(playerName);
-                var name = participant.GetUsedName(configuration.DebugRandomPn);
-                ImGui.Selectable($"{name}");
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                    deletion = participant.name;
-
-                if (!ImGui.IsItemHovered()) continue;
-                ImGui.BeginTooltip();
-                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                ImGui.TextUnformatted("Hold Shift and right-click to delete.");
-                ImGui.PopTextWrapPos();
-                ImGui.EndTooltip();
-            }
-
-        if (deletion != "") participants.DeleteEntry(deletion);
+        if (!ImGui.CollapsingHeader("Shuffled Entry List", ImGuiTreeNodeFlags.DefaultOpen)) return;
+        foreach (var name in spTourn.TParticipants.PlayerNameList.Select(playerName => 
+                     spTourn.TParticipants.FindPlayer(playerName).GetUsedName(configuration.DebugRandomPn)))
+        {
+            ImGui.Selectable($"{name}");
+        }
     }
     
     public void RegistrationPanel()
@@ -293,7 +280,7 @@ public class SimpleTournamentMode
             }
         }
 
-        if (configuration.DebugChat)
+        if (configuration.Debug)
         {
             ImGui.Dummy(new Vector2(0.0f, 5.0f));
             ImGui.Text("Number of players to generate:");
@@ -321,25 +308,6 @@ public class SimpleTournamentMode
         ImGui.Text($"Players can enter by rolling /random or /dice once.");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         
-        var deletion = "";
-        if (ImGui.CollapsingHeader("Entry List", ImGuiTreeNodeFlags.DefaultOpen))
-            foreach (var playerName in participants.PlayerNameList)
-                
-            {
-                var participant = participants.FindPlayer(playerName);
-                var name = participant.GetUsedName(configuration.DebugRandomPn);
-                ImGui.Selectable($"{name}");
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                    deletion = participant.name;
-
-                if (!ImGui.IsItemHovered()) continue;
-                ImGui.BeginTooltip();
-                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                ImGui.TextUnformatted("Hold Shift and right-click to delete.");
-                ImGui.PopTextWrapPos();
-                ImGui.EndTooltip();
-            }
-
-        if (deletion != "") participants.DeleteEntry(deletion);
+        Helper.PlayerListRender("Entry List", configuration.DebugRandomPn, participants, ImGuiTreeNodeFlags.DefaultOpen);
     }
 }

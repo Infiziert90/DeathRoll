@@ -81,10 +81,10 @@ public class GeneralSettings
             configuration.Save();
         }
 
-        var verboseChatlog = configuration.DebugChat;
+        var verboseChatlog = configuration.Debug;
         if (ImGui.Checkbox("Debug", ref verboseChatlog))
         {
-            configuration.DebugChat = verboseChatlog;
+            configuration.Debug = verboseChatlog;
             configuration.DebugRandomPn = false;
             configuration.DebugAllowDiceCheat = false;
             configuration.Save();

@@ -17,8 +17,8 @@ public class Participants
     
     // deathroll
     public bool RoundDone = false;
-    public Participant Last;
-    public Participant Winner;
+    public Participant Last = new("Unknown", 1000, 1000);
+    public Participant Winner = new("Unknown", 1000, 1000);
 
     public Participants(Configuration configuration)
     {
@@ -28,7 +28,10 @@ public class Participants
     public void Add(Participant p)
     {
         PList.Add(p);
-        PlayerNameList.Add(p.name);
+        if (!PlayerNameList.Exists(x => x == p.name))
+        {
+            PlayerNameList.Add(p.name);
+        }
         Last = p;
         if (PList.Count == 1)
         {
@@ -119,7 +122,8 @@ public class Participant
         this.hasHighlight = true;
         this.highlightColor = highlightColor;
         
-        Init();
+        randomName = GetRandomizedName();
+        fName = GetReadableName();
     }
 
     public Participant(string name, int roll, int outOf)
@@ -129,12 +133,7 @@ public class Participant
         this.outOf = outOf;
         hasHighlight = false;
         highlightColor = new Vector4(0, 0, 0, 0);
-
-        Init();
-    }
-
-    private void Init()
-    {
+        
         randomName = GetRandomizedName();
         fName = GetReadableName();
     }
@@ -161,8 +160,8 @@ public class Participant
         return $"{FirstName[random.Next(FirstName.Count)]} {Surnames[random.Next(Surnames.Count)]}";
     }
 
-    public string GetUsedName(bool randomPn)
+    public string GetUsedName(bool useRandomPn)
     {
-        return !randomPn ? GetReadableName() : randomName;
+        return !useRandomPn ? GetReadableName() : randomName;
     }
 }
