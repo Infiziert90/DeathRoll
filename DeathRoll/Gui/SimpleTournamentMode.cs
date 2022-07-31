@@ -264,7 +264,7 @@ public class SimpleTournamentMode
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         if (!ImGui.CollapsingHeader("Shuffled Entry List", ImGuiTreeNodeFlags.DefaultOpen)) return;
         foreach (var name in spTourn.TParticipants.PlayerNameList.Select(playerName => 
-                     spTourn.TParticipants.FindPlayer(playerName).GetUsedName(configuration.DebugRandomPn)))
+                     spTourn.TParticipants.FindPlayer(playerName).GetUsedName(configuration.DRandomizeNames)))
         {
             ImGui.Selectable($"{name}");
         }
@@ -308,6 +308,6 @@ public class SimpleTournamentMode
         ImGui.Text($"Players can enter by rolling /random or /dice once.");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         
-        Helper.PlayerListRender("Entry List", configuration.DebugRandomPn, participants, ImGuiTreeNodeFlags.DefaultOpen);
+        Helper.PlayerListRender("Entry List", configuration.DRandomizeNames, participants, ImGuiTreeNodeFlags.DefaultOpen);
     }
 }

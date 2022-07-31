@@ -76,7 +76,7 @@ public class DeathRollMode
         ImGui.TableHeadersRow();
         foreach (var (participant, idx) in participants.PList.Select((value, i) => (value, i)))
         {
-            var name = participant.GetUsedName(configuration.DebugRandomPn);
+            var name = participant.GetUsedName(configuration.DRandomizeNames);
 
             ImGui.TableNextColumn();
             ImGui.Text(name);
@@ -93,7 +93,7 @@ public class DeathRollMode
     
     public void OrderListRender()
     {
-        if (!Helper.PlayerListRender("Player List", configuration.DebugRandomPn, participants, ImGuiTreeNodeFlags.None)) return;
+        if (!Helper.PlayerListRender("Player List", configuration.DRandomizeNames, participants, ImGuiTreeNodeFlags.None)) return;
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ImGui.Text("Removing players is currently not working as intended."); 
     }

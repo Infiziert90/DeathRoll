@@ -76,19 +76,7 @@ public class Rolls
             ? new Participant(playerName, parsedRoll, parsedOutOf, hightlightColor)
             : new Participant(playerName, parsedRoll, parsedOutOf));
 
-        switch (configuration.CurrentMode)
-        {
-            case 0:
-                participants.Min();
-                break;
-            case 1:
-                participants.Max();
-                break;
-            case 2:
-                participants.Nearest(configuration.Nearest);
-                break;
-        }
-        
+        participants.UpdateSorting();
         participants.IsOutOfUsed = participants.PList.Exists(x => x.outOf > -1);
     }
     

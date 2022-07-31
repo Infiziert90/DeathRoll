@@ -18,7 +18,7 @@ public class Configuration : IPluginConfiguration
     public bool OnlyRandom { get; set; } = false;
     public bool OnlyDice { get; set; } = false;
 
-    public int CurrentMode { get; set; } = 0;
+    public SortingType SortingMode { get; set; } = SortingType.Min;
     public int Nearest { get; set; } = 1;
 
     public bool ActiveBlocklist { get; set; } = false;
@@ -39,7 +39,7 @@ public class Configuration : IPluginConfiguration
     public int Version { get; set; } = 0;
 
     [NonSerialized] private DalamudPluginInterface? pluginInterface;
-    [NonSerialized] public bool DebugRandomPn = false;
+    [NonSerialized] public bool DRandomizeNames = false;
     [NonSerialized] public bool DebugAllowDiceCheat = false;
     [NonSerialized] public bool AcceptNewPlayers = false;
 

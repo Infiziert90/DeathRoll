@@ -41,9 +41,14 @@ public class Participants
         Winner = PList[^2];
     }
     
-    public Participant FindPlayer(string playerName)
+    public Participant? FindPlayer(string playerName)
     {
-        return PList.Find(x => x.name == playerName) ?? PList.Find(x => x.fName == playerName);
+        if (!configuration.DRandomizeNames)
+        {
+            return PList.Find(x => x.name == playerName) ?? PList.Find(x => x.fName == playerName);
+        }
+
+        return PList.Find(x => x.randomName == playerName);
     }
 
     public Participant GetWithIndex(int idx)
@@ -57,19 +62,15 @@ public class Participants
         PlayerNameList.RemoveAll(x => x == name);
     }
 
-    public void Min()
+    public void UpdateSorting()
     {
-        PList = PList.OrderBy(x => x.roll).ToList();
-    }
-
-    public void Max()
-    {
-        PList = PList.OrderByDescending(x => x.roll).ToList();
-    }
-
-    public void Nearest(int nearest)
-    {
-        PList = PList.OrderBy(x => Math.Abs(nearest - x.roll)).ToList();
+        PList = configuration.SortingMode switch
+        {
+            SortingType.Min => PList.OrderBy(x => x.roll).ToList(),
+            SortingType.Max => PList.OrderByDescending(x => x.roll).ToList(),
+            SortingType.Nearest => PList.OrderBy(x => Math.Abs(configuration.Nearest - x.roll)).ToList(),
+            _ => PList
+        };
     }
     
     public void Update()
@@ -164,4 +165,11 @@ public class Participant
     {
         return !useRandomPn ? GetReadableName() : randomName;
     }
+}
+
+public enum SortingType
+{
+   Min = 0,
+   Max = 1,
+   Nearest = 2,
 }

@@ -85,7 +85,7 @@ public class GeneralSettings
         if (ImGui.Checkbox("Debug", ref verboseChatlog))
         {
             configuration.Debug = verboseChatlog;
-            configuration.DebugRandomPn = false;
+            configuration.DRandomizeNames = false;
             configuration.DebugAllowDiceCheat = false;
             configuration.Save();
         }
@@ -94,9 +94,9 @@ public class GeneralSettings
         {
             ImGui.Dummy(new Vector2(15.0f, 0.0f));
             ImGui.SameLine();
-            var randomizePlayers = configuration.DebugRandomPn;
+            var randomizePlayers = configuration.DRandomizeNames;
             if (ImGui.Checkbox("Randomize names", ref randomizePlayers))
-                configuration.DebugRandomPn = randomizePlayers;
+                configuration.DRandomizeNames = randomizePlayers;
 
             ImGui.Dummy(new Vector2(15.0f, 0.0f));
             ImGui.SameLine();

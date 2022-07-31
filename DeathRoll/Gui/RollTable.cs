@@ -65,7 +65,7 @@ public class RollTable
         
         ImGui.TextUnformatted("Sorting:");
         
-        var current = configuration.CurrentMode;
+        var current = (int) configuration.SortingMode;
         var nearest = configuration.Nearest;
         ImGui.RadioButton("min", ref current, 0);
         ImGui.SameLine();
@@ -79,23 +79,11 @@ public class RollTable
             if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0)) nearest = Math.Clamp(nearest, 1, 999);
         }
 
-        if (current == configuration.CurrentMode && nearest == configuration.Nearest) return;
-        configuration.CurrentMode = current;
+        if (current == (int) configuration.SortingMode && nearest == configuration.Nearest) return;
+        configuration.SortingMode = (SortingType) current;
         configuration.Nearest = nearest;
         configuration.Save();
-        
-        switch (current)
-        {
-            case 0:
-                participants.Min();
-                break;
-            case 1:
-                participants.Max();
-                break;
-            case 2:
-                participants.Nearest(configuration.Nearest);
-                break;
-        }
+        participants.UpdateSorting();
     }
 
     public void RenderRollTable()
@@ -120,7 +108,7 @@ public class RollTable
                     color = configuration.LastPlaceColor;
             }
 
-            var name = participant.GetUsedName(configuration.DebugRandomPn);
+            var name = participant.GetUsedName(configuration.DRandomizeNames);
 
             ImGui.TableNextColumn();
             ImGui.TextColored(color, name);
@@ -140,6 +128,6 @@ public class RollTable
 
     public void RenderDeletionDropdown()
     {
-        Helper.PlayerListRender("Player List", configuration.DebugRandomPn, participants, ImGuiTreeNodeFlags.None);
+        Helper.PlayerListRender("Player List", configuration.DRandomizeNames, participants, ImGuiTreeNodeFlags.None);
     }
 }
