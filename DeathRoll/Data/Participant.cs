@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using DeathRoll.Data;
 
 namespace DeathRoll;
 
@@ -20,6 +22,8 @@ public class Participants
     public Participant Last = new("Unknown", 1000, 1000);
     public Participant Winner = new("Unknown", 1000, 1000);
 
+    private Dictionary<string, string> UsedDebugNames = new();
+    
     public Participants(Configuration configuration)
     {
         this.configuration = configuration;
@@ -27,33 +31,36 @@ public class Participants
 
     public void Add(Participant p)
     {
-        PList.Add(p);
         if (!PlayerNameList.Exists(x => x == p.name))
         {
+            while (UsedDebugNames.ContainsValue(p.randomName)) // check that random name is unique
+                p.GenerateRandomizedName();
             PlayerNameList.Add(p.name);
         }
-        Last = p;
-        if (PList.Count == 1)
+        else
         {
-            Winner = p;
-            return;
-        }
-        Winner = PList[^2];
-    }
-    
-    public Participant? FindPlayer(string playerName)
-    {
-        if (!configuration.DRandomizeNames)
-        {
-            return PList.Find(x => x.name == playerName) ?? PList.Find(x => x.fName == playerName);
+            p.randomName = UsedDebugNames[p.name]; // set random name to existing name
         }
 
-        return PList.Find(x => x.randomName == playerName);
+        UsedDebugNames[p.name] = p.randomName;
+        PList.Add(p);
+        Last = p;
+        Winner = PList[^(PList.Count == 1 ? 1 : 2)]; // we only ever take last if there is one entry
+    }
+    
+    public Participant FindPlayer(string playerName)
+    {
+        return PList.Find(x => x.name == playerName);
     }
 
     public Participant GetWithIndex(int idx)
     {
         return FindPlayer(PlayerNameList[idx]);
+    }
+
+    public string LookupDisplayName(string playerName)
+    {
+        return FindPlayer(playerName).GetDisplayName();
     }
     
     public void DeleteEntry(string name)
@@ -80,8 +87,8 @@ public class Participants
         foreach (var roll in PList)
         {
             roll.UpdateColor(false);
-            foreach (var hl in configuration.SavedHighlights.Where(hl =>
-                         hl.CompiledRegex.Match(roll.roll.ToString()).Success))
+            foreach (var hl in configuration.SavedHighlights.Where(
+                         hl => hl.CompiledRegex.Match(roll.roll.ToString()).Success))
             {
                 roll.UpdateColor(true, hl.Color);
                 break;
@@ -102,19 +109,17 @@ public class Participants
 public class Participant
 {
     public readonly string name;
+    public string randomName = "";
+    public string fName = "";
+    
     public readonly int outOf;
     public readonly int roll;
 
     public bool hasHighlight;
     public Vector4 highlightColor;
-    public string randomName;
-    public string fName;
 
-    private readonly List<string> FirstName = new()
-        {"Absolutely", "Completely", "Undoubtedly", "More or less", "Assuredly", "Utterly", "Kind of"};
-    private readonly List<string> Surnames = new()
-        {"Fake", "Sus", "Imposter", "Pseudo"};
-
+    const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    
     public Participant(string name, int roll, int outOf, Vector4 highlightColor)
     {
         this.name = name;
@@ -123,8 +128,8 @@ public class Participant
         this.hasHighlight = true;
         this.highlightColor = highlightColor;
         
-        randomName = GetRandomizedName();
-        fName = GetReadableName();
+        GenerateRandomizedName();
+        GenerateFancyName();
     }
 
     public Participant(string name, int roll, int outOf)
@@ -135,8 +140,8 @@ public class Participant
         hasHighlight = false;
         highlightColor = new Vector4(0, 0, 0, 0);
         
-        randomName = GetRandomizedName();
-        fName = GetReadableName();
+        GenerateRandomizedName();
+        GenerateFancyName();
     }
     
     public void UpdateColor(bool hasHl)
@@ -150,20 +155,20 @@ public class Participant
         highlightColor = hlColor;
     }
 
-    public string GetReadableName()
+    public void GenerateFancyName()
     {
-        return name.Replace("\uE05D", "\uE05D ");
+        fName = name.Replace("\uE05D", "\uE05D ");
     }
 
-    public string GetRandomizedName()
+    public void GenerateRandomizedName()
     {
         var random = new Random();
-        return $"{FirstName[random.Next(FirstName.Count)]} {Surnames[random.Next(Surnames.Count)]}";
+        randomName = "Player " + new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
     }
-
-    public string GetUsedName(bool useRandomPn)
+    
+    public string GetDisplayName()
     {
-        return !useRandomPn ? GetReadableName() : randomName;
+        return !DebugConfig.RandomizeNames ? fName : randomName;
     }
 }
 

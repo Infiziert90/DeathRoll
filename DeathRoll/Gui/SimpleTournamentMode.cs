@@ -61,7 +61,7 @@ public class SimpleTournamentMode
         var textWidth1   = ImGui.CalcTextSize("WINNER").X;
         var textWidth2   = ImGui.CalcTextSize("GOAT").X;
         var textWidth3   = ImGui.CalcTextSize("DINNER").X;
-        var textWidth4   = ImGui.CalcTextSize($"{participants.Winner.fName}").X;
+        var textWidth4   = ImGui.CalcTextSize($"{participants.Winner.GetDisplayName()}").X;
         
         ImGui.SetCursorPosX((windowWidth - textWidth1) * 0.5f);
         ImGui.TextColored(_yellowColor, $"WINNER");
@@ -72,7 +72,7 @@ public class SimpleTournamentMode
         ImGui.SetCursorPosX((windowWidth - textWidth3) * 0.5f);
         ImGui.TextColored(_yellowColor, $"DINNER");
         ImGui.SetCursorPosX((windowWidth - textWidth4) * 0.5f);
-        ImGui.TextColored(_yellowColor, $"{participants.Winner.fName}");
+        ImGui.TextColored(_yellowColor, $"{participants.Winner.GetDisplayName()}");
         
         ImGui.Dummy(new Vector2(0.0f, 210.0f));
         
@@ -117,39 +117,31 @@ public class SimpleTournamentMode
         {
             bracketVisible = true;
         }
-
-        if (!spTourn.CalculationDone)
+        
+        if (spTourn.Player2.name != "Byes")
         {
-            ImGui.TextUnformatted("Preparing Next Match...");
+            ImGui.Text("Next Match:");
+            ImGui.Text($"{spTourn.Player1.GetDisplayName()} vs {(spTourn.Player2.GetDisplayName())}");
+            
+            if (ImGui.Button("Begin Match"))
+            {
+                matchVisible = true;
+                Plugin.SwitchState(GameState.Match);
+            }
+
+            if (!configuration.Debug) return;
+            if (ImGui.Button("Auto Win Match"))
+            {
+                spTourn.AutoWin();
+            }
         }
         else
         {
-            if (spTourn.Player2.name != "Byes")
+            ImGui.Text($"{spTourn.Player1.GetDisplayName()} got lucky and automatically won~");
+            
+            if (ImGui.Button("Continue to next Round"))
             {
-                ImGui.Text("Next Match:");
-                ImGui.Text($"{spTourn.Player1.fName} vs {(spTourn.Player2.fName)}");
-                
-                if (ImGui.Button("Begin Match"))
-                {
-                    matchVisible = true;
-                    Plugin.SwitchState(GameState.Match);
-                }
-
-                if (!configuration.Debug) return;
-                if (ImGui.Button("Auto Win Match"))
-                {
-                    spTourn.AutoWin();
-                }
-            }
-            else
-            {
-                ImGui.Text("No other player available.");
-                ImGui.Text($"{spTourn.Player1.fName} automatically wins");
-                
-                if (ImGui.Button("Continue to next Round"))
-                {
-                    spTourn.ForfeitWin(spTourn.Player1);
-                }
+                spTourn.ForfeitWin(spTourn.Player1);
             }
         }
     }
@@ -202,8 +194,8 @@ public class SimpleTournamentMode
             }
             else
             {
-                ImGui.Text($"Player 1: {spTourn.Player1.fName}");
-                ImGui.Text($"Player 2: {spTourn.Player2.fName}");
+                ImGui.Text($"Player 1: {spTourn.Player1.GetDisplayName()}");
+                ImGui.Text($"Player 2: {spTourn.Player2.GetDisplayName()}");
             }
         
             ImGui.Dummy(new Vector2(0.0f, 10.0f));
@@ -263,11 +255,9 @@ public class SimpleTournamentMode
             
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         if (!ImGui.CollapsingHeader("Shuffled Entry List", ImGuiTreeNodeFlags.DefaultOpen)) return;
-        foreach (var name in spTourn.TParticipants.PlayerNameList.Select(playerName => 
-                     spTourn.TParticipants.FindPlayer(playerName).GetUsedName(configuration.DRandomizeNames)))
-        {
+        foreach (var name in spTourn.TParticipants.PlayerNameList.Select(
+                     playerName => spTourn.TParticipants.LookupDisplayName(playerName)))
             ImGui.Selectable($"{name}");
-        }
     }
     
     public void RegistrationPanel()
@@ -308,6 +298,6 @@ public class SimpleTournamentMode
         ImGui.Text($"Players can enter by rolling /random or /dice once.");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         
-        Helper.PlayerListRender("Entry List", configuration.DRandomizeNames, participants, ImGuiTreeNodeFlags.DefaultOpen);
+        Helper.PlayerListRender("Entry List", participants, ImGuiTreeNodeFlags.DefaultOpen);
     }
 }

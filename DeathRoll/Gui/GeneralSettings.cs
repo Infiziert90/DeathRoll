@@ -1,4 +1,5 @@
 using System.Numerics;
+using DeathRoll.Data;
 using DeathRoll.Logic;
 using ImGuiNET;
 
@@ -85,8 +86,8 @@ public class GeneralSettings
         if (ImGui.Checkbox("Debug", ref verboseChatlog))
         {
             configuration.Debug = verboseChatlog;
-            configuration.DRandomizeNames = false;
-            configuration.DebugAllowDiceCheat = false;
+            DebugConfig.AllowDiceCheat = false;
+            DebugConfig.RandomizeNames = false;
             configuration.Save();
         }
 
@@ -94,15 +95,15 @@ public class GeneralSettings
         {
             ImGui.Dummy(new Vector2(15.0f, 0.0f));
             ImGui.SameLine();
-            var randomizePlayers = configuration.DRandomizeNames;
+            var randomizePlayers = DebugConfig.RandomizeNames;
             if (ImGui.Checkbox("Randomize names", ref randomizePlayers))
-                configuration.DRandomizeNames = randomizePlayers;
+                DebugConfig.RandomizeNames = randomizePlayers;
 
             ImGui.Dummy(new Vector2(15.0f, 0.0f));
             ImGui.SameLine();
-            var allowDiceCheat = configuration.DebugAllowDiceCheat;
+            var allowDiceCheat = DebugConfig.AllowDiceCheat;
             if (ImGui.Checkbox("Allow dice cheat", ref allowDiceCheat))
-                configuration.DebugAllowDiceCheat = allowDiceCheat;
+                DebugConfig.AllowDiceCheat = allowDiceCheat;
         }
 
         ImGui.EndTabItem();

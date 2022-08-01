@@ -39,8 +39,6 @@ public class Configuration : IPluginConfiguration
     public int Version { get; set; } = 0;
 
     [NonSerialized] private DalamudPluginInterface? pluginInterface;
-    [NonSerialized] public bool DRandomizeNames = false;
-    [NonSerialized] public bool DebugAllowDiceCheat = false;
     [NonSerialized] public bool AcceptNewPlayers = false;
 
     public void Initialize(DalamudPluginInterface pluginInterface)

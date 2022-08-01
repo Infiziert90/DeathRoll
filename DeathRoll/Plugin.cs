@@ -11,6 +11,7 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using DeathRoll.Attributes;
+using DeathRoll.Data;
 using DeathRoll.Logic;
 
 namespace DeathRoll;
@@ -177,7 +178,7 @@ public sealed class Plugin : IDalamudPlugin
 
         // dice always needs the autoTranslate payload
         // if not has a player just written the exact string
-        if (dice && !Configuration.DebugAllowDiceCheat && diceCommand != 3)
+        if (dice && !DebugConfig.AllowDiceCheat && diceCommand != 3)
         {
             Chat.Print($"{playerName} tried to cheat~");
             return;

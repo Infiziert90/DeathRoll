@@ -20,7 +20,7 @@ public static class Helper
         ImGui.EndTooltip();
     }
     
-    public static bool PlayerListRender(string title, bool useRandomPn, Participants participants, ImGuiTreeNodeFlags flags)
+    public static bool PlayerListRender(string title, Participants participants, ImGuiTreeNodeFlags flags)
     {
         try
         {
@@ -30,7 +30,7 @@ public static class Helper
             foreach (var playerName in participants.PlayerNameList)
             {
                 var participant = participants.FindPlayer(playerName);
-                var name = participant.GetUsedName(useRandomPn);
+                var name = participant.GetDisplayName();
                 ImGui.Selectable($"{name}");
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
                     deletion = participant.name;

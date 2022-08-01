@@ -12,7 +12,7 @@ public class SimpleTournament
     
     public Participants TParticipants;
     
-    public List<List<string>> InternalBrackets = new();
+    public List<List<Participant>> InternalBrackets = new();
     public List<List<string>> FilledBrackets = new();
 
     private int currentIndex = 0;
@@ -22,8 +22,6 @@ public class SimpleTournament
     
     public Participant Player1 = new("Unknown", 1000, 1000);
     public Participant Player2 = new("Unknown", 1000, 1000);
-    
-    public bool CalculationDone = false;
     
     public SimpleTournament(Configuration configuration, Participants participants)
     {
@@ -126,7 +124,7 @@ public class SimpleTournament
         
         for (var i = 0; i < stages; i++)
         {
-            InternalBrackets.Add(new List<string>());
+            InternalBrackets.Add(new List<Participant>());
         }
         
         // fill with byes if need
@@ -137,8 +135,8 @@ public class SimpleTournament
         
         foreach (var (name, idx) in TParticipants.PlayerNameList.Select((value, i) => (value, i)))
         {
-            InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(idx).fName);
-            InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(magicNumber-idx).fName);
+            InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(idx));
+            InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(magicNumber-idx));
             if (idx == neededPlayers / 2 - 1) break;
         }
         
@@ -150,11 +148,11 @@ public class SimpleTournament
 
     public void FillCurrentStageBrackets()
     {
-        InternalBrackets[currentStage+1] = new List<string>();
+        InternalBrackets[currentStage+1] = new List<Participant>();
         
         foreach (var name in TParticipants.NextRound)
         {
-            InternalBrackets[currentStage+1].Add(TParticipants.FindPlayer(name).fName);
+            InternalBrackets[currentStage+1].Add(TParticipants.FindPlayer(name));
         }
 
         FillBracketTable();
@@ -166,24 +164,17 @@ public class SimpleTournament
         
         try
         {
-            CalculationDone = false;
-            
             if (currentIndex >= InternalBrackets[currentStage].Count)
             {
                 PrepareNextStage();
                 return;  
             }
             
-            (Player1, Player2) = (
-                TParticipants.FindPlayer(InternalBrackets[currentStage][currentIndex]), 
-                TParticipants.FindPlayer(InternalBrackets[currentStage][currentIndex+1])
-                );
+            (Player1, Player2) = (InternalBrackets[currentStage][currentIndex], InternalBrackets[currentStage][currentIndex+1]);
             
             participants.Reset();
             participants.PlayerNameList.Add(Player1.name);
             participants.PlayerNameList.Add(Player2.name);
-            
-            CalculationDone = true;
         } 
         catch (Exception e)
         {
@@ -273,7 +264,7 @@ public class SimpleTournament
                 switch (stage)
                 {
                     case 0 when idx % 2 == 0:
-                        FilledBrackets[idx].Add(InternalBrackets[stage][idx / 2]);
+                        FilledBrackets[idx].Add(InternalBrackets[stage][idx / 2].GetDisplayName());
                         break;
                     case 0 when idx % 2 == 1:
                         // fill the cell with spaces to give it font height
@@ -284,7 +275,7 @@ public class SimpleTournament
                         FilledBrackets[idx].Add("x");
                         break;
                     case 1:
-                        FilledBrackets[idx].Add(InternalBrackets[stage][nestedIDX[stage]]);
+                        FilledBrackets[idx].Add(InternalBrackets[stage][nestedIDX[stage]].GetDisplayName());
                         nestedIDX[stage]++;
                         break;
                     default:
@@ -299,7 +290,7 @@ public class SimpleTournament
                         
                         FilledBrackets[idx].Clear();
                         for (var s = 0; s < stage; s++) FilledBrackets[idx].Add("  ");
-                        FilledBrackets[idx].Add(InternalBrackets[stage][nestedIDX[stage]]);
+                        FilledBrackets[idx].Add(InternalBrackets[stage][nestedIDX[stage]].GetDisplayName());
                         nestedIDX[stage]++;
                         break;
                     }

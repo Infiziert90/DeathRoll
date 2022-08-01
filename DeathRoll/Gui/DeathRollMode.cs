@@ -41,7 +41,7 @@ public class DeathRollMode
     public void RenderWinnerPanel()
     {
         var loser = participants.PList.Last();
-        ImGui.TextColored(_redColor, $"{loser.name} lost!!!");
+        ImGui.TextColored(_redColor, $"{loser.GetDisplayName()} lost!!!");
     }
 
     public void RenderControlPanel()
@@ -76,10 +76,8 @@ public class DeathRollMode
         ImGui.TableHeadersRow();
         foreach (var (participant, idx) in participants.PList.Select((value, i) => (value, i)))
         {
-            var name = participant.GetUsedName(configuration.DRandomizeNames);
-
             ImGui.TableNextColumn();
-            ImGui.Text(name);
+            ImGui.Text(participant.GetDisplayName());
 
             ImGui.TableNextColumn();
             ImGui.Text(participant.roll.ToString());
@@ -93,7 +91,7 @@ public class DeathRollMode
     
     public void OrderListRender()
     {
-        if (!Helper.PlayerListRender("Player List", configuration.DRandomizeNames, participants, ImGuiTreeNodeFlags.None)) return;
+        if (!Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None)) return;
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ImGui.Text("Removing players is currently not working as intended."); 
     }

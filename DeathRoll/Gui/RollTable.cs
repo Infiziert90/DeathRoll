@@ -108,7 +108,7 @@ public class RollTable
                     color = configuration.LastPlaceColor;
             }
 
-            var name = participant.GetUsedName(configuration.DRandomizeNames);
+            var name = participant.GetDisplayName();
 
             ImGui.TableNextColumn();
             ImGui.TextColored(color, name);
@@ -128,6 +128,6 @@ public class RollTable
 
     public void RenderDeletionDropdown()
     {
-        Helper.PlayerListRender("Player List", configuration.DRandomizeNames, participants, ImGuiTreeNodeFlags.None);
+        Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None);
     }
 }
