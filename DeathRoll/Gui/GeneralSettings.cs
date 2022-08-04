@@ -32,17 +32,15 @@ public class GeneralSettings
         ImGui.SameLine();
         Helper.ShowHelpMarker("Venue: Useful for games like Truth&Dare\nTournament: 1 vs 1 DeathRoll with a bracket system");
         
-        var gameMode = configuration.GameMode;
-        ImGui.RadioButton("Venue", ref gameMode, 0);
-        ImGui.SameLine();
-        ImGui.RadioButton("DeathRoll", ref gameMode, 1);
-        ImGui.RadioButton("Simple Tournament", ref gameMode, 2);
+        var gameMode = (int) configuration.GameMode;
+        var list = System.Enum.GetNames(typeof(GameModes));
+        ImGui.Combo("##gamemode_combo", ref gameMode, list, list.Length);
 
-        if (gameMode != configuration.GameMode)
+        if (gameMode != (int) configuration.GameMode)
         {
             Plugin.SwitchState(GameState.NotRunning);
             
-            configuration.GameMode = gameMode;
+            configuration.GameMode = (GameModes) gameMode;
             configuration.Save();
         }
         

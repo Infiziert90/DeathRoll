@@ -3,6 +3,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using Dalamud.Logging;
+using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
 
@@ -28,13 +29,13 @@ public class Rolls
 
             switch (configuration.GameMode)
             {
-                case 0:
+                case GameModes.Venue:
                     NormalGameMode(playerName, parsedRoll, parsedOutOf);
                     break;
-                case 1:
+                case GameModes.DeathRoll:
                     DeathRollGameMode(playerName, parsedRoll, parsedOutOf);
                     break;                
-                case 2:
+                case GameModes.Tournament:
                     simpleTournament.Parser(playerName, parsedRoll, parsedOutOf);
                     break;
             }

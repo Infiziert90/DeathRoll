@@ -13,15 +13,18 @@ public class Participants
     
     public List<Participant> PList = new();
     public List<string> PlayerNameList = new();
-    public List<string> NextRound = new();
     
+    // venue
     public bool IsOutOfUsed = false;
     
     // deathroll
-    public bool RoundDone = false;
     public Participant Last = new("Unknown", 1000, 1000);
     public Participant Winner = new("Unknown", 1000, 1000);
-
+    
+    // tournament
+    public List<string> NextRound = new();
+    public bool RoundDone = false;
+    
     private Dictionary<string, string> UsedDebugNames = new();
     
     public Participants(Configuration configuration)

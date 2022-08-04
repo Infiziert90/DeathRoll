@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Configuration;
 using Dalamud.Plugin;
+using DeathRoll.Data;
 
 namespace DeathRoll;
 
@@ -12,7 +13,7 @@ public class Configuration : IPluginConfiguration
     public bool On { get; set; } = false;
     public bool Debug { get; set; } = false;
     
-    public int GameMode { get; set; } = 0;
+    public GameModes GameMode { get; set; } = 0;
     
     public bool RerollAllowed { get; set; } = false;
     public bool OnlyRandom { get; set; } = false;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using DeathRoll.Data;
 using DeathRoll.Gui;
 using DeathRoll.Logic;
 using ImGuiNET;
@@ -86,13 +87,13 @@ public class PluginUI : IDisposable
         {
             switch (Configuration.GameMode)
             {
-                case 0:
+                case GameModes.Venue:
                     RollTable.MainRender();
                     break;
-                case 1:
+                case GameModes.DeathRoll:
                     DeathRollMode.MainRender();
                     break;
-                case 2:
+                case GameModes.Tournament:
                     SimpleTournamentMode.MainRender();
                     break;
             }
