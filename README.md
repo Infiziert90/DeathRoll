@@ -17,7 +17,7 @@ Plugin to help with a number of /random and /dice related games.
 + Uneven number of players get filled with byes
 + Randomization via shuffling is enforced
 + Forfeit functionality if a player needs to leave
-###Blackjack:
+### Blackjack Mode:
 + Support for all normal blackjack plays
 + Automatic reward calculation based on standard blackjack rules
 + Simplistic, visual view of cards in play
