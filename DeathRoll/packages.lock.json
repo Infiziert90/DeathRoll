@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net5.0-windows7.0": {
+      "DalamudPackager": {
+        "type": "Direct",
+        "requested": "[2.1.6, )",
+        "resolved": "2.1.6",
+        "contentHash": "JGgpGP2FMM5Vt4utyDD+xV2+XXfo3Rb3VgJ4FnvzkWlvn4JG/bBILo6mDubWCPjDGqT0n6dF1JRG0r5ygLv/ng=="
+      },
+      "ILRepack": {
+        "type": "Direct",
+        "requested": "[2.1.0-beta1, )",
+        "resolved": "2.1.0-beta1",
+        "contentHash": "CUmDepugxfNKVMAsd1PzS8NSoyDfELsufDzwJ1+7D08bMAQbtHEQ9UVdjWjR3GBE0iPc0GvOhSJi0+xfFXwiRA=="
+      }
+    }
+  }
+}

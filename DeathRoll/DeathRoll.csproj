@@ -21,6 +21,7 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <OutputType>Library</OutputType>
         <OutputPath>..\builds\$(Configuration)\</OutputPath>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
 
     <ItemGroup>
