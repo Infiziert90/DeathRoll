@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Game;
 using Dalamud.Logging;
-using DeathRoll.Logic;
+using DeathRoll.Data;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;

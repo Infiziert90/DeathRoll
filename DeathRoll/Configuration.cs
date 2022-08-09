@@ -39,6 +39,11 @@ public class Configuration : IPluginConfiguration
     public int DefaultSec { get; set; } = 0;
     public int Version { get; set; } = 0;
 
+    public bool AutoDrawCard = true;
+    public bool AutoDrawOpening = true;
+    public bool AutoOpenField = true;
+    public int DefaultBet = 250000;
+    
     [NonSerialized] private DalamudPluginInterface? pluginInterface;
     [NonSerialized] public bool AcceptNewPlayers = false;
 

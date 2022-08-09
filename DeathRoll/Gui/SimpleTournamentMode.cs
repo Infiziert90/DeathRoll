@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using DeathRoll.Data;
 using DeathRoll.Logic;
 using ImGuiNET;
 
@@ -11,6 +12,9 @@ public class SimpleTournamentMode
     private readonly Vector4 _redColor = new(0.980f, 0.245f, 0.245f, 1.0f);
     private readonly Vector4 _greenColor = new(0.0f, 1.0f, 0.0f, 1.0f);
     private readonly Vector4 _yellowColor = new(0.959f, 1.0f, 0.0f, 1.0f);
+
+    private string ErrorMsg = string.Empty;
+    
     private readonly Configuration configuration;
     private readonly Participants participants;
     private readonly SimpleTournament spTourn;
@@ -28,7 +32,7 @@ public class SimpleTournamentMode
         this.pluginUi = pluginUi;
         configuration = pluginUi.Configuration;
         participants = pluginUi.Participants;
-        spTourn = pluginUi.Rolls.simpleTournament;
+        spTourn = pluginUi.Rolls.SimpleTournament;
     }
 
     public void MainRender()
@@ -262,6 +266,8 @@ public class SimpleTournamentMode
     
     public void RegistrationPanel()
     {
+        if (ErrorMsg != string.Empty) { Helper.ErrorWindow(ref ErrorMsg); }
+        
         if (participants.PlayerNameList.Count > 2)
         {
             if (ImGui.Button("Close Registration"))
@@ -295,9 +301,12 @@ public class SimpleTournamentMode
                 ? $"{3 - participants.PlayerNameList.Count} more players are necessary ..."
                 : $"Awaiting more players ...");
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        ImGui.Text($"Players can enter by rolling /random or /dice once.");
+        ImGui.TextWrapped("Players can automatically enter by typing /random or /dice respectively while round registration is active.");
+        ImGui.TextWrapped("Alternatively players can be manually entered by targetting the character and pressing 'Add Target' below.");
+        ImGui.Dummy(new Vector2(0.0f, 5.0f));
+        if (ImGui.Button("Add Target")) { ErrorMsg = spTourn.TargetRegistration(); }
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         
-        Helper.PlayerListRender("Entry List", participants, ImGuiTreeNodeFlags.DefaultOpen);
+        Helper.PlayerListRender("Entries", participants, ImGuiTreeNodeFlags.DefaultOpen);
     }
 }

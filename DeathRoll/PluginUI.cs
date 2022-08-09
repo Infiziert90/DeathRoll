@@ -20,7 +20,7 @@ public class PluginUI : IDisposable
     // this extra bool exists for ImGui, since you can't ref a property
     private bool visible;
 
-    // passing in the image here just for simplicityw
+    
     public PluginUI(Configuration configuration, Participants participants, Rolls rolls)
     {
         this.Configuration = configuration;
@@ -33,6 +33,7 @@ public class PluginUI : IDisposable
         RollTable = new RollTable(this);
         DeathRollMode = new DeathRollMode(this);
         SimpleTournamentMode = new SimpleTournamentMode(this);
+        BlackjackMode = new BlackjackMode(this);
 
         // needs RollTable
         TimerSetting = new TimerSetting(configuration, RollTable);
@@ -44,6 +45,7 @@ public class PluginUI : IDisposable
     public RollTable RollTable { get; }
     public DeathRollMode DeathRollMode { get; }
     public SimpleTournamentMode SimpleTournamentMode { get; }
+    public BlackjackMode BlackjackMode { get; }
     public TimerSetting TimerSetting { get; }
 
     public bool Visible
@@ -75,6 +77,7 @@ public class PluginUI : IDisposable
         DrawSettingsWindow();
         SimpleTournamentMode.DrawGeneratedBracket();
         SimpleTournamentMode.DrawMatch();
+        BlackjackMode.DrawGameField();
     }
 
     public void DrawMainWindow()
@@ -96,6 +99,12 @@ public class PluginUI : IDisposable
                 case GameModes.Tournament:
                     SimpleTournamentMode.MainRender();
                     break;
+                case GameModes.Blackjack:
+                    BlackjackMode.MainRender();
+                    break;
+                default:
+                    ImGui.Text("Not Implemented!");
+                    break;
             }
         }
 
@@ -106,8 +115,8 @@ public class PluginUI : IDisposable
     {
         if (!SettingsVisible) return;
 
-        ImGui.SetNextWindowSize(new Vector2(260, 380), ImGuiCond.Always);
-        if (ImGui.Begin("DRH Config", ref settingsVisible, ImGuiWindowFlags.NoResize))
+        ImGui.SetNextWindowSize(new Vector2(260, 420));
+        if (ImGui.Begin("DRH Config", ref settingsVisible))
             if (ImGui.BeginTabBar("##settings-tabs"))
             {
                 // Renders General Settings UI

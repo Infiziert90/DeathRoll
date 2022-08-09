@@ -2,6 +2,8 @@
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
@@ -20,13 +22,13 @@ public sealed class Plugin : IDalamudPlugin
 {
     private readonly PluginCommandManager<Plugin> commandManager;
     private readonly ClientState clientState;
-    private readonly Reg reg = new();
     public static Participants? Participants;
     public static GameState State = GameState.NotRunning;
-    
+
     [PluginService] public static DataManager Data { get; private set; } = null!;
     [PluginService] public static ChatGui Chat { get; private set; } = null!;
     [PluginService] public static Framework Framework { get; private set; } = null!;
+    [PluginService] public static TargetManager TargetManager { get; private set; } = null!;
 
     public string Name => "Death Roll Helper";
 
@@ -55,6 +57,8 @@ public sealed class Plugin : IDalamudPlugin
         Chat.ChatMessage += OnChatMessage;
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+        PluginInterface.UiBuilder.BuildFonts += FontManager.BuildFonts;
+        PluginInterface.UiBuilder.RebuildFonts();
     }
 
     public void Dispose()
@@ -62,6 +66,8 @@ public sealed class Plugin : IDalamudPlugin
         Chat.ChatMessage -= OnChatMessage;
         PluginUi.Dispose();
         commandManager.Dispose();
+        PluginInterface.UiBuilder.BuildFonts -= FontManager.BuildFonts;
+        PluginInterface.UiBuilder.RebuildFonts();
     }
 
     [Command("/drh")]
@@ -86,6 +92,14 @@ public sealed class Plugin : IDalamudPlugin
                 PluginUi.Visible = true;
                 break;
         }
+    }
+    
+    public static string GetTargetName()
+    {
+        var target = TargetManager.SoftTarget ?? TargetManager.Target;
+        if (target is not PlayerCharacter pc || pc.HomeWorld.GameData == null) return string.Empty;
+        
+        return $"{pc.Name}\uE05D{pc.HomeWorld.GameData.Name}";
     }
 
     private void OnChatMessage(XivChatType type, uint id, ref SeString sender, ref SeString message, ref bool handled)
@@ -118,7 +132,7 @@ public sealed class Plugin : IDalamudPlugin
                 return;
         }
 
-        var m = reg.Match(message.ToString(), clientState.ClientLanguage, dice);
+        var m = Reg.Match(message.ToString(), clientState.ClientLanguage, dice);
         if (!m.Success) return;
 
         var local = clientState?.LocalPlayer;

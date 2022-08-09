@@ -1,13 +1,16 @@
 using System;
+using System.Numerics;
 using System.Text.Json;
 using Dalamud.Logging;
-using DeathRoll.Logic;
+using DeathRoll.Data;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
 
 public static class Helper
 {
+    private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize;
+
     // https://www.programcreek.com/cpp/?code=kswaldemar%2Frewind-viewer%2Frewind-viewer-master%2Fsrc%2Fimgui_impl%2Fimgui_widgets.cpp
     public static void ShowHelpMarker(string desc) {
         ImGui.TextDisabled("(?)");
@@ -19,9 +22,35 @@ public static class Helper
         ImGui.PopTextWrapPos();
         ImGui.EndTooltip();
     }
+
+    public static void ErrorWindow(ref string msg)
+    {
+        if (ImGui.Begin("Error##popup_helper_error", Flags))
+        {
+            ImGui.Text(msg);
+                
+            ImGui.Spacing();
+            ImGui.NextColumn();
+
+            ImGui.Columns(1);
+            ImGui.Separator();
+
+            ImGui.NewLine();
+
+            ImGui.SameLine(120);
+            //click ok when finished adjusting
+            if (ImGui.Button("OK", new Vector2(100, 0))) {
+                msg = string.Empty;
+            }
+
+            ImGui.End();
+        }
+    }
     
     public static bool PlayerListRender(string title, Participants participants, ImGuiTreeNodeFlags flags)
     {
+        if (participants.PList.Count == 0) return false;
+        
         try
         {
             var deletion = "";

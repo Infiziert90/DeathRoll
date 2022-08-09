@@ -1,6 +1,6 @@
+using System;
 using System.Numerics;
 using DeathRoll.Data;
-using DeathRoll.Logic;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
@@ -35,7 +35,7 @@ public class GeneralSettings
         var gameMode = (int) configuration.GameMode;
         var list = System.Enum.GetNames(typeof(GameModes));
         ImGui.Combo("##gamemode_combo", ref gameMode, list, list.Length);
-
+        
         if (gameMode != (int) configuration.GameMode)
         {
             Plugin.SwitchState(GameState.NotRunning);
@@ -44,20 +44,64 @@ public class GeneralSettings
             configuration.Save();
         }
         
-        if (configuration.GameMode == 0)
+        if (configuration.GameMode is GameModes.Venue or GameModes.Blackjack)
         {
             ImGui.Dummy(new Vector2(0.0f, 5.0f));
             ImGui.Text("Game Mode Options:");
             ImGui.Dummy(new Vector2(0.0f, 5.0f));
-            
-            var allowReroll = configuration.RerollAllowed;
-            if (ImGui.Checkbox("Reroll allowed", ref allowReroll))
+
+            switch (configuration.GameMode)
             {
-                configuration.RerollAllowed = allowReroll;
-                configuration.Save();
+                case GameModes.Venue:
+                {
+                    var allowReroll = configuration.RerollAllowed;
+                    if (ImGui.Checkbox("Reroll allowed", ref allowReroll))
+                    {
+                        configuration.RerollAllowed = allowReroll;
+                        configuration.Save();
+                    }
+                    ImGui.SameLine();
+                    Helper.ShowHelpMarker("Player can roll as often as they want,\noverwriting there previous roll in the process.");
+                    break;
+                }
+                case GameModes.Blackjack:
+                    var autoDrawCard = configuration.AutoDrawCard;
+                    if (ImGui.Checkbox("(After) Automatically draw", ref autoDrawCard))
+                    {
+                        configuration.AutoDrawCard = autoDrawCard;
+                        configuration.Save();
+                    }
+                    ImGui.SameLine();
+                    Helper.ShowHelpMarker("Automatically draw all cards for players after the first two starting cards.");
+
+                    var autoDrawOpening = configuration.AutoDrawOpening;
+                    if (ImGui.Checkbox("(Start) Automatically draw", ref autoDrawOpening))
+                    {
+                        configuration.AutoDrawOpening = autoDrawOpening;
+                        configuration.Save();
+                    }                    
+                    ImGui.SameLine();
+                    Helper.ShowHelpMarker("Automatically draw two cards for all players at game start.");
+                    
+                    var autoOpenField = configuration.AutoOpenField;
+                    if (ImGui.Checkbox("Open card field on game start", ref autoOpenField))
+                    {
+                        configuration.AutoOpenField = autoOpenField;
+                        configuration.Save();
+                    }
+                    
+                    var defaultBet = configuration.DefaultBet;
+                    ImGui.Text("Default Bet:");
+                    ImGui.SameLine();
+                    ImGui.PushItemWidth(100f);
+                    if (ImGui.InputInt("##default_bet_input:", ref defaultBet, 0))
+                    {
+                        defaultBet = Math.Clamp(defaultBet, 10, int.MaxValue);
+                        configuration.DefaultBet = defaultBet;
+                        configuration.Save();
+                    }
+                    break;
             }
-            ImGui.SameLine();
-            Helper.ShowHelpMarker("Player can roll as often as they want,\noverwriting there previous roll in the process.");
         }
 
         ImGui.Dummy(new Vector2(0.0f, 5.0f));

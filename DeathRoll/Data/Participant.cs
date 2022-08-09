@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -13,7 +12,10 @@ public class Participants
     
     public List<Participant> PList = new();
     public List<string> PlayerNameList = new();
+    public List<string> ReversedPlayerNameList = new();
     
+    public Dictionary<string, string> UsedDebugNames = new();
+
     // venue
     public bool IsOutOfUsed = false;
     
@@ -25,7 +27,12 @@ public class Participants
     public List<string> NextRound = new();
     public bool RoundDone = false;
     
-    private Dictionary<string, string> UsedDebugNames = new();
+    // blackjack
+    public string DealerAction = "";
+    public List<Participant> DealerCards = new();
+    public Dictionary<string, Player> PlayerBets = new();
+    public int CurrentIndex = 0;
+    public List<int> CardsInUse = new();
     
     public Participants(Configuration configuration)
     {
@@ -55,7 +62,17 @@ public class Participants
     {
         return PList.Find(x => x.name == playerName);
     }
-
+    
+    public List<Participant> FindAll(string playerName)
+    {
+        return PList.FindAll(x => x.name == playerName);
+    }
+    
+    public List<Participant> FindAllWithIndex()
+    {
+        return FindAll(PList[CurrentIndex].name);
+    }
+    
     public Participant GetWithIndex(int idx)
     {
         return FindPlayer(PlayerNameList[idx]);
@@ -70,6 +87,10 @@ public class Participants
     {
         PList.RemoveAll(x => x.name == name);
         PlayerNameList.RemoveAll(x => x == name);
+        ReversedPlayerNameList.RemoveAll(x => x == name);
+        
+        UsedDebugNames.Remove(name);
+        PlayerBets.Remove(name);
     }
 
     public void UpdateSorting()
@@ -99,19 +120,47 @@ public class Participants
         }
     }
 
+    public void DeleteRangeFromStart(int range)
+    {
+        PList.RemoveRange(0, range);
+    }
+    
     public void Reset()
     {
         PList.Clear();
         PlayerNameList.Clear();
+        ReversedPlayerNameList.Clear();
+        UsedDebugNames.Clear();
         NextRound.Clear();
+        
         IsOutOfUsed = false;
         RoundDone = false;
+        
+        DealerCards.Clear();
+        PlayerBets.Clear();
+        CardsInUse.Clear();
+        CurrentIndex = 0;
+        DealerAction = "";
+    }
+    
+    // blackjack
+    public class Player
+    {
+        public int Bet;
+        public bool IsAlive;
+        public string LastAction = "";
+
+        public Player(int bet, bool isAlive)
+        {
+            Bet = bet;
+            IsAlive = isAlive;
+        }
     }
 }
 
 public class Participant
 {
-    public readonly string name;
+    public string name;
     public string randomName = "";
     public string fName = "";
     
@@ -122,6 +171,10 @@ public class Participant
     public Vector4 highlightColor;
 
     const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    
+    //blackjack
+    public Cards.Card Card = new(1, 1, false);
+    public bool CanSplit = false;
     
     public Participant(string name, int roll, int outOf, Vector4 highlightColor)
     {
@@ -143,6 +196,15 @@ public class Participant
         hasHighlight = false;
         highlightColor = new Vector4(0, 0, 0, 0);
         
+        GenerateRandomizedName();
+        GenerateFancyName();
+    }
+    
+    public Participant(string name, Cards.Card card)
+    {
+        this.name = name;
+        Card = card;
+
         GenerateRandomizedName();
         GenerateFancyName();
     }

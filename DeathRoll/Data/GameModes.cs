@@ -5,4 +5,5 @@ public enum GameModes
     Venue = 0,
     DeathRoll = 1,
     Tournament = 2,
+    Blackjack = 3,
 }

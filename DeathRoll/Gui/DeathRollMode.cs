@@ -1,6 +1,6 @@
 using System.Linq;
 using System.Numerics;
-using DeathRoll.Logic;
+using DeathRoll.Data;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;

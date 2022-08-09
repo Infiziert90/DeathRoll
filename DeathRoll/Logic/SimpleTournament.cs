@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Logging;
+using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
 
@@ -88,6 +89,19 @@ public class SimpleTournament
             participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
             participants.RoundDone = true;
         }
+    }
+    
+    public string TargetRegistration()
+    {
+        // get target
+        var name = Plugin.GetTargetName();
+        if (name == string.Empty) return "Target not found.";
+        
+        // check if player is already in list
+        if (participants.PlayerNameList.Exists(x => x == name)) return "Target already registered.";
+        
+        participants.Add(new Participant(name, 1000, 1000));
+        return string.Empty;
     }
     
     public void Registration(string playerName, int parsedRoll, int parsedOutOf)

@@ -17,6 +17,14 @@ Plugin to help with a number of /random and /dice related games.
 + Uneven number of players get filled with byes
 + Randomization via shuffling is enforced
 + Forfeit functionality if a player needs to leave
+###Blackjack:
++ Support for all normal blackjack plays
++ Automatic reward calculation based on standard blackjack rules
++ Simplistic, visual view of cards in play
++ Automatic drawing of cards, or manual player based roll for cards
++ Current players can be seemlessly moved to subsequent rounds
++ Further support for custom rules is planned (For example, the dealer can hit above 16)
+
 
 ## Features
 + Can block or prevent players from partaking in any of your games
@@ -44,3 +52,7 @@ More features are planned for future updates in accordance with feedback.
 
 ## Thanks to
 BluBb_mADe, JudgeZarbi
+
+Fonts used:  
+[JetBrains Mono](https://github.com/JetBrains/JetBrainsMono)  
+[Source Code Pro](https://github.com/adobe-fonts/source-code-pro)

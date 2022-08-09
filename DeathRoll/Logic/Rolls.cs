@@ -11,13 +11,15 @@ public class Rolls
 {
     private readonly Configuration configuration;
     private readonly Participants participants;
-    public SimpleTournament simpleTournament;
+    public readonly SimpleTournament SimpleTournament;
+    public readonly Blackjack Blackjack;
     
     public Rolls(Configuration configuration, Participants participants)
     {
         this.configuration = configuration;
         this.participants = participants;
-        this.simpleTournament = new SimpleTournament(configuration, participants);
+        SimpleTournament = new SimpleTournament(configuration, participants);
+        Blackjack = new Blackjack(configuration, participants);
     }
     
     public void ParseRoll(Match m, string playerName)
@@ -36,8 +38,13 @@ public class Rolls
                     DeathRollGameMode(playerName, parsedRoll, parsedOutOf);
                     break;                
                 case GameModes.Tournament:
-                    simpleTournament.Parser(playerName, parsedRoll, parsedOutOf);
+                    SimpleTournament.Parser(playerName, parsedRoll, parsedOutOf);
                     break;
+                case GameModes.Blackjack:
+                    Blackjack.Parser(playerName, parsedRoll, parsedOutOf);
+                    break;
+                default:
+                    return;
             }
         }
         catch (FormatException e)
