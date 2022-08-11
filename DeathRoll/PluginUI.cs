@@ -28,7 +28,7 @@ public class PluginUI : IDisposable
         this.Rolls = rolls;
         
         Blocklist = new Blocklist(configuration);
-        GeneralSettings = new GeneralSettings(configuration);
+        GeneralSettings = new GeneralSettings(this, configuration);
         Highlights = new Highlights(this);
         RollTable = new RollTable(this);
         DeathRollMode = new DeathRollMode(this);
@@ -115,7 +115,8 @@ public class PluginUI : IDisposable
     {
         if (!SettingsVisible) return;
 
-        ImGui.SetNextWindowSize(new Vector2(260, 420));
+        ImGui.SetNextWindowSize(new Vector2(260, 420), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(260, 420), new Vector2(float.MaxValue, float.MaxValue));
         if (ImGui.Begin("DRH Config", ref settingsVisible))
             if (ImGui.BeginTabBar("##settings-tabs"))
             {

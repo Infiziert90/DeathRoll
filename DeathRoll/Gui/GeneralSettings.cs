@@ -8,11 +8,13 @@ namespace DeathRoll.Gui;
 
 public class GeneralSettings
 {
+    private PluginUI pluginUI;
     private readonly Configuration configuration;
     private readonly BlackjackSettings blackjackSettings;
     
-    public GeneralSettings(Configuration configuration)
+    public GeneralSettings(PluginUI pluginUI, Configuration configuration)
     {
+        this.pluginUI = pluginUI;
         this.configuration = configuration;
         blackjackSettings = new BlackjackSettings(configuration);
     }
@@ -28,6 +30,14 @@ public class GeneralSettings
         {
             configuration.On = on;
             configuration.Save();
+        }
+        
+        var spacing = ImGui.GetScrollMaxY() == 0 ? 65.0f : 80.0f;
+        ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
+        
+        if (ImGui.Button("Show UI"))
+        {
+            pluginUI.Visible = true;
         }
         
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
