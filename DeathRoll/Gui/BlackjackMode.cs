@@ -141,13 +141,24 @@ Round continues as before, with the split hands turn happening later";
         
         ImGui.TextColored(_greenColor, $"Waiting for dealer roll ...");
         ImGui.TextColored(_greenColor, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
-
+        
+        if (ImGui.Button("Copy Dealer"))
+        {
+            var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
+            ImGui.SetClipboardText($"Dealer: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} Value: {cards}");
+        }
     }
     
     public void DealerRoundPanel()
     {
         ImGui.TextColored(_yellowColor, $"All players done!");
         if (ImGui.Button("Begin Dealer Round")) { blackjack.DealerAction(); }
+        
+        if (ImGui.Button("Copy Dealer"))
+        {
+            var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
+            ImGui.SetClipboardText($"Dealer: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} Value: {cards}");
+        }
     }
 
     public void WaitForRollPanel()
@@ -181,7 +192,7 @@ Round continues as before, with the split hands turn happening later";
 
         if (ImGui.Button("Copy Dealer"))
         {
-            ImGui.SetClipboardText(string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card))));
+            ImGui.SetClipboardText($"Dealer: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))}");
         }
     }
     
