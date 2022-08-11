@@ -47,6 +47,7 @@ public class Blackjack
         while (DealerCheckHand()) { GiveDealerCard(false); }
         
         DealerRound();
+        Plugin.SwitchState(GameState.DealerDone);
     }
     
     public void PlayerAction()
