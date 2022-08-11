@@ -29,11 +29,26 @@ public class Blackjack
             case GameState.DrawFirstCards or GameState.DrawSecondCards:
                 ParseFirstCards(playerName, parsedRoll, parsedOutOf);
                 break;
+            case GameState.DrawDealerCard:
+                ParseDealerCards(playerName, parsedRoll, parsedOutOf);
+                break;
             default:
                 return;
         }
     }
 
+    public void DealerAction()
+    {
+        if (!configuration.AutoDrawDealer)
+        {
+            Plugin.SwitchState(GameState.DrawDealerCard);
+            return;
+        }
+        while (DealerCheckHand()) { GiveDealerCard(false); }
+        
+        DealerRound();
+    }
+    
     public void PlayerAction()
     {
         if (!participants.PList[participants.CurrentIndex].name.EndsWith(" Split"))
@@ -75,7 +90,6 @@ public class Blackjack
     
     private void ParseFirstCards(string playerName, int parsedRoll, int parsedOutOf)
     {
-        // check if roll is out of 13 (13 cards) and check if current player has rolled
         if (parsedOutOf != 13) return;
         if (participants.ReversedPlayerNameList[participants.CurrentIndex] != playerName) return;
 
@@ -83,6 +97,15 @@ public class Blackjack
         participants.Add(new Participant(playerName, new Cards.Card(parsedRoll, card.Suit, false)));
         
         participants.CurrentIndex++;
+    }
+    
+    private void ParseDealerCards(string playerName, int parsedRoll, int parsedOutOf)
+    {
+        if (parsedOutOf != 13) return;
+        if (Plugin.LocalPlayer != playerName) return;
+
+        var card = DrawCard();
+        participants.DealerCards.Add(new Participant("", new Cards.Card(parsedRoll, card.Suit, false)));
     }
 
     public void TakePeopleIntoNextRound()
@@ -116,10 +139,8 @@ public class Blackjack
         Plugin.SwitchState(GameState.Done);
     }
 
-    public void DealerDraw(bool draw)
+    public bool DealerCheckHand()
     {
-        if (draw) GiveDealerCard(false);
-        
         var cards = CalculatePlayerCardValues(participants.DealerCards);
         var hasAce = participants.DealerCards.Any(x => x.Card.IsAce);
         var check = configuration.DealerRule switch
@@ -131,7 +152,7 @@ public class Blackjack
             _ => cards < 16
         };
 
-        if (check) DealerDraw(true);
+        return check;
     }
     
     public void DealerBust()
@@ -156,10 +177,8 @@ public class Blackjack
         Plugin.SwitchState(GameState.Done);
     }
     
-    public void DealerRound(bool once)
+    public void DealerRound()
     {
-        participants.DealerAction = "End";
-        
         var cards = CalculatePlayerCardValues(participants.DealerCards);
         switch (cards)
         {
@@ -168,10 +187,6 @@ public class Blackjack
                 break;
             case 21:
                 DealerBlackjack();
-                break;
-            default:
-                DealerDraw(false);
-                if (once) DealerRound(false);
                 break;
         }
     }
@@ -184,7 +199,7 @@ public class Blackjack
             return;
         }
         
-        DealerRound(true);
+        DealerRound();
     }
     
     public void Hit(Cards.Card card)

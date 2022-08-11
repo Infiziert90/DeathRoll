@@ -60,6 +60,12 @@ Round continues as before, with the split hands turn happening later";
                 break;
             case GameState.DealerRound:
                 DealerRoundPanel();
+                break;            
+            case GameState.DrawDealerCard:
+                DealerDrawRender();
+                break;            
+            case GameState.DealerDone:
+                DealerDoneRender();
                 break;
             case GameState.Done:
                 MatchDonePanel();
@@ -116,13 +122,32 @@ Round continues as before, with the split hands turn happening later";
             fieldVisible = false;
         }
     }
+
+    public void DealerDoneRender()
+    {
+        ImGui.TextColored(_yellowColor, $"The dealer is not allowed to hit anymore!");
+        ImGui.TextColored(_yellowColor, $"Please proceed by pressing 'Calculate Winnings' below.");
+        if (ImGui.Button("Calculate Winnings")) { blackjack.EndMatch(); }
+    }
+    
+    public void DealerDrawRender()
+    {
+        if (!blackjack.DealerCheckHand())
+        {
+            participants.DealerAction = "End";
+            Plugin.SwitchState(GameState.DealerDone);
+            return;
+        }
+        
+        ImGui.TextColored(_greenColor, $"Waiting for dealer roll ...");
+        ImGui.TextColored(_greenColor, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
+
+    }
     
     public void DealerRoundPanel()
     {
-        ImGui.TextColored(_yellowColor, $"The dealer is not allowed to hit above 17!");
-        ImGui.TextColored(_yellowColor, $"Pls proceed by pressing 'Calculate Winnings' below.");
-        if (ImGui.Button("Calculate Winnings")) { blackjack.EndMatch(); }
-        if (ImGui.Button("Copy Dealer")) { ImGui.SetClipboardText(string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))); }
+        ImGui.TextColored(_yellowColor, $"All players done!");
+        if (ImGui.Button("Begin Dealer Round")) { blackjack.DealerAction(); }
     }
 
     public void WaitForRollPanel()
@@ -146,8 +171,18 @@ Round continues as before, with the split hands turn happening later";
         if (participants.PList[participants.CurrentIndex].CanSplit) { if (ImGui.Button("Split")) { blackjack.Split(); } }
         
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
-        if (ImGui.Button("Copy Player")) { ImGui.SetClipboardText(string.Join(" ", participants.FindAllWithIndex().Select(x => Cards.ShowCardSimple(x.Card)))); }
-        if (ImGui.Button("Copy Dealer")) { ImGui.SetClipboardText(string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))); }
+        if (ImGui.Button("Copy Player"))
+        {
+            var currentPlayer = participants.FindAllWithIndex();
+            var cards = blackjack.CalculatePlayerCardValues(currentPlayer);
+            var playerString = $"Player: {string.Join(" ", currentPlayer.Select(x => Cards.ShowCardSimple(x.Card)))} Value: {cards}";
+            ImGui.SetClipboardText(playerString);
+        }
+
+        if (ImGui.Button("Copy Dealer"))
+        {
+            ImGui.SetClipboardText(string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card))));
+        }
     }
     
     public void CardDeckRender()

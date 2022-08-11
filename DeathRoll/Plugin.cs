@@ -24,6 +24,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ClientState clientState;
     public static Participants? Participants;
     public static GameState State = GameState.NotRunning;
+    public static string LocalPlayer = string.Empty;
 
     [PluginService] public static DataManager Data { get; private set; } = null!;
     [PluginService] public static ChatGui Chat { get; private set; } = null!;
@@ -144,6 +145,7 @@ public sealed class Plugin : IDalamudPlugin
 
         var diceCommand = 0;
         var playerName = $"{local.Name}\uE05D{local.HomeWorld.GameData.Name}";
+        LocalPlayer = playerName;
         var isLocalPlayer = sender.ToString() == local.Name.ToString();
         if (!isLocalPlayer || dice)
         {

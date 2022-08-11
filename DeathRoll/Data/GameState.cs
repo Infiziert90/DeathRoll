@@ -20,4 +20,6 @@ public enum GameState
     DoubleDown = 205,
     DrawFirstCards = 206,
     DrawSecondCards = 207,
+    DrawDealerCard = 208,
+    DealerDone = 209,
 }
