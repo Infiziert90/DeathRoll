@@ -14,16 +14,14 @@ public class BlackjackMode
 
     private string ErrorMsg = string.Empty;
 
-    private const string HelpText = @"
-- Hit: Player draws a card,
+    private const string HelpText = @"- Hit: Player draws a card,
 - Stay: Player holds hand as it is
 - Surrender: Player drops out of round and loses half the bet
 - Double Down: Player bets double, but receives exactly one more card
 
 - Split: Only possible at round start, and if the player has same Rank cards (e.g K and K)
 Player opens a new hand with one card in each hand, puts another bet of same amount, and draws with both hands a card
-Round continues as before, with the split hands turn happening later
-";
+Round continues as before, with the split hands turn happening later";
     
     private readonly Configuration configuration;
     private readonly PluginUI pluginUi;

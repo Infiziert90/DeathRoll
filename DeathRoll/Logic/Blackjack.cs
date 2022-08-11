@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Logging;
 using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
@@ -117,14 +116,22 @@ public class Blackjack
         Plugin.SwitchState(GameState.Done);
     }
 
-    public void DealerUnder17()
+    public void DealerDraw(bool draw)
     {
-        do
-        { 
-            GiveDealerCard(false);
-        } while (CalculatePlayerCardValues(participants.DealerCards) < 17);
+        if (draw) GiveDealerCard(false);
+        
+        var cards = CalculatePlayerCardValues(participants.DealerCards);
+        var hasAce = participants.DealerCards.Any(x => x.Card.IsAce);
+        var check = configuration.DealerRule switch
+        {
+            DealerRules.DealerHard17 => cards < 17,
+            DealerRules.DealerHard16 => cards < 16,
+            DealerRules.DealerSoft17 => !hasAce ? cards < 17: HasDealerSoftHand() <= 17 || cards < 17,
+            DealerRules.DealerSoft16 => !hasAce ? cards < 16: HasDealerSoftHand() <= 16 || cards < 16,
+            _ => cards < 16
+        };
 
-        DealerRound();
+        if (check) DealerDraw(true);
     }
     
     public void DealerBust()
@@ -149,8 +156,10 @@ public class Blackjack
         Plugin.SwitchState(GameState.Done);
     }
     
-    public void DealerRound()
+    public void DealerRound(bool once)
     {
+        participants.DealerAction = "End";
+        
         var cards = CalculatePlayerCardValues(participants.DealerCards);
         switch (cards)
         {
@@ -160,12 +169,11 @@ public class Blackjack
             case 21:
                 DealerBlackjack();
                 break;
-            case < 17:
-                DealerUnder17();
+            default:
+                DealerDraw(false);
+                if (once) DealerRound(false);
                 break;
         }
-        
-        participants.DealerAction = "End";
     }
 
     public void CheckForRemainingPlayers()
@@ -175,7 +183,8 @@ public class Blackjack
             Plugin.SwitchState(GameState.Done);
             return;
         }
-        DealerRound();
+        
+        DealerRound(true);
     }
     
     public void Hit(Cards.Card card)
@@ -412,4 +421,17 @@ public class Blackjack
 
         return !hasAce ? cards : cards - 1 < 11 ? cards + 10 : cards;
     }
+    
+    public int HasDealerSoftHand()
+    {
+        return participants.DealerCards.Select(x => x.Card).Sum(card => card.Value) + 10;
+    }
+}
+
+public enum DealerRules
+{
+    DealerHard17 = 0,
+    DealerSoft17 = 1,
+    DealerHard16 = 2,
+    DealerSoft16 = 3
 }

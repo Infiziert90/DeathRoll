@@ -4,6 +4,7 @@ using System.Numerics;
 using Dalamud.Configuration;
 using Dalamud.Plugin;
 using DeathRoll.Data;
+using DeathRoll.Logic;
 
 namespace DeathRoll;
 
@@ -43,6 +44,7 @@ public class Configuration : IPluginConfiguration
     public bool AutoDrawOpening = true;
     public bool AutoOpenField = true;
     public int DefaultBet = 250000;
+    public DealerRules DealerRule = DealerRules.DealerHard16;
     
     [NonSerialized] private DalamudPluginInterface? pluginInterface;
     [NonSerialized] public bool AcceptNewPlayers = false;

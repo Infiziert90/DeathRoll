@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using DeathRoll.Data;
+using DeathRoll.Logic;
 using ImGuiNET;
 
 namespace DeathRoll.Gui;
@@ -8,7 +9,18 @@ namespace DeathRoll.Gui;
 public class GeneralSettings
 {
     private readonly Configuration configuration;
+    private const string DealerHitMsg = @"Hard = Dealer stays at number
+Hard17 Example: 
+- Hand: Ace (11) + 6 (6) Value: 17 
+- Dealer has 17 and stops
 
+Soft = Dealer hits with ace
+Soft17 Example: 
+- Hand: Ace (11) + 6 (6) Value: 17 
+- Draws Queen 
+- Hand: Ace (1) + 6 (6) + Queen (10) Value: 17 
+- Dealer has hard 17 and stops";
+    
     public GeneralSettings(Configuration configuration)
     {
         this.configuration = configuration;
@@ -33,7 +45,7 @@ public class GeneralSettings
         Helper.ShowHelpMarker("Venue: Useful for games like Truth&Dare\nTournament: 1 vs 1 DeathRoll with a bracket system");
         
         var gameMode = (int) configuration.GameMode;
-        var list = System.Enum.GetNames(typeof(GameModes));
+        var list = Enum.GetNames(typeof(GameModes));
         ImGui.Combo("##gamemode_combo", ref gameMode, list, list.Length);
         
         if (gameMode != (int) configuration.GameMode)
@@ -91,15 +103,30 @@ public class GeneralSettings
                     }
                     
                     var defaultBet = configuration.DefaultBet;
-                    ImGui.Text("Default Bet:");
-                    ImGui.SameLine();
-                    ImGui.PushItemWidth(100f);
+                    ImGui.PushItemWidth(120f);
                     if (ImGui.InputInt("##default_bet_input:", ref defaultBet, 0))
                     {
                         defaultBet = Math.Clamp(defaultBet, 10, int.MaxValue);
                         configuration.DefaultBet = defaultBet;
                         configuration.Save();
                     }
+                    ImGui.SameLine();
+                    ImGui.Text("Default Bet");
+                    
+                    
+                    var dealerRule = (int) configuration.DealerRule;
+                    var list1 = Enum.GetNames(typeof(DealerRules));
+                    ImGui.PushItemWidth(120f);
+                    ImGui.Combo("##dealerrules_combo", ref dealerRule, list1, list1.Length);
+                    if (dealerRule != (int) configuration.DealerRule)
+                    {
+                        configuration.DealerRule = (DealerRules) dealerRule;
+                        configuration.Save();
+                    }
+                    ImGui.SameLine();
+                    ImGui.Text("Dealer Rule");
+                    ImGui.SameLine();
+                    Helper.ShowHelpMarker(DealerHitMsg);
                     break;
             }
         }
