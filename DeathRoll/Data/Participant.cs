@@ -32,7 +32,6 @@ public class Participants
     public List<Participant> DealerCards = new();
     public Dictionary<string, Player> PlayerBets = new();
     public int CurrentIndex = 0;
-    public List<int> CardsInUse = new();
     
     public Participants(Configuration configuration)
     {
@@ -138,7 +137,6 @@ public class Participants
         
         DealerCards.Clear();
         PlayerBets.Clear();
-        CardsInUse.Clear();
         CurrentIndex = 0;
         DealerAction = "";
     }

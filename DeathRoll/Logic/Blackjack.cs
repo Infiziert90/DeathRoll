@@ -389,14 +389,7 @@ public class Blackjack
     private Random rng = new Random(unchecked(Environment.TickCount * 31));
     public Cards.Card DrawCard()
     {
-        Cards.Card card;
-        do
-        {
-            card = new Cards.Card(rng.Next(1, 14), rng.Next(0, 4), false);
-        } while (participants.CardsInUse.Contains(card.Suit * 100 + card.Rank));
-        
-        participants.CardsInUse.Add(card.Suit * 100 + card.Rank);
-        return card;
+        return new Cards.Card(rng.Next(1, 14), rng.Next(0, 4), false);
     }
     
     public void CheckIfPlayersCanSplits()
