@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dalamud.Logging;
 using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
@@ -90,9 +91,8 @@ public class Blackjack
         var last = new List<string>(participants.PlayerNameList);
         participants.Reset();
 
-        foreach (var name in last)
+        foreach (var name in last.Where(name => !name.EndsWith(" Split")))
         {
-            if (name.EndsWith(" Split")) continue;
             participants.Add(new Participant(name, 1000, 1000));
             participants.PlayerBets[name] = new Participants.Player(configuration.DefaultBet, true);
         }
@@ -102,11 +102,13 @@ public class Blackjack
     public void EndMatch()
     {
         var dealerCards = CalculatePlayerCardValues(participants.DealerCards);
-        foreach (var player in participants.PlayerBets.Values.Where(x => x.IsAlive))
+        foreach (var (name, player) in participants.PlayerBets)
         {
-            var currentPlayer = participants.FindAll(participants.PList[participants.CurrentIndex].name);
+            if (!player.IsAlive) continue;
+            
+            var currentPlayer = participants.FindAll(name);
             var cards = CalculatePlayerCardValues(currentPlayer);
-
+            
             if (cards != dealerCards)
             {
                 player.Bet *= cards > dealerCards ? 2 : -1;
