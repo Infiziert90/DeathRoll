@@ -51,7 +51,7 @@ Soft17 Example:
             configuration.Save();
         }                    
         ImGui.SameLine();
-        Helper.ShowHelpMarker("Automatically draw all dealer cards (first card is always automatic).");
+        Helper.ShowHelpMarker("Automatically draw all dealer cards (first two cards are always automatic).");
         
         var autoOpenField = configuration.AutoOpenField;
         if (ImGui.Checkbox("Open card field on game start", ref autoOpenField))
