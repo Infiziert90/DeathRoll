@@ -29,7 +29,7 @@ public class Blackjack
             case GameState.DrawFirstCards or GameState.DrawSecondCards:
                 ParseFirstCards(playerName, parsedRoll, parsedOutOf);
                 break;
-            case GameState.DrawDealerCard:
+            case GameState.DealerFirstCards or GameState.DealerSecondCards or GameState.DrawDealerCard:
                 ParseDealerCards(playerName, parsedRoll, parsedOutOf);
                 break;
             default:
@@ -45,9 +45,8 @@ public class Blackjack
             return;
         }
         while (DealerCheckHand()) { GiveDealerCard(false); }
-        
         DealerRound();
-        Plugin.SwitchState(GameState.DealerDone);
+        if (Plugin.State != GameState.Done) Plugin.SwitchState(GameState.DealerDone);
     }
     
     public void PlayerAction()
@@ -163,6 +162,7 @@ public class Blackjack
         foreach (var player in participants.PlayerBets.Values.Where(x => x.IsAlive))
         {
             player.Bet *= 2;
+            player.IsAlive = false;
         }
         Plugin.SwitchState(GameState.Done);
     }
@@ -174,6 +174,7 @@ public class Blackjack
         foreach (var player in participants.PlayerBets.Values.Where(x => x.IsAlive))
         {
             player.Bet *= -1;
+            player.IsAlive = false;
         }
         Plugin.SwitchState(GameState.Done);
     }
@@ -283,6 +284,12 @@ public class Blackjack
             NextPlayer();
             return;
         }
+
+        if (configuration.VenueDealer)
+        {
+            Plugin.SwitchState(GameState.DealerSecondCards);
+            return;
+        }
         
         participants.DealerCards[0].Card.IsHidden = false;
         Plugin.SwitchState(GameState.DealerRound);
@@ -324,13 +331,14 @@ public class Blackjack
     public void FinishDrawingRound(GameState state)
     {
         participants.CurrentIndex = 0;
-        GiveDealerCard(Plugin.State == GameState.DrawFirstCards);
         
         Plugin.SwitchState(state);
     }
 
     public void SetDrawingRound()
     {
+        if (!configuration.VenueDealer) GiveDealerCard(true);
+        
         // reverse list for easier imgui access
         participants.ReversedPlayerNameList = new List<string>(participants.PlayerNameList);
         participants.ReversedPlayerNameList.Reverse();
@@ -341,11 +349,12 @@ public class Blackjack
             return;
         }
 
-        Plugin.SwitchState(!participants.DealerCards.Any() ? GameState.DrawFirstCards : GameState.DrawSecondCards);
+        Plugin.SwitchState(participants.FindAllWithIndex().Count == 1 ? GameState.DrawFirstCards : GameState.DrawSecondCards);
     }
 
     public void PreparePlayers()
     {
+        if (!configuration.VenueDealer) GiveDealerCard(false);
         participants.DeleteRangeFromStart(participants.PlayerNameList.Count);
         CheckIfPlayersCanSplits();
         FirstPlayer();
@@ -354,9 +363,7 @@ public class Blackjack
     public void StartRound()
     {
         GiveEachPlayerOneCard();
-        GiveDealerCard(true);
         GiveEachPlayerOneCard();
-        GiveDealerCard(false);
         
         participants.CurrentIndex = 0;
     }

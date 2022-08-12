@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using DeathRoll.Logic;
 using ImGuiNET;
 
@@ -18,6 +19,11 @@ Soft17 Example:
 - Draws Queen 
 - Hand: Ace (1) + 6 (6) + Queen (10) Value: 17 
 - Dealer has hard 17 and stops";
+
+    private const string DealerVenueMsg = "Venue:\n" +
+                                          "Modifies the game into a format suitable for a public venue, " +
+                                          "this will force all players and dealer to roll for cards - but in a different " +
+                                          "order to preserve the 'Hidden Card' status.";
     
     public BlackjackSettings(Configuration configuration)
     {
@@ -26,35 +32,68 @@ Soft17 Example:
     
     public void RenderSettings()
     {
-        var autoDrawCard = configuration.AutoDrawCard;
-        if (ImGui.Checkbox("(After) Automatically draw", ref autoDrawCard))
+        var current = configuration.BlackjackMode;
+        ImGui.RadioButton("Normal", ref current, 0);
+        ImGui.SameLine();
+        ImGui.RadioButton("Venue", ref current, 1);
+        ImGui.SameLine();
+        Helper.ShowHelpMarker(DealerVenueMsg);
+
+        if (current != configuration.BlackjackMode)
         {
-            configuration.AutoDrawCard = autoDrawCard;
+            configuration.BlackjackMode = current;
+            switch (current)
+            {
+                case 0:
+                    configuration.AutoDrawCard = configuration.AutoDrawOpening = configuration.AutoDrawDealer = true;
+                    configuration.VenueDealer = false;
+                    break;
+                case 1:
+                    configuration.AutoDrawCard = configuration.AutoDrawOpening = configuration.AutoDrawDealer = false;
+                    configuration.VenueDealer = true;
+                    break;
+            }
             configuration.Save();
         }
-        ImGui.SameLine();
-        Helper.ShowHelpMarker("Automatically draw all cards for players after the first two starting cards.");
-
-        var autoDrawOpening = configuration.AutoDrawOpening;
-        if (ImGui.Checkbox("(Start) Automatically draw", ref autoDrawOpening))
-        {
-            configuration.AutoDrawOpening = autoDrawOpening;
-            configuration.Save();
-        }                    
-        ImGui.SameLine();
-        Helper.ShowHelpMarker("Automatically draw two cards for all players at game start.");
         
-        var autoDrawDealer = configuration.AutoDrawDealer;
-        if (ImGui.Checkbox("(Dealer) Automatically draw", ref autoDrawDealer))
+        
+        if (configuration.BlackjackMode == 0)
         {
-            configuration.AutoDrawDealer = autoDrawDealer;
-            configuration.Save();
-        }                    
-        ImGui.SameLine();
-        Helper.ShowHelpMarker("Automatically draw all dealer cards (first two cards are always automatic).");
+            var autoDrawCard = configuration.AutoDrawCard;
+            if (ImGui.Checkbox("(After) Automatically draw", ref autoDrawCard))
+            {
+                configuration.VenueDealer = false;
+                configuration.AutoDrawCard = autoDrawCard;
+                configuration.Save();
+            }
+            ImGui.SameLine();
+            Helper.ShowHelpMarker("Automatically draw all cards for players after the first two starting cards.");
+
+            var autoDrawOpening = configuration.AutoDrawOpening;
+            if (ImGui.Checkbox("(Start) Automatically draw", ref autoDrawOpening))
+            {
+                configuration.VenueDealer = false;
+                configuration.AutoDrawOpening = autoDrawOpening;
+                configuration.Save();
+            }                    
+            ImGui.SameLine();
+            Helper.ShowHelpMarker("Automatically draw two cards for all players at game start.");
+        
+            var autoDrawDealer = configuration.AutoDrawDealer;
+            if (ImGui.Checkbox("(Dealer) Automatically draw", ref autoDrawDealer))
+            {
+                configuration.VenueDealer = false;
+                configuration.AutoDrawDealer = autoDrawDealer;
+                configuration.Save();
+            }                    
+            ImGui.SameLine();
+            Helper.ShowHelpMarker("Automatically draw all dealer cards (first two cards are excluded).");
+        }
+        
+        ImGui.Dummy(new Vector2(0.0f, 5.0f));
         
         var autoOpenField = configuration.AutoOpenField;
-        if (ImGui.Checkbox("Open card field on game start", ref autoOpenField))
+        if (ImGui.Checkbox("Open extended UI", ref autoOpenField))
         {
             configuration.AutoOpenField = autoOpenField;
             configuration.Save();

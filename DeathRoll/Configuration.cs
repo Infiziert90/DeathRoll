@@ -43,6 +43,8 @@ public class Configuration : IPluginConfiguration
     public bool AutoDrawCard = true;
     public bool AutoDrawOpening = true;
     public bool AutoDrawDealer = true;
+    public bool VenueDealer = false;
+    public int BlackjackMode = 0;
     public bool AutoOpenField = true;
     public int DefaultBet = 250000;
     public DealerRules DealerRule = DealerRules.DealerHard16;

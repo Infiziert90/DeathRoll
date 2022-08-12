@@ -46,6 +46,9 @@ Round continues as before, with the split hands turn happening later";
             case GameState.Registration:
                 RegistrationPanel();
                 break;
+            case GameState.DealerFirstCards or GameState.DealerSecondCards:
+                DealerStartingDraw();
+                break;
             case GameState.PrepareRound:
                 MatchBeginningPanel();
                 break;
@@ -93,7 +96,6 @@ Round continues as before, with the split hands turn happening later";
                 if (!ImGui.Button("Start Round")) return;
                 participants.Reset();
                 fieldVisible = false;
-                //blackjack.CheckForDealer();
                 Plugin.SwitchState(GameState.Registration);
                 return;            
             case GameState.Crash:
@@ -134,6 +136,9 @@ Round continues as before, with the split hands turn happening later";
     {
         if (!blackjack.DealerCheckHand())
         {
+            blackjack.DealerRound();
+            if (Plugin.State == GameState.Done) return;
+            
             participants.DealerAction = "End";
             Plugin.SwitchState(GameState.DealerDone);
             return;
@@ -284,6 +289,23 @@ Round continues as before, with the split hands turn happening later";
         if (configuration.AutoOpenField) fieldVisible = true;
     }
     
+    public void DealerStartingDraw()
+    {
+        switch (Plugin.State)
+        {
+            case GameState.DealerFirstCards when participants.DealerCards.Any():
+                blackjack.SetDrawingRound();
+                break;
+            case GameState.DealerSecondCards when participants.DealerCards.Count == 2:
+                Plugin.SwitchState(GameState.DealerRound);
+                blackjack.CheckForRemainingPlayers();
+                break;
+        }
+
+        ImGui.TextColored(_greenColor, $"Waiting for dealer roll ...");
+        ImGui.TextColored(_greenColor, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
+    }
+    
     public void RegistrationPanel()
     {
         if (ErrorMsg != string.Empty) { Helper.ErrorWindow(ref ErrorMsg); }
@@ -292,7 +314,14 @@ Round continues as before, with the split hands turn happening later";
         {
             if (ImGui.Button("Close Registration"))
             {
-                blackjack.SetDrawingRound();
+                if (configuration.VenueDealer)
+                {
+                    Plugin.SwitchState(GameState.DealerFirstCards);
+                }
+                else
+                {
+                    blackjack.SetDrawingRound();
+                }
                 return;
             }
         }

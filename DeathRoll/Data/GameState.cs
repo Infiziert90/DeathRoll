@@ -14,12 +14,14 @@ public enum GameState
     
     // blackjack
     PrepareRound = 200,
-    PlayerRound = 201,
-    DealerRound = 203,
+    DrawFirstCards = 201,
+    DrawSecondCards = 202,
+    PlayerRound = 203,
     Hit = 204,
     DoubleDown = 205,
-    DrawFirstCards = 206,
-    DrawSecondCards = 207,
-    DrawDealerCard = 208,
-    DealerDone = 209,
+    DealerRound = 206,
+    DealerFirstCards = 207,
+    DealerSecondCards = 208,
+    DrawDealerCard = 209,
+    DealerDone = 210,
 }
