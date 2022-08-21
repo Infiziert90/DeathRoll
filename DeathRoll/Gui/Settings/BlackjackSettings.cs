@@ -10,15 +10,21 @@ public class BlackjackSettings
     private readonly Configuration configuration;
     private const string DealerHitMsg = @"Hard = Dealer stays at number
 Hard17 Example: 
-- Hand: Ace (11) + 6 (6) Value: 17 
-- Dealer has 17 and stops
+- Hand: Ace (11) + 6 Value: 17 
+- Dealer has 17 and must stay
 
 Soft = Dealer hits with ace
 Soft17 Example: 
-- Hand: Ace (11) + 6 (6) Value: 17 
+- Hand: Ace (11) + 6 Value: 17 
+- Draws 3 
+- Hand: Ace (11) + 6 + 3 Value: 20 
+- Dealer has 20 and must stay
+
+Alternative Soft16 Example:
+- Hand: Ace (11) + 5 Value: 16 
 - Draws Queen 
-- Hand: Ace (1) + 6 (6) + Queen (10) Value: 17 
-- Dealer has hard 17 and stops";
+- Hand: Ace (1) + 5 + Queen Value: 16 
+- Dealer has hard 16 and must stay";
 
     private const string DealerVenueMsg = "Venue:\n" +
                                           "Modifies the game into a format suitable for a public venue, " +
