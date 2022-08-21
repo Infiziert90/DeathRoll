@@ -276,7 +276,7 @@ public class Blackjack
     {
         participants.NextParticipant();
         
-        if (!participants.HasMoreParticipants())
+        if (participants.HasMoreParticipants())
         {
             Plugin.SwitchState(GameState.PlayerRound);
             if (CheckPlayerCards()) return;

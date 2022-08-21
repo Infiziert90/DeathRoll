@@ -158,7 +158,6 @@ public class Participants
     public void NextParticipant() => CurrentIndex++;
     public void ResetParticipant() => CurrentIndex = 0;
     public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
-    public bool HasLastPlayerTwoCards() => PList.Any() && FindAll(PlayerNameList.Last()).Count >= 2;
 }
 
 public class Participant

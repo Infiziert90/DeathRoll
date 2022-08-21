@@ -76,10 +76,15 @@ Round continues as before, with the split hands turn happening later";
         }
         
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        
-        if (participants.HasLastPlayerTwoCards())
+
+        switch (Plugin.State)
         {
-            CardDeckRender();
+            case GameState.PlayerRound:    
+            case GameState.DealerRound:           
+            case GameState.DealerDone:
+            case GameState.Done:
+                CardDeckRender();
+                break;
         }
     }
 
