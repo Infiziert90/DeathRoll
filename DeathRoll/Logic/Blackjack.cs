@@ -51,7 +51,7 @@ public class Blackjack
     
     public void PlayerAction()
     {
-        if (!participants.PList[participants.CurrentIndex].name.EndsWith(" Split"))
+        if (!participants.GetParticipant().name.EndsWith(" Split"))
         {
             if (!configuration.AutoDrawCard) return;
         }
@@ -74,7 +74,7 @@ public class Blackjack
     {
         // check if roll is out of 13 (13 cards) and check if current player has rolled
         if (parsedOutOf != 13) return;
-        if (participants.PList[participants.CurrentIndex].name != playerName) return;
+        if (participants.GetParticipant().name != playerName) return;
 
         var card = DrawCard();
         switch (Plugin.State)
@@ -91,12 +91,12 @@ public class Blackjack
     private void ParseFirstCards(string playerName, int parsedRoll, int parsedOutOf)
     {
         if (parsedOutOf != 13) return;
-        if (participants.ReversedPlayerNameList[participants.CurrentIndex] != playerName) return;
+        if (participants.GetParticipantName() != playerName) return;
 
         var card = DrawCard();
         participants.Add(new Participant(playerName, new Cards.Card(parsedRoll, card.Suit, false)));
         
-        participants.CurrentIndex++;
+        participants.NextParticipant();
     }
     
     private void ParseDealerCards(string playerName, int parsedRoll, int parsedOutOf)
@@ -206,7 +206,7 @@ public class Blackjack
     
     public void Hit(Cards.Card card)
     {
-        var currentPlayer = participants.PList[participants.CurrentIndex].name;
+        var currentPlayer = participants.GetParticipant().name;
         participants.PlayerBets[currentPlayer].LastAction = "Hit";
         
         participants.Add(new Participant(currentPlayer, card)); 
@@ -220,7 +220,7 @@ public class Blackjack
 
     public void DoubleDown(Cards.Card card)
     {
-        var currentPlayer = participants.PList[participants.CurrentIndex].name;
+        var currentPlayer = participants.GetParticipant().name;
         participants.PlayerBets[currentPlayer].Bet *= 2;
         participants.PlayerBets[currentPlayer].LastAction = "Double Down";
             
@@ -232,21 +232,20 @@ public class Blackjack
     public void Split()
     {
         var cards = participants.FindAllWithIndex();
-        var currentPlayer = participants.PList[participants.CurrentIndex].name;
+        var currentPlayer = participants.GetParticipant().name;
         var splitName = $"{currentPlayer} Split";
         
         var card1 = DrawCard();
         var card2 = DrawCard();
         
         var tmp = new Participant(splitName, cards[1].Card);
-        participants.PList[participants.CurrentIndex+participants.PlayerNameList.Count] = tmp;
+        participants.PList[participants.GetCurrentIndex() + participants.PlayerNameList.Count] = tmp;
         participants.UsedDebugNames[splitName] = tmp.randomName;
         cards[1] = tmp;
 
         participants.Add(new Participant(currentPlayer, card1));
         
         participants.PlayerNameList.Add(splitName);
-        participants.ReversedPlayerNameList.Insert(0, splitName);
         participants.PList.Insert(participants.PlayerNameList.Count-1, new Participant(splitName, card2));
         
         var player = participants.PlayerBets[currentPlayer];
@@ -257,14 +256,14 @@ public class Blackjack
     
     public void Stay()
     {
-        participants.PlayerBets[participants.PList[participants.CurrentIndex].name].LastAction = "Stay";
+        participants.PlayerBets[participants.GetParticipant().name].LastAction = "Stay";
         
         NextPlayer();
     }
     
     public void Surrender()
     {
-        var currentPlayer = participants.PList[participants.CurrentIndex].name;
+        var currentPlayer = participants.GetParticipant().name;
         var player = participants.PlayerBets[currentPlayer];
         player.Bet = (player.Bet / 2) * -1;
         player.IsAlive = false;
@@ -275,9 +274,9 @@ public class Blackjack
     
     public void NextPlayer()
     {
-        participants.CurrentIndex++;
+        participants.NextParticipant();
         
-        if (participants.CurrentIndex < participants.PlayerNameList.Count)
+        if (!participants.HasMoreParticipants())
         {
             Plugin.SwitchState(GameState.PlayerRound);
             if (CheckPlayerCards()) return;
@@ -308,7 +307,7 @@ public class Blackjack
     
     public bool CheckPlayerCards()
     {
-        var currentPlayer = participants.FindAll(participants.PList[participants.CurrentIndex].name);
+        var currentPlayer = participants.FindAll(participants.GetParticipant().name);
         var cards = CalculatePlayerCardValues(currentPlayer);
         
         var player = participants.PlayerBets[currentPlayer[0].name];
@@ -330,7 +329,7 @@ public class Blackjack
     
     public void FinishDrawingRound(GameState state)
     {
-        participants.CurrentIndex = 0;
+        participants.ResetParticipant();
         
         Plugin.SwitchState(state);
     }
@@ -338,11 +337,7 @@ public class Blackjack
     public void SetDrawingRound()
     {
         if (!configuration.VenueDealer) GiveDealerCard(true);
-        
-        // reverse list for easier imgui access
-        participants.ReversedPlayerNameList = new List<string>(participants.PlayerNameList);
-        participants.ReversedPlayerNameList.Reverse();
-        
+
         if (configuration.AutoDrawOpening)
         {
             Plugin.SwitchState(GameState.PrepareRound);
@@ -365,7 +360,7 @@ public class Blackjack
         GiveEachPlayerOneCard();
         GiveEachPlayerOneCard();
         
-        participants.CurrentIndex = 0;
+        participants.ResetParticipant();
     }
     
     public string TargetRegistration()

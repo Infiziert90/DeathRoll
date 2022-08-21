@@ -77,7 +77,7 @@ Round continues as before, with the split hands turn happening later";
         
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         
-        if (participants.DealerCards.Count >= 2)
+        if (participants.HasLastPlayerTwoCards())
         {
             CardDeckRender();
         }
@@ -168,14 +168,14 @@ Round continues as before, with the split hands turn happening later";
 
     public void WaitForRollPanel()
     {
-        ImGui.TextColored(_yellowColor, $"Current Player: {participants.PList[participants.CurrentIndex].GetDisplayName()}");
+        ImGui.TextColored(_yellowColor, $"Current Player: {participants.GetParticipant().GetDisplayName()}");
         ImGui.TextColored(_greenColor, $"Waiting for player roll ...");
         ImGui.TextColored(_greenColor, $"Player must draw a card with either /random 13 or /dice 13 respectively.");
     }
     
     public void PlayerRoundPanel()
     {
-        ImGui.TextColored(_yellowColor, $"Current Player: {participants.PList[participants.CurrentIndex].GetDisplayName()}");
+        ImGui.TextColored(_yellowColor, $"Current Player: {participants.GetParticipant().GetDisplayName()}");
         ImGui.Text("Player Options:");
         ImGui.SameLine();
         Helper.ShowHelpMarker(HelpText);
@@ -184,7 +184,7 @@ Round continues as before, with the split hands turn happening later";
         if (ImGui.Button("Surrender")) { blackjack.Surrender(); }
         if (ImGui.Button("Double Down")) { Plugin.SwitchState(GameState.DoubleDown); blackjack.PlayerAction(); }
 
-        if (participants.PList[participants.CurrentIndex].CanSplit) { if (ImGui.Button("Split")) { blackjack.Split(); } }
+        if (participants.GetParticipant().CanSplit) { if (ImGui.Button("Split")) { blackjack.Split(); } }
         
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         if (ImGui.Button("Copy Player"))
@@ -251,7 +251,7 @@ Round continues as before, with the split hands turn happening later";
 
     public void MatchBeginDraw()
     {
-        if (participants.CurrentIndex >= participants.PlayerNameList.Count)
+        if (participants.GetCurrentIndex() >= participants.PlayerNameList.Count)
         {
             switch (Plugin.State)
             {
@@ -271,7 +271,7 @@ Round continues as before, with the split hands turn happening later";
         ImGui.Text("The draw order is:");
         foreach (var (name, i) in participants.PlayerNameList.Select((value, i) => (value, i)))
         {
-            if (participants.CurrentIndex == i)
+            if (participants.GetCurrentIndex() == i)
             {
                 ImGui.TextColored(_greenColor, $"{participants.FindPlayer(name).GetDisplayName()}");
             }
@@ -420,9 +420,9 @@ Round continues as before, with the split hands turn happening later";
             }
 
             var currentX = orgCursor.X;
-            foreach (var name in participants.ReversedPlayerNameList)
+            foreach (var name in participants.PlayerNameList)
             {
-                if (participants.ReversedPlayerNameList.First() != name)
+                if (participants.PlayerNameList.First() != name)
                     currentX += 30;
                 ImGui.SetCursorPos(new Vector2(currentX, orgCursor.Y + 250));
                 ImGui.Text($"{participants.FindPlayer(name).GetDisplayName()}: ");

@@ -12,7 +12,6 @@ public class Participants
     
     public List<Participant> PList = new();
     public List<string> PlayerNameList = new();
-    public List<string> ReversedPlayerNameList = new();
     
     public Dictionary<string, string> UsedDebugNames = new();
 
@@ -31,7 +30,7 @@ public class Participants
     public string DealerAction = "";
     public List<Participant> DealerCards = new();
     public Dictionary<string, Player> PlayerBets = new();
-    public int CurrentIndex = 0;
+    private int CurrentIndex = 0;
     
     public Participants(Configuration configuration)
     {
@@ -86,7 +85,6 @@ public class Participants
     {
         PList.RemoveAll(x => x.name == name);
         PlayerNameList.RemoveAll(x => x == name);
-        ReversedPlayerNameList.RemoveAll(x => x == name);
         
         UsedDebugNames.Remove(name);
         PlayerBets.Remove(name);
@@ -128,7 +126,6 @@ public class Participants
     {
         PList.Clear();
         PlayerNameList.Clear();
-        ReversedPlayerNameList.Clear();
         UsedDebugNames.Clear();
         NextRound.Clear();
         
@@ -154,6 +151,14 @@ public class Participants
             IsAlive = isAlive;
         }
     }
+
+    public int GetCurrentIndex() => CurrentIndex;
+    public Participant GetParticipant() => PList[CurrentIndex];
+    public string GetParticipantName() => PlayerNameList[CurrentIndex];
+    public void NextParticipant() => CurrentIndex++;
+    public void ResetParticipant() => CurrentIndex = 0;
+    public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
+    public bool HasLastPlayerTwoCards() => PList.Any() && FindAll(PlayerNameList.Last()).Count >= 2;
 }
 
 public class Participant
