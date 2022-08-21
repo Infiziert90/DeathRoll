@@ -23,6 +23,7 @@ public class SimpleTournamentMode
 
     private bool shuffled = false;
     private int debugNumber = 8;
+    private bool lastSeenSetting = false;
 
     private bool bracketVisible = false;
     private bool matchVisible = false;
@@ -154,6 +155,11 @@ public class SimpleTournamentMode
     {
         if (!bracketVisible) return;
         if (Plugin.State is GameState.NotRunning or GameState.Crash) return;
+        if (lastSeenSetting != DebugConfig.RandomizeNames)
+        {
+            lastSeenSetting = DebugConfig.RandomizeNames;
+            spTourn.FillBracketTable();
+        }
         
         ImGui.SetNextWindowSize(new Vector2(600, 600), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(float.MaxValue, float.MaxValue));
