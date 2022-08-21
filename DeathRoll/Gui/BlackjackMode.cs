@@ -152,6 +152,7 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TextColored(_greenColor, $"Waiting for dealer roll ...");
         ImGui.TextColored(_greenColor, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
         
+        ImGui.Dummy(new Vector2(0.0f, 5.0f));
         if (ImGui.Button("Copy Dealer"))
         {
             var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
@@ -164,6 +165,7 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TextColored(_yellowColor, $"All players done!");
         if (ImGui.Button("Begin Dealer Round")) { blackjack.DealerAction(); }
         
+        ImGui.Dummy(new Vector2(0.0f, 5.0f));
         if (ImGui.Button("Copy Dealer"))
         {
             var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);

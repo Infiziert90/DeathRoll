@@ -155,11 +155,18 @@ public class Participants
     }
 
     public int GetCurrentIndex() => CurrentIndex;
+    
     public Participant GetParticipant() => PList[CurrentIndex];
+    
     public string GetParticipantName() => PlayerNameList[CurrentIndex];
+    
     public void NextParticipant() => CurrentIndex++;
+    
     public void ResetParticipant() => CurrentIndex = 0;
+    
     public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
+    
+    public void SetLastPlayerAction(string action) => PlayerBets[GetParticipant().name].LastAction = action;
 }
 
 public class Participant

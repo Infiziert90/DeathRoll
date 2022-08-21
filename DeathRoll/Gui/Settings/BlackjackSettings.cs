@@ -60,27 +60,27 @@ Soft17 Example:
         if (configuration.BlackjackMode == 0)
         {
             var autoDrawCard = configuration.AutoDrawCard;
-            if (ImGui.Checkbox("(After) Automatically draw", ref autoDrawCard))
+            if (ImGui.Checkbox("Automate player draws", ref autoDrawCard))
             {
                 configuration.VenueDealer = false;
                 configuration.AutoDrawCard = autoDrawCard;
                 configuration.Save();
             }
             ImGui.SameLine();
-            Helper.ShowHelpMarker("Automatically draw all cards for players after the first two starting cards.");
+            Helper.ShowHelpMarker("Automatically draw cards for players on hit, double down and split.");
 
             var autoDrawOpening = configuration.AutoDrawOpening;
-            if (ImGui.Checkbox("(Start) Automatically draw", ref autoDrawOpening))
+            if (ImGui.Checkbox("Automate opening draws", ref autoDrawOpening))
             {
                 configuration.VenueDealer = false;
                 configuration.AutoDrawOpening = autoDrawOpening;
                 configuration.Save();
             }                    
             ImGui.SameLine();
-            Helper.ShowHelpMarker("Automatically draw two cards for all players at game start.");
+            Helper.ShowHelpMarker("Automatically draw the first two cards for all players.");
         
             var autoDrawDealer = configuration.AutoDrawDealer;
-            if (ImGui.Checkbox("(Dealer) Automatically draw", ref autoDrawDealer))
+            if (ImGui.Checkbox("Automate dealer draws", ref autoDrawDealer))
             {
                 configuration.VenueDealer = false;
                 configuration.AutoDrawDealer = autoDrawDealer;

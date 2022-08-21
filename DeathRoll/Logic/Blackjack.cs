@@ -210,7 +210,7 @@ public class Blackjack
     public void Hit(Cards.Card card)
     {
         var currentPlayer = participants.GetParticipant().name;
-        participants.PlayerBets[currentPlayer].LastAction = "Hit";
+        participants.SetLastPlayerAction("Hit");
         
         participants.Add(new Participant(currentPlayer, card)); 
         if (!CheckPlayerCards())
@@ -225,7 +225,7 @@ public class Blackjack
     {
         var currentPlayer = participants.GetParticipant().name;
         participants.PlayerBets[currentPlayer].Bet *= 2;
-        participants.PlayerBets[currentPlayer].LastAction = "Double Down";
+        participants.SetLastPlayerAction("Double Down");
             
         participants.Add(new Participant(currentPlayer, card)); 
         CheckPlayerCards();
@@ -234,7 +234,7 @@ public class Blackjack
     
     public void Split()
     {
-        if (!configuration.VenueDealer && !configuration.AutoDrawCard)
+        if (!configuration.VenueDealer && configuration.AutoDrawCard)
         {
             participants.SplitDraw.Add(DrawCard());
             participants.SplitDraw.Add(DrawCard());
@@ -267,14 +267,15 @@ public class Blackjack
         player.LastAction = "Split";
         
         participants.PlayerBets[splitName] = new Participants.Player(player.Bet, true);
-        
+
+        participants.GetParticipant().CanSplit = false;
         participants.SplitDraw.Clear();
         Plugin.SwitchState(GameState.PlayerRound);
     }
     
     public void Stay()
     {
-        participants.PlayerBets[participants.GetParticipant().name].LastAction = "Stay";
+        participants.SetLastPlayerAction("Stay");
         
         NextPlayer();
     }
