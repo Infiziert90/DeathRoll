@@ -58,7 +58,7 @@ Round continues as before, with the split hands turn happening later";
             case GameState.PlayerRound:
                 PlayerRoundPanel();
                 break;            
-            case GameState.Hit or GameState.DoubleDown:
+            case GameState.Hit or GameState.DoubleDown or GameState.DrawSplit:
                 WaitForRollPanel();
                 break;
             case GameState.DealerRound:
@@ -176,6 +176,12 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TextColored(_yellowColor, $"Current Player: {participants.GetParticipant().GetDisplayName()}");
         ImGui.TextColored(_greenColor, $"Waiting for player roll ...");
         ImGui.TextColored(_greenColor, $"Player must draw a card with either /random 13 or /dice 13 respectively.");
+        
+        if (Plugin.State != GameState.DrawSplit) return;
+        ImGui.TextColored(_greenColor, $"Player has drawn: {participants.SplitDraw.Count} out of 2 cards");
+        
+        if (participants.SplitDraw.Count != 2) return;
+        blackjack.Split();
     }
     
     public void PlayerRoundPanel()

@@ -31,6 +31,7 @@ public class Participants
     public List<Participant> DealerCards = new();
     public Dictionary<string, Player> PlayerBets = new();
     private int CurrentIndex = 0;
+    public List<Cards.Card> SplitDraw = new();
     
     public Participants(Configuration configuration)
     {
@@ -136,6 +137,7 @@ public class Participants
         PlayerBets.Clear();
         CurrentIndex = 0;
         DealerAction = "";
+        SplitDraw.Clear();
     }
     
     // blackjack

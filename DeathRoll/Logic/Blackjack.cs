@@ -9,7 +9,7 @@ public class Blackjack
 {
     private readonly Configuration configuration;
     private readonly Participants participants;
-    
+
     public Blackjack(Configuration configuration, Participants participants)
     {
         this.configuration = configuration;
@@ -23,7 +23,7 @@ public class Blackjack
             case GameState.Registration:
                 Registration(playerName, parsedRoll, parsedOutOf);
                 break;
-            case GameState.Hit or GameState.DoubleDown:
+            case GameState.Hit or GameState.DoubleDown or GameState.DrawSplit:
                 RollParse(playerName, parsedRoll, parsedOutOf);
                 break;            
             case GameState.DrawFirstCards or GameState.DrawSecondCards:
@@ -84,6 +84,9 @@ public class Blackjack
                 return;
             case GameState.DoubleDown:
                 DoubleDown(new Cards.Card(parsedRoll, card.Suit, false));
+                return;
+            case GameState.DrawSplit:
+                participants.SplitDraw.Add(new Cards.Card(parsedRoll, card.Suit, false));
                 return;
         } 
     }
@@ -231,12 +234,24 @@ public class Blackjack
     
     public void Split()
     {
+        if (!configuration.VenueDealer && !configuration.AutoDrawCard)
+        {
+            participants.SplitDraw.Add(DrawCard());
+            participants.SplitDraw.Add(DrawCard());
+        }
+        
+        if (participants.SplitDraw.Count != 2)
+        {
+            Plugin.SwitchState(GameState.DrawSplit);
+            return;
+        }
+
         var cards = participants.FindAllWithIndex();
         var currentPlayer = participants.GetParticipant().name;
         var splitName = $"{currentPlayer} Split";
         
-        var card1 = DrawCard();
-        var card2 = DrawCard();
+        var card1 = participants.SplitDraw[0];
+        var card2 = participants.SplitDraw[1];
         
         var tmp = new Participant(splitName, cards[1].Card);
         participants.PList[participants.GetCurrentIndex() + participants.PlayerNameList.Count] = tmp;
@@ -252,6 +267,9 @@ public class Blackjack
         player.LastAction = "Split";
         
         participants.PlayerBets[splitName] = new Participants.Player(player.Bet, true);
+        
+        participants.SplitDraw.Clear();
+        Plugin.SwitchState(GameState.PlayerRound);
     }
     
     public void Stay()
