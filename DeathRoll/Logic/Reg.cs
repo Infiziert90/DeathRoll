@@ -14,6 +14,9 @@ public static class Reg
     private static Regex diceRollRegexFR = new(@"^Lancer (?:de dé|d'un dé )(?<out>\d+)? ! (?<roll>\d+)");
     private static Regex randomRollRegexFR = new(@"^(?:Lancer d'un dé (?<out>\d+) ! )?(?<player>Vous|[a-zA-Z'-]+ [a-zA-Z'-]*) (?:jetez|jette|obtenez un|obtient un) (?:les dés et (?:obtenez|obtient) )?(?<roll>\d+) !");
 
+    private static Regex diceRollRegexJP = new(@"^ダイス！ (?:MAX(?<out>\d+)  )?(?<roll>\d+)");
+    private static Regex randomRollRegexJP = new(@"^(?:(?<out>\d+)面)?ダイス！ (?<player>[a-zA-Z'-]+ [a-zA-Z'-]*)は、(?<roll>\d+)を出した！");
+    
     public static Match Match(string message, ClientLanguage language, bool dice)
     {
         var reg = language switch
@@ -21,6 +24,7 @@ public static class Reg
             ClientLanguage.English => !dice ? randomRollRegexEN : diceRollRegexEN,
             ClientLanguage.German => !dice ? randomRollRegexDE : diceRollRegexDE,
             ClientLanguage.French => !dice ? randomRollRegexFR : diceRollRegexFR,
+            ClientLanguage.Japanese => !dice ? randomRollRegexJP : diceRollRegexJP,
             _ => randomRollRegexEN
         };
         return reg.Match(message);
