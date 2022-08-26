@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
+using System.Text;
 using DeathRoll.Data;
 
 namespace DeathRoll;
@@ -12,8 +14,6 @@ public class Participants
     
     public List<Participant> PList = new();
     public List<string> PlayerNameList = new();
-    
-    public Dictionary<string, string> UsedDebugNames = new();
 
     // venue
     public bool IsOutOfUsed = false;
@@ -42,16 +42,9 @@ public class Participants
     {
         if (!PlayerNameList.Exists(x => x == p.name))
         {
-            while (UsedDebugNames.ContainsValue(p.randomName)) // check that random name is unique
-                p.GenerateRandomizedName();
             PlayerNameList.Add(p.name);
         }
-        else
-        {
-            p.randomName = UsedDebugNames[p.name]; // set random name to existing name
-        }
 
-        UsedDebugNames[p.name] = p.randomName;
         PList.Add(p);
         Last = p;
         Winner = PList[^(PList.Count == 1 ? 1 : 2)]; // we only ever take last if there is one entry
@@ -87,7 +80,6 @@ public class Participants
         PList.RemoveAll(x => x.name == name);
         PlayerNameList.RemoveAll(x => x == name);
         
-        UsedDebugNames.Remove(name);
         PlayerBets.Remove(name);
     }
 
@@ -127,7 +119,6 @@ public class Participants
     {
         PList.Clear();
         PlayerNameList.Clear();
-        UsedDebugNames.Clear();
         NextRound.Clear();
         
         IsOutOfUsed = false;
@@ -180,8 +171,6 @@ public class Participant
 
     public bool hasHighlight;
     public Vector4 highlightColor;
-
-    const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     
     //blackjack
     public Cards.Card Card = new(1, 1, false);
@@ -195,7 +184,7 @@ public class Participant
         this.hasHighlight = true;
         this.highlightColor = highlightColor;
         
-        GenerateRandomizedName();
+        GenerateHashedName();
         GenerateFancyName();
     }
 
@@ -207,7 +196,7 @@ public class Participant
         hasHighlight = false;
         highlightColor = new Vector4(0, 0, 0, 0);
         
-        GenerateRandomizedName();
+        GenerateHashedName();
         GenerateFancyName();
     }
     
@@ -216,7 +205,7 @@ public class Participant
         this.name = name;
         Card = card;
 
-        GenerateRandomizedName();
+        GenerateHashedName();
         GenerateFancyName();
     }
     
@@ -235,11 +224,20 @@ public class Participant
     {
         fName = name.Replace("\uE05D", "\uE05D ");
     }
-
-    public void GenerateRandomizedName()
+    
+    public void GenerateHashedName()
     {
-        var random = new Random();
-        randomName = "Player " + new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
+        using var sha1 = SHA1.Create();
+        var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(name));
+        var sb = new StringBuilder(hash.Length * 2);
+
+        foreach (var b in hash)
+        {
+            // can be "x2" if you want lowercase
+            sb.Append(b.ToString("X2"));
+        }
+
+        randomName = $"Player {sb.ToString()[..10]}";
     }
     
     public string GetDisplayName()

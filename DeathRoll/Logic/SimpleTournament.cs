@@ -186,9 +186,7 @@ public class SimpleTournament
             
             (Player1, Player2) = (InternalBrackets[currentStage][currentIndex], InternalBrackets[currentStage][currentIndex+1]);
 
-            var tmp = new Dictionary<string, string>(participants.UsedDebugNames);
             participants.Reset();
-            participants.UsedDebugNames = new Dictionary<string, string>(tmp);
             participants.PlayerNameList.Add(Player1.name);
             participants.PlayerNameList.Add(Player2.name);
         } 

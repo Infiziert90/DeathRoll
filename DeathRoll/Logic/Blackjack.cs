@@ -255,7 +255,6 @@ public class Blackjack
         
         var tmp = new Participant(splitName, cards[1].Card);
         participants.PList[participants.GetCurrentIndex() + participants.PlayerNameList.Count] = tmp;
-        participants.UsedDebugNames[splitName] = tmp.randomName;
         cards[1] = tmp;
 
         participants.Add(new Participant(currentPlayer, card1));
