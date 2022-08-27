@@ -21,7 +21,7 @@ public class PluginUI : IDisposable
     private bool visible;
 
     
-    public PluginUI(Configuration configuration, Participants participants, Rolls rolls)
+    public PluginUI(Plugin plugin, Configuration configuration, Participants participants, Rolls rolls)
     {
         this.Configuration = configuration;
         this.Participants = participants;
@@ -33,7 +33,7 @@ public class PluginUI : IDisposable
         RollTable = new RollTable(this);
         DeathRollMode = new DeathRollMode(this);
         SimpleTournamentMode = new SimpleTournamentMode(this);
-        BlackjackMode = new BlackjackMode(this);
+        BlackjackMode = new BlackjackMode(plugin, this);
 
         // needs RollTable
         TimerSetting = new TimerSetting(configuration, RollTable);

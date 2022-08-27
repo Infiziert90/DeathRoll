@@ -78,10 +78,7 @@ public class Timers : IDisposable
         if (time.StartsWith("00:")) time = time.Remove(0, 3);
         time += time.Length < 6 ? " min" : " hr";
         
-        ImGui.TextColored(_greenColor, time);
-        
-        ImGui.SameLine(ImGui.CalcTextSize(time).X + 15.0f);
-        if (ImGui.Button("Stop Timer")) StopTimer(); 
+        ImGui.TextColored(_greenColor, $"Time Left: {time}");
     }
 
     private void StartTimer()
@@ -118,4 +115,6 @@ public class Timers : IDisposable
         _m = configuration.DefaultMin;
         _s = configuration.DefaultSec;
     }
+
+    public bool IsStopwatchRunning() => stopwatch.IsRunning;
 }

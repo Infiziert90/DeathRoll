@@ -45,7 +45,7 @@ public class RollTable
         
         if (Plugin.State is GameState.Match)
         {
-            if (ImGui.Button("Stop Round"))
+            if (ImGui.Button(!Timers.IsStopwatchRunning()? "Stop Round" : "Stop Timer"))
             {
                 Timers.StopTimer();
                 Plugin.SwitchState(GameState.Done);
