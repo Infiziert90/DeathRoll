@@ -27,9 +27,11 @@ Round continues as before, with the split hands turn happening later";
     private readonly PluginUI pluginUi;
     private readonly Participants participants;
     private readonly Blackjack blackjack;
+    private readonly Plugin plugin;
     
-    public BlackjackMode(PluginUI pluginUi)
+    public BlackjackMode(Plugin plugin, PluginUI pluginUi)
     {
+        this.plugin = plugin;
         this.pluginUi = pluginUi;
         configuration = pluginUi.Configuration;
         participants = pluginUi.Participants;
@@ -230,7 +232,7 @@ Round continues as before, with the split hands turn happening later";
             ImGui.Text(p[0].GetDisplayName());
 
             ImGui.TableNextColumn();
-            ImGui.PushFont(FontManager.Font2);
+            ImGui.PushFont(plugin.FontManager.Font2);
             ImGui.Text(string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card))));
             ImGui.PopFont();
             
@@ -248,7 +250,7 @@ Round continues as before, with the split hands turn happening later";
         ImGui.Text("Dealer");
 
         ImGui.TableNextColumn();
-        ImGui.PushFont(FontManager.Font2);
+        ImGui.PushFont(plugin.FontManager.Font2);
         ImGui.Text(string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card))));
         ImGui.PopFont();
         
@@ -399,7 +401,7 @@ Round continues as before, with the split hands turn happening later";
     public void GameCardRender(Cards.Card card)
     {
         var s = Cards.ShowCard(card);
-        ImGui.PushFont(FontManager.Font);
+        ImGui.PushFont(plugin.FontManager.Font);
         ImGui.Text(s[0]);
         ImGui.PopFont();
         
@@ -407,7 +409,7 @@ Round continues as before, with the split hands turn happening later";
         
         var p = ImGui.GetCursorPos();
         ImGui.SetCursorPos(new Vector2(p.X-70, p.Y+100));
-        ImGui.PushFont(FontManager.Font1);
+        ImGui.PushFont(plugin.FontManager.Font1);
         ImGui.Text(s[1]);
         ImGui.PopFont();
     }

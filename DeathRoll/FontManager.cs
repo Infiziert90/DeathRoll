@@ -7,18 +7,18 @@ using ImGuiNET;
 
 namespace DeathRoll;
 
-public static class FontManager
+public class FontManager
 {
-    public static ImFontPtr Font;
-    public static ImFontPtr Font1;
-    public static ImFontPtr Font2;
+    public ImFontPtr Font;
+    public ImFontPtr Font1;
+    public ImFontPtr Font2;
     
-    static ImVector Ranges;
-    static ImFontConfigPtr FontConfig;
+    private ImVector Ranges;
+    private ImFontConfigPtr FontConfig;
     
-    static unsafe void SetUpRanges()
+    private unsafe void SetUpRanges()
     {
-        static ImVector BuildRange(IReadOnlyList<ushort> chars, params IntPtr[] ranges)
+        ImVector BuildRange(IReadOnlyList<ushort>? chars, params IntPtr[] ranges)
         {
             var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
             foreach (var range in ranges)
@@ -63,7 +63,7 @@ public static class FontManager
         };
     }
     
-    public static void BuildFonts()
+    public void BuildFonts()
     {
         SetUpRanges();
         var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\JetBrainsMono-Medium.ttf");

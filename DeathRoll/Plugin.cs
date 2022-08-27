@@ -37,6 +37,7 @@ public sealed class Plugin : IDalamudPlugin
     private Configuration Configuration { get; init; }
     private PluginUI PluginUi { get; init; }
     private Rolls Rolls { get; init; }
+    public FontManager FontManager { get; init; }
     
     public Plugin(
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
@@ -46,13 +47,15 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface = pluginInterface;
         this.clientState = clientState;
 
+        FontManager = new FontManager();
+        
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.Initialize(PluginInterface);
         
         Participants = new Participants(Configuration);
         Rolls = new Rolls(Configuration, Participants);
         
-        PluginUi = new PluginUI(Configuration, Participants, Rolls);
+        PluginUi = new PluginUI(this, Configuration, Participants, Rolls);
         commandManager = new PluginCommandManager<Plugin>(this, commands);
 
         Chat.ChatMessage += OnChatMessage;
