@@ -26,27 +26,27 @@ public class DeathRollMode
         if (Plugin.State is GameState.Done)
         {
             ImGui.Dummy(new Vector2(0.0f, 10.0f));
-            RenderWinnerPanel();  
+            RenderLoserPanel();  
         }
         
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ParticipantRender();
 
-        if (participants.PList.Count == 0 || Plugin.State is GameState.Done) return;
-        
-        ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        OrderListRender();
+        // if (participants.PList.Count == 0 || Plugin.State is GameState.Done) return;
+        //
+        // ImGui.Dummy(new Vector2(0.0f, 10.0f));
+        // DeletionListRender();
     }
 
-    public void RenderWinnerPanel()
+    public void RenderLoserPanel()
     {
-        var loser = participants.PList.Last();
-        ImGui.TextColored(_redColor, $"{loser.GetDisplayName()} lost!!!");
+        ImGui.TextColored(_redColor, $"{participants.Last.GetDisplayName()} lost!!!");
     }
 
     public void RenderControlPanel()
     {
-        if (ImGui.Button("Show Settings")) pluginUi.SettingsVisible = true;
+        if (ImGui.Button("Show Settings")) 
+            pluginUi.SettingsVisible = true;
         
         var spacing = ImGui.GetScrollMaxY() == 0 ? 80.0f : 95.0f;
         ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
@@ -59,16 +59,18 @@ public class DeathRollMode
         }
         
         var acceptNewPlayers = configuration.AcceptNewPlayers;
-        if (ImGui.Checkbox("Accept New Players", ref acceptNewPlayers))
-        {
-            configuration.AcceptNewPlayers = acceptNewPlayers;
-            configuration.Save();
-        }
+        if (!ImGui.Checkbox("Accept New Players", ref acceptNewPlayers)) 
+            return;
+        
+        configuration.AcceptNewPlayers = acceptNewPlayers;
+        configuration.Save();
     }
     
     public void ParticipantRender()
     {
-        if (!ImGui.BeginTable("##rolls", 3)) return;
+        if (!ImGui.BeginTable("##rolls", 3)) 
+            return;
+        
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 3.0f);
         ImGui.TableSetupColumn("Roll");
         ImGui.TableSetupColumn("Out Of");
@@ -89,10 +91,11 @@ public class DeathRollMode
         ImGui.EndTable();
     }
     
-    public void OrderListRender()
-    {
-        if (!Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None)) return;
-        ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        ImGui.Text("Removing players is currently not working as intended."); 
-    }
+    // TODO Fix deletion not working as intended
+    // public void DeletionListRender()
+    // {
+    //     if (!Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None)) return;
+    //     ImGui.Dummy(new Vector2(0.0f, 10.0f));
+    //     ImGui.Text("Removing players is currently not working as intended."); 
+    // }
 }

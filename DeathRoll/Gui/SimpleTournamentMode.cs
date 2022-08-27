@@ -200,7 +200,7 @@ public class SimpleTournamentMode
             if (participants.RoundDone)
             {
                 ImGui.Dummy(new Vector2(0.0f, 10.0f));
-                pluginUi.DeathRollMode.RenderWinnerPanel();  
+                pluginUi.DeathRollMode.RenderLoserPanel();  
             }
             else
             {
