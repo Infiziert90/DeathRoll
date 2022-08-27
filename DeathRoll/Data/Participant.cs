@@ -60,10 +60,6 @@ public class Participants
         return PList.FindAll(x => x.name == playerName);
     }
     
-    public List<Participant> FindAllWithIndex()
-    {
-        return FindAll(PList[CurrentIndex].name);
-    }
     
     public Participant GetWithIndex(int idx)
     {
@@ -150,6 +146,8 @@ public class Participants
     public Participant GetParticipant() => PList[CurrentIndex];
     
     public string GetParticipantName() => PlayerNameList[CurrentIndex];
+    
+    public List<Participant> FindAllWithIndex() => FindAll(PList[CurrentIndex].name);
     
     public void NextParticipant() => CurrentIndex++;
     

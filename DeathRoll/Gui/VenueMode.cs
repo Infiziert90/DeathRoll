@@ -13,7 +13,7 @@ public class RollTable
     private readonly Participants participants;
 
     private readonly PluginUI pluginUi;
-    public Timers Timers;
+    public readonly Timers Timers;
 
     public RollTable(PluginUI pluginUi)
     {
@@ -27,7 +27,7 @@ public class RollTable
     {
         RenderControlPanel();
         
-        if (participants.PList.Count <= 0) return;
+        if (!participants.PList.Any()) return;
         
         ImGui.Spacing();
         RenderRollTable();
@@ -35,13 +35,14 @@ public class RollTable
         RenderDeletionDropdown();
     }
     
-    public void RenderControlPanel()
+    private void RenderControlPanel()
     {
-        if (ImGui.Button("Show Settings")) pluginUi.SettingsVisible = true;
+        if (ImGui.Button("Show Settings")) 
+            pluginUi.SettingsVisible = true;
 
         var spacing = ImGui.GetScrollMaxY() == 0 ? 85.0f : 120.0f;
         ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
-
+        
         if (Plugin.State is GameState.Match)
         {
             if (ImGui.Button("Stop Round"))
@@ -61,7 +62,8 @@ public class RollTable
         
         ImGui.Dummy(new Vector2(0.0f, 1.0f));
 
-        if (configuration.UseTimer) Timers.RenderTimer();
+        if (configuration.UseTimer) 
+            Timers.RenderTimer();
         
         ImGui.TextUnformatted("Sorting:");
         
@@ -79,16 +81,19 @@ public class RollTable
             if (ImGui.InputInt("##nearestinput", ref nearest, 0, 0)) nearest = Math.Clamp(nearest, 1, 999);
         }
 
-        if (current == (int) configuration.SortingMode && nearest == configuration.Nearest) return;
+        if (current == (int) configuration.SortingMode && nearest == configuration.Nearest) 
+            return;
+        
         configuration.SortingMode = (SortingType) current;
         configuration.Nearest = nearest;
         configuration.Save();
         participants.UpdateSorting();
     }
 
-    public void RenderRollTable()
+    private void RenderRollTable()
     {
         if (!ImGui.BeginTable("##rolls", participants.IsOutOfUsed ? 3 : 2)) return;
+        
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 3.0f);
         ImGui.TableSetupColumn("Roll");
         if (participants.IsOutOfUsed) ImGui.TableSetupColumn("Out Of");
@@ -116,17 +121,17 @@ public class RollTable
             ImGui.TableNextColumn();
             ImGui.TextColored(color, participant.roll.ToString());
 
-            if (participants.IsOutOfUsed)
-            {
-                ImGui.TableNextColumn();
-                ImGui.TextColored(color, participant.outOf != -1 ? participant.outOf.ToString() : "");
-            }
+            if (!participants.IsOutOfUsed) 
+                continue;
+            
+            ImGui.TableNextColumn();
+            ImGui.TextColored(color, participant.outOf != -1 ? participant.outOf.ToString() : "");
         }
 
         ImGui.EndTable();
     }
 
-    public void RenderDeletionDropdown()
+    private void RenderDeletionDropdown()
     {
         Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None);
     }
