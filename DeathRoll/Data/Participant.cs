@@ -40,7 +40,7 @@ public class Participants
 
     public void Add(Participant p)
     {
-        if (!PlayerNameList.Exists(x => x == p.name))
+        if (p.name == "Byes" || !PlayerNameList.Exists(x => x == p.name))
         {
             PlayerNameList.Add(p.name);
         }
