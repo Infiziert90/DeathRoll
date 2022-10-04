@@ -135,17 +135,16 @@ public sealed class Plugin : IDalamudPlugin
             case false when Configuration.OnlyDice: // only /dice is accepted
                 return;
         }
-
         var m = Reg.Match(message.ToString(), clientState.ClientLanguage, dice);
         if (!m.Success) return;
-
+        
         var local = clientState?.LocalPlayer;
         if (local == null || local.HomeWorld.GameData?.Name == null)
         {
             PluginLog.Information("Unable to fetch character name.");
             return;
         }
-
+        
         var diceCommand = 0;
         var playerName = $"{local.Name}\uE05D{local.HomeWorld.GameData.Name}";
         LocalPlayer = playerName;
@@ -159,7 +158,7 @@ public sealed class Plugin : IDalamudPlugin
                 switch (payload)
                 {
                     case PlayerPayload playerPayload:
-                        playerName = playerPayload.DisplayedName;
+                        playerName = $"{playerPayload.PlayerName}\uE05D{playerPayload.World.Name}";
                         found = true;
                         break;
                     case IconPayload iconPayload:
@@ -182,12 +181,12 @@ public sealed class Plugin : IDalamudPlugin
                     if (Configuration.Debug) PluginLog.Debug($"Sender: {payload}");
                     playerName = payload switch
                     {
-                        PlayerPayload playerPayload => playerPayload.DisplayedName,
+                        PlayerPayload playerPayload => $"{playerPayload.PlayerName}\uE05D{playerPayload.World.Name}",
                         _ => playerName
                     };
                 }
         }
-
+        
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
         {
             if (Configuration.Debug) PluginLog.Debug("Blocked player tried to roll.");
