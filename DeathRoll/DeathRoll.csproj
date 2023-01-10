@@ -3,14 +3,14 @@
     <PropertyGroup>
         <Authors>Infi</Authors>
         <AssemblyName>DeathRoll</AssemblyName>
-        <AssemblyVersion>1.0.0.1</AssemblyVersion>
-        <Version>1.0.0.1</Version>
+        <AssemblyVersion>1.0.0.2</AssemblyVersion>
+        <Version>1.0.0.2</Version>
         <Description>Easy to use deathroll/roll game helper with functions to hightlight or block players.</Description>
         <PackageProjectUrl>https://github.com/Infiziert90/DeathRoll</PackageProjectUrl>
     </PropertyGroup>
 
     <PropertyGroup>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net7.0-windows</TargetFramework>
         <Platforms>x64</Platforms>
         <Nullable>enable</Nullable>
         <DebugSymbols>true</DebugSymbols>
@@ -41,7 +41,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.8" />
+        <PackageReference Include="DalamudPackager" Version="2.1.10" />
         <PackageReference Include="ILRepack" Version="2.1.0-beta1" />
         <Reference Include="FFXIVClientStructs">
             <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
