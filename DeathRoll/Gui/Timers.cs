@@ -64,10 +64,7 @@ public class Timers : IDisposable
             
         ImGui.SameLine(155.0f);
         if (ImGui.Button("Start Timer"))
-        {
-            wantedTime = new TimeSpan(_h, _m, _s);
             StartTimer();
-        }
     }
 
     public void RenderRunning()
@@ -81,8 +78,9 @@ public class Timers : IDisposable
         ImGui.TextColored(_greenColor, $"Time Left: {time}");
     }
 
-    private void StartTimer()
+    public void StartTimer()
     {
+        wantedTime = new TimeSpan(_h, _m, _s);
         stopwatch.Start();
         Plugin.Framework.Update += OnFrameworkUpdate;
 
@@ -90,7 +88,7 @@ public class Timers : IDisposable
         configuration.Save();
         Plugin.SwitchState(GameState.Match);
 
-        if (configuration.Debug) PluginLog.Debug("Timer started.");
+        if (configuration.Debug) PluginLog.Information("Timer started.");
     }
 
     public void StopTimer()
@@ -100,7 +98,7 @@ public class Timers : IDisposable
 
         Plugin.SwitchState(GameState.Done);
 
-        if (configuration.Debug) PluginLog.Debug("Timer stopped.");
+        if (configuration.Debug) PluginLog.Information("Timer stopped.");
     }
 
     private void OnFrameworkUpdate(Framework _)

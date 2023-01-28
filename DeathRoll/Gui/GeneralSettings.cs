@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Dalamud.Interface;
 using DeathRoll.Data;
 using DeathRoll.Gui.Settings;
 using ImGuiNET;
@@ -11,6 +12,7 @@ public class GeneralSettings
     private PluginUI pluginUI;
     private readonly Configuration configuration;
     private readonly BlackjackSettings blackjackSettings;
+    private readonly Vector4 _redColor = new(0.980f, 0.245f, 0.245f, 1.0f);
     
     public GeneralSettings(PluginUI pluginUI, Configuration configuration)
     {
@@ -75,6 +77,15 @@ public class GeneralSettings
                     }
                     ImGui.SameLine();
                     Helper.ShowHelpMarker("Player can roll as often as they want,\noverwriting there previous roll in the process.");
+                    
+                    var timerResets = configuration.TimerResets;
+                    if (ImGui.Checkbox("Timer start resets all rolls", ref timerResets))
+                    {
+                        configuration.TimerResets = timerResets;
+                        configuration.Save();
+                    }
+                    ImGui.SameLine();
+                    Helper.ShowHelpMarker("On timer start the current list of rolls will get empty,\neveryone can roll again.");
                     break;
                 }
                 case GameModes.Blackjack:
@@ -103,6 +114,21 @@ public class GeneralSettings
             configuration.Save();
         }
 
+        ImGui.EndTabItem();
+    }
+    
+    public void RenderDebugTab()
+    {
+        if (!ImGui.BeginTabItem("Debug###debug-tab")) return;
+        
+        ImGui.Dummy(new Vector2(0.0f, 5.0f));
+        ImGui.TextColored(_redColor,"Please do not run debug all the time!");
+        ImGui.TextColored(_redColor,"This will bloat your log.");
+        
+        ImGuiHelpers.ScaledDummy(5);
+        ImGui.Separator();
+        ImGuiHelpers.ScaledDummy(5);
+        
         var verboseChatlog = configuration.Debug;
         if (ImGui.Checkbox("Debug", ref verboseChatlog))
         {

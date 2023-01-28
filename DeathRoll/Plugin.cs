@@ -76,7 +76,7 @@ public sealed class Plugin : IDalamudPlugin
 
     [Command("/drh")]
     [Aliases("/deathroll")]
-    [HelpMessage("Toggles UI\nArguments:\non - Turns on\noff - Turns off\nconfig - Opens config")]
+    [HelpMessage("Toggles UI\nArguments:\non - Turns on\noff - Turns off\nconfig - Opens config\ntimer - Toggles timer")]
     public void PluginCommand(string command, string args)
     {
         switch (args)
@@ -91,6 +91,12 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case "config":
                 PluginUi.SettingsVisible = true;
+                break;
+            case "timer":
+                if (PluginUi.RollTable.Timers.IsStopwatchRunning()) 
+                    PluginUi.RollTable.Timers.StopTimer();
+                else 
+                    PluginUi.RollTable.StartTimer();
                 break;
             default:
                 PluginUi.Visible = true;
@@ -115,13 +121,12 @@ public sealed class Plugin : IDalamudPlugin
         
         if (Configuration.Debug)
         {
-            PluginLog.Debug("Chat Event fired.");
-            PluginLog.Debug($"Sender: {sender}.");
-            PluginLog.Debug($"ID: {id}.");
-            PluginLog.Debug($"ChatType: {type}.");
-            PluginLog.Debug($"Channel: {channel}.");
-            PluginLog.Debug($"Content: {message}.");
-            PluginLog.Debug($"Language: {clientState.ClientLanguage}.");
+            PluginLog.Information("Chat Event fired.");
+            PluginLog.Information($"Sender: {sender}.");
+            PluginLog.Information($"ChatType: {type}.");
+            PluginLog.Information($"Channel: {channel}.");
+            PluginLog.Information($"Content: {message}.");
+            PluginLog.Information($"Language: {clientState.ClientLanguage}.");
         }
         
         // 2122 = Random Roll 8266 = different Player Random roll?
@@ -154,7 +159,7 @@ public sealed class Plugin : IDalamudPlugin
             var found = isLocalPlayer;
             foreach (var payload in message.Payloads) // try to get name and check for dice cheating
             {
-                if (Configuration.Debug) PluginLog.Debug($"message: {payload}");
+                if (Configuration.Debug) PluginLog.Information($"message: {payload}");
                 switch (payload)
                 {
                     case PlayerPayload playerPayload:
@@ -178,7 +183,7 @@ public sealed class Plugin : IDalamudPlugin
             if (!found) // get playerName from payload
                 foreach (var payload in sender.Payloads)
                 {
-                    if (Configuration.Debug) PluginLog.Debug($"Sender: {payload}");
+                    if (Configuration.Debug) PluginLog.Information($"Sender: {payload}");
                     playerName = payload switch
                     {
                         PlayerPayload playerPayload => $"{playerPayload.PlayerName}\uE05D{playerPayload.World.Name}",
@@ -189,7 +194,7 @@ public sealed class Plugin : IDalamudPlugin
         
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
         {
-            if (Configuration.Debug) PluginLog.Debug("Blocked player tried to roll.");
+            if (Configuration.Debug) PluginLog.Information("Blocked player tried to roll.");
             return;
         }
 
@@ -204,8 +209,8 @@ public sealed class Plugin : IDalamudPlugin
 
         if (Configuration.Debug)
         {
-            PluginLog.Debug($"Extracted Player Name: {playerName}.");
-            PluginLog.Debug($"Message: {message}\n    Matches: 1: {m.Groups["player"]} 2: {m.Groups["roll"]} 3: {m.Groups["out"].Success} {m.Groups["out"]}");
+            PluginLog.Information($"Extracted Player Name: {playerName}.");
+            PluginLog.Information($"Message: {message} ||| Regex matches: 1: {m.Groups["player"]} 2: {m.Groups["roll"]} 3: {m.Groups["out"].Success} {m.Groups["out"]}");
         }
 
         Rolls.ParseRoll(m, playerName);

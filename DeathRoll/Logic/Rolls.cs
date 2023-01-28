@@ -61,7 +61,7 @@ public class Rolls
         {
             case false when exists:
             {
-                if (configuration.Debug) PluginLog.Debug("Player already rolled, no reroll allowed.");
+                if (configuration.Debug) PluginLog.Information("Player already rolled, no reroll allowed.");
                 return;
             }
             case true when exists:

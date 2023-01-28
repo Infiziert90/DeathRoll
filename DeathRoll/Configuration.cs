@@ -19,6 +19,7 @@ public class Configuration : IPluginConfiguration
     public bool RerollAllowed { get; set; } = false;
     public bool OnlyRandom { get; set; } = false;
     public bool OnlyDice { get; set; } = false;
+    public bool TimerResets { get; set; } = false;
 
     public SortingType SortingMode { get; set; } = SortingType.Min;
     public int Nearest { get; set; } = 1;

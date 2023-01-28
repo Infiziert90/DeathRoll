@@ -115,9 +115,9 @@ public class PluginUI : IDisposable
     {
         if (!SettingsVisible) return;
 
-        ImGui.SetNextWindowSize(new Vector2(260, 420), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSizeConstraints(new Vector2(260, 420), new Vector2(float.MaxValue, float.MaxValue));
-        if (ImGui.Begin("DRH Config", ref settingsVisible))
+        ImGui.SetNextWindowSize(new Vector2(330, 530), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(330, 530), new Vector2(float.MaxValue, float.MaxValue));
+        if (ImGui.Begin("DRH Settings", ref settingsVisible))
             if (ImGui.BeginTabBar("##settings-tabs"))
             {
                 // Renders General Settings UI
@@ -129,9 +129,12 @@ public class PluginUI : IDisposable
                 // Renders Highlight Settings Tab
                 Highlights.RenderHightlightsTab();
 
-                // Renders Blocklist UI
+                // Renders Blocklist Tab
                 Blocklist.RenderBlocklistTab();
-
+                
+                // Renders Debug Tab
+                GeneralSettings.RenderDebugTab();
+                
                 ImGui.EndTabBar();
             }
 
