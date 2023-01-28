@@ -85,7 +85,7 @@ public class GeneralSettings
                         configuration.Save();
                     }
                     ImGui.SameLine();
-                    Helper.ShowHelpMarker("On timer start the current list of rolls will get empty,\neveryone can roll again.");
+                    Helper.ShowHelpMarker("On timer start the current list of rolls will\nbe emptied and everyone can roll again.");
                     break;
                 }
                 case GameModes.Blackjack:
