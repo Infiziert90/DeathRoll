@@ -68,22 +68,6 @@ public class SimpleTournament
 
     private void MatchGameMode(Roll roll)
     {
-        if (configuration.Debug)
-        {
-            PluginLog.Information("Tournament Match:");
-            PluginLog.Information($"Player: {roll.PlayerName}.");
-            if (participants.PList.Count != 0)
-            {
-                PluginLog.Information($"Last Player: {participants.Last.Name}.");
-                PluginLog.Information($"Last Roll: {participants.Last.Roll}.");
-                
-            }
-            else
-            {
-                PluginLog.Information($"First roll.");
-            }
-        }
-        
         // check if player is in playerList
         if (!participants.PlayerNameList.Exists(x => x == roll.PlayerName)) return;
         
