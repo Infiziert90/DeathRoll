@@ -31,11 +31,6 @@ public class DeathRollMode
         
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ParticipantRender();
-
-        // if (participants.PList.Count == 0 || Plugin.State is GameState.Done) return;
-        //
-        // ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        // DeletionListRender();
     }
 
     public void RenderLoserPanel()
@@ -82,20 +77,12 @@ public class DeathRollMode
             ImGui.Text(participant.GetDisplayName());
 
             ImGui.TableNextColumn();
-            ImGui.Text(participant.roll.ToString());
+            ImGui.Text(participant.Roll.ToString());
             
             ImGui.TableNextColumn();
-            ImGui.Text(participant.outOf.ToString());
+            ImGui.Text(participant.OutOf.ToString());
         }
 
         ImGui.EndTable();
     }
-    
-    // TODO Fix deletion not working as intended
-    // public void DeletionListRender()
-    // {
-    //     if (!Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None)) return;
-    //     ImGui.Dummy(new Vector2(0.0f, 10.0f));
-    //     ImGui.Text("Removing players is currently not working as intended."); 
-    // }
 }

@@ -31,8 +31,6 @@ public class RollTable
         
         ImGui.Spacing();
         RenderRollTable();
-        ImGui.Dummy(new Vector2(0.0f, 60.0f));
-        RenderDeletionDropdown();
     }
     
     private void RenderControlPanel()
@@ -105,35 +103,29 @@ public class RollTable
             var color = _defaultColor;
             if (configuration.ActiveHighlighting)
             {
-                if (participant.hasHighlight)
-                    color = participant.highlightColor;
+                if (participant.HasHighlight)
+                    color = participant.HighlightColor;
                 else if (idx == 0 && configuration.UseFirstPlace)
                     color = configuration.FirstPlaceColor;
                 else if (idx == last && configuration.UseLastPlace)
                     color = configuration.LastPlaceColor;
             }
 
-            var name = participant.GetDisplayName();
+            ImGui.TableNextColumn();
+            if (Helper.SelectableDelete(participant, participants, idx, color))
+                break; // break because we deleted an entry
 
             ImGui.TableNextColumn();
-            ImGui.TextColored(color, name);
-
-            ImGui.TableNextColumn();
-            ImGui.TextColored(color, participant.roll.ToString());
+            ImGui.TextColored(color, participant.Roll.ToString());
 
             if (!participants.IsOutOfUsed) 
                 continue;
             
             ImGui.TableNextColumn();
-            ImGui.TextColored(color, participant.outOf != -1 ? participant.outOf.ToString() : "");
+            ImGui.TextColored(color, participant.OutOf != -1 ? participant.OutOf.ToString() : "");
         }
 
         ImGui.EndTable();
-    }
-
-    private void RenderDeletionDropdown()
-    {
-        Helper.PlayerListRender("Player List", participants, ImGuiTreeNodeFlags.None);
     }
 
     public void StartTimer()

@@ -350,14 +350,11 @@ Round continues as before, with the split hands turn happening later";
         if (ImGui.Button("Add Target")) { ErrorMsg = blackjack.TargetRegistration(); }
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         TableBetRender();
-        ImGui.Dummy(new Vector2(0.0f, 10.0f));
-        Helper.PlayerListRender("Entries", participants, ImGuiTreeNodeFlags.DefaultOpen);
     }
 
     public void TableBetRender()
     {
-        var selection = participants.PlayerBets.ToArray();
-        if (!selection.Any()) return;
+        if (!participants.PlayerBets.Any()) return;
         
         ImGui.TextColored(_yellowColor, "Player Bets:");
         if (!ImGui.BeginTable("##bj_table", 3, ImGuiTableFlags.None))
@@ -369,12 +366,14 @@ Round continues as before, with the split hands turn happening later";
 
         var updateName = string.Empty;
         var newBet = -1;
-        foreach (var (name, player) in selection)
+        foreach (var (name, player) in participants.PlayerBets)
         {
             var currentBet = player.Bet;
+            var participant = participants.FindPlayer(name);
 
             ImGui.TableNextColumn();
-            ImGui.Text(participants.FindPlayer(name).GetDisplayName());
+            if (Helper.SelectableDelete(participant, participants))
+                break; // break because we deleted an entry
                 
             ImGui.TableNextColumn();
             ImGui.Text($"{currentBet:N0}");

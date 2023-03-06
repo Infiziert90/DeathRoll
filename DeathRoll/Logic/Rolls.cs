@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Numerics;
 using System.Text.RegularExpressions;
 using Dalamud.Logging;
 using DeathRoll.Data;
@@ -22,26 +21,29 @@ public class Rolls
         Blackjack = new Blackjack(configuration, participants);
     }
     
-    public void ParseRoll(Match m, string playerName)
+    public void ParseRoll(Roll roll)
     {
+        if (configuration.Debug)
+        {
+            PluginLog.Information($"Extracted Player Name: {roll.PlayerName}.");
+            PluginLog.Information($"Regex: Roll {roll.Rolled} OutOf {roll.OutOf}");
+        }
+        
         try
         {
-            var parsedRoll = int.Parse(m.Groups["roll"].Value);
-            var parsedOutOf = m.Groups["out"].Success ? int.Parse(m.Groups["out"].Value) : -1;
-
             switch (configuration.GameMode)
             {
                 case GameModes.Venue:
-                    NormalGameMode(playerName, parsedRoll, parsedOutOf);
+                    NormalGameMode(roll);
                     break;
                 case GameModes.DeathRoll:
-                    DeathRollGameMode(playerName, parsedRoll, parsedOutOf);
+                    DeathRollGameMode(roll);
                     break;                
                 case GameModes.Tournament:
-                    SimpleTournament.Parser(playerName, parsedRoll, parsedOutOf);
+                    SimpleTournament.Parser(roll);
                     break;
                 case GameModes.Blackjack:
-                    Blackjack.Parser(playerName, parsedRoll, parsedOutOf);
+                    Blackjack.Parser(roll);
                     break;
                 default:
                     return;
@@ -54,9 +56,9 @@ public class Rolls
         }
     }
 
-    public void NormalGameMode(string playerName, int parsedRoll, int parsedOutOf)
+    private void NormalGameMode(Roll roll)
     {
-        var exists = participants.PList.Exists(x => x.name == playerName);
+        var exists = participants.PList.Exists(x => x.Name == roll.PlayerName);
         switch (configuration.RerollAllowed)
         {
             case false when exists:
@@ -65,60 +67,64 @@ public class Rolls
                 return;
             }
             case true when exists:
-                participants.DeleteEntry(playerName);
+                participants.DeleteEntry(roll.PlayerName);
                 break;
         }
         
-        var hasHighlight = false;
-        var hightlightColor = new Vector4();
-        if (configuration.ActiveHighlighting && configuration.SavedHighlights.Count > 0)
-            foreach (var highlight in configuration.SavedHighlights.Where(highlight => 
-                         highlight.CompiledRegex.Match(parsedRoll.ToString()).Success))
-            {
-                hasHighlight = true;
-                hightlightColor = highlight.Color;
-                break;
-            }
+        Highlight? highlight = null;
+        if (configuration is { ActiveHighlighting: true, SavedHighlights.Count: > 0 })
+            highlight = configuration.SavedHighlights.FirstOrDefault(hl => hl.Matches(roll.Rolled));
 
-        participants.Add(hasHighlight
-            ? new Participant(playerName, parsedRoll, parsedOutOf, hightlightColor)
-            : new Participant(playerName, parsedRoll, parsedOutOf));
+        participants.Add(highlight != null
+            ? new Participant(roll, highlight)
+            : new Participant(roll));
 
         participants.UpdateSorting();
-        participants.IsOutOfUsed = participants.PList.Exists(x => x.outOf > -1);
+        participants.IsOutOfUsed = participants.PList.Any(x => x.OutOf > -1);
     }
     
-    private void DeathRollGameMode(string playerName, int parsedRoll, int parsedOutOf)
+    private void DeathRollGameMode(Roll roll)
     {
-        // check if player is in playerList, if not, check if new players get accepted
-        if (!participants.PlayerNameList.Exists(x => x == playerName))
-        {
-            if (!configuration.AcceptNewPlayers) return;
-        }
-        
+        // check that player not in playerList and new players not get accepted
+        if (participants.PlayerNameList.All(x => x != roll.PlayerName) && !configuration.AcceptNewPlayers)
+            return;
+
         // check if rolls exists, if not, add first roll with OutOf 1000
         if (participants.PList.Count == 0)
         {
-            if (parsedOutOf == -1) parsedOutOf = 1000;
-            participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
+            if (roll.OutOf == -1) roll.OutOf = 1000;
+            participants.Add(new Participant(roll));
             return;
         }
         
         // check if same player and check if OutOf is correct
-        // deathroll rules -> first rolls /random -> all others /random {PreviousNumber}
-        if (playerName == participants.Last.name || participants.Last.roll != parsedOutOf) return;
+        // deathroll rules: first roll /random all following /random {PreviousNumber}
+        if (roll.PlayerName == participants.Last.Name || participants.Last.Roll != roll.OutOf) return;
         
-        // everything above 1 is ongoing
-        if (parsedRoll >= 2)
-        {
-            participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-        }
-        else // player lost this round
-        {
-            participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-            configuration.AcceptNewPlayers = false;
-            configuration.Save();
-            Plugin.SwitchState(GameState.Done);
-        }
+        participants.Add(new Participant(roll));
+        if (roll.Rolled >= 2) return;
+        
+        // player lost this round
+        configuration.AcceptNewPlayers = false;
+        configuration.Save();
+        Plugin.SwitchState(GameState.Done);
     }
+}
+
+public class Roll
+{
+    public int Rolled = 1000;
+    public int OutOf = 1000;
+    public string PlayerName;
+
+    private Roll(string name) { PlayerName = name; }
+    
+    public Roll(Match m, string playerName)
+    {
+        Rolled = int.Parse(m.Groups["roll"].Value);
+        OutOf = m.Groups["out"].Success ? int.Parse(m.Groups["out"].Value) : -1;
+        PlayerName = playerName;
+    }
+
+    public static Roll Dummy(string name = "Unknown") => new(name);
 }

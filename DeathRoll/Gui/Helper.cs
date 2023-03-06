@@ -39,49 +39,62 @@ public static class Helper
 
             ImGui.SameLine(120);
             //click ok when finished adjusting
-            if (ImGui.Button("OK", new Vector2(100, 0))) {
+            if (ImGui.Button("OK", new Vector2(100, 0)))
                 msg = string.Empty;
-            }
+            
 
             ImGui.End();
         }
     }
     
-    public static bool PlayerListRender(string title, Participants participants, ImGuiTreeNodeFlags flags)
+    public static bool SelectableDelete(Participant participant, Participants participants, int idx = 0, Vector4 color = new())
     {
-        if (participants.PList.Count == 0) return false;
+        var deletion = "";
         
         try
         {
-            var deletion = "";
-            if (!ImGui.CollapsingHeader(title, flags)) return false;
-            
-            foreach (var playerName in participants.PlayerNameList)
-            {
-                var participant = participants.FindPlayer(playerName);
-                var name = participant.GetDisplayName();
-                ImGui.Selectable($"{name}");
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
-                    deletion = participant.name;
+            if (color.W != 0) ImGui.PushStyleColor(ImGuiCol.Text, color);
+            ImGui.Selectable($"{participant.GetDisplayName()}##selectable{idx}");
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
+                deletion = participant.Name;
+            if (color.W != 0) ImGui.PopStyleColor();
 
-                if (!ImGui.IsItemHovered()) continue;
+            if (ImGui.IsItemHovered())
+            {
                 ImGui.BeginTooltip();
                 ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
                 ImGui.TextUnformatted("Hold Shift and right-click to delete.");
                 ImGui.PopTextWrapPos();
                 ImGui.EndTooltip();
             }
-            
-            if (deletion != "") participants.DeleteEntry(deletion);
-            return true;
+
+            if (deletion != "")
+            {
+                participants.DeleteEntry(deletion);
+                return true;
+            }
+
         }
         catch (NullReferenceException e)
         {
             PluginLog.Error(e.Message);
             foreach (var pname in participants.PlayerNameList) PluginLog.Information($"Name in cause: {pname}");
-            foreach (var participant in participants.PList) PluginLog.Information($"Participants: {JsonSerializer.Serialize(participant)}");
+            foreach (var p in participants.PList) PluginLog.Information($"Participants: {JsonSerializer.Serialize(p)}");
             Plugin.SwitchState(GameState.NotRunning);
-            return false;
+            return true;
         }
+
+        return false;
+    }
+
+    public static void SetTextCenter(string text, Vector4 color = new())
+    {
+        ImGui.SetCursorPosX((ImGui.GetWindowSize().X - ImGui.CalcTextSize(text).X) * 0.5f);
+        
+        // Alpha 0 means empty color
+        if (color.W == 0) 
+            ImGui.TextUnformatted(text);
+        else 
+            ImGui.TextColored(color, text);
     }
 }

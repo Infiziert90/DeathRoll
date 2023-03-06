@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using DeathRoll.Data;
+using DeathRoll.Logic;
 
 namespace DeathRoll;
 
@@ -16,22 +17,22 @@ public class Participants
     public List<string> PlayerNameList = new();
 
     // venue
-    public bool IsOutOfUsed = false;
+    public bool IsOutOfUsed;
     
     // deathroll
-    public Participant Last = new("Unknown", 1000, 1000);
-    public Participant Winner = new("Unknown", 1000, 1000);
+    public Participant Last = new(Roll.Dummy());
+    public Participant Winner = new(Roll.Dummy());
     
     // tournament
     public List<string> NextRound = new();
-    public bool RoundDone = false;
+    public bool RoundDone;
     
     // blackjack
     public string DealerAction = "";
     public List<Participant> DealerCards = new();
     public Dictionary<string, Player> PlayerBets = new();
-    private int CurrentIndex = 0;
     public List<Cards.Card> SplitDraw = new();
+    private int currentIndex;
     
     public Participants(Configuration configuration)
     {
@@ -40,40 +41,19 @@ public class Participants
 
     public void Add(Participant p)
     {
-        if (p.name == "Byes" || !PlayerNameList.Exists(x => x == p.name))
+        if (p.Name == "Byes" || !PlayerNameList.Exists(x => x == p.Name))
         {
-            PlayerNameList.Add(p.name);
+            PlayerNameList.Add(p.Name);
         }
 
         PList.Add(p);
         Last = p;
         Winner = PList[^(PList.Count == 1 ? 1 : 2)]; // we only ever take last if there is one entry
     }
-    
-    public Participant FindPlayer(string playerName)
-    {
-        return PList.Find(x => x.name == playerName);
-    }
-    
-    public List<Participant> FindAll(string playerName)
-    {
-        return PList.FindAll(x => x.name == playerName);
-    }
-    
-    
-    public Participant GetWithIndex(int idx)
-    {
-        return FindPlayer(PlayerNameList[idx]);
-    }
 
-    public string LookupDisplayName(string playerName)
-    {
-        return FindPlayer(playerName).GetDisplayName();
-    }
-    
     public void DeleteEntry(string name)
     {
-        PList.RemoveAll(x => x.name == name);
+        PList.RemoveAll(x => x.Name == name);
         PlayerNameList.RemoveAll(x => x == name);
         
         PlayerBets.Remove(name);
@@ -83,33 +63,36 @@ public class Participants
     {
         PList = configuration.SortingMode switch
         {
-            SortingType.Min => PList.OrderBy(x => x.roll).ToList(),
-            SortingType.Max => PList.OrderByDescending(x => x.roll).ToList(),
-            SortingType.Nearest => PList.OrderBy(x => Math.Abs(configuration.Nearest - x.roll)).ToList(),
+            SortingType.Min => PList.OrderBy(x => x.Roll).ToList(),
+            SortingType.Max => PList.OrderByDescending(x => x.Roll).ToList(),
+            SortingType.Nearest => PList.OrderBy(x => Math.Abs(configuration.Nearest - x.Roll)).ToList(),
             _ => PList
         };
     }
     
     public void Update()
     {
-        if (!configuration.ActiveHighlighting || PList.Count == 0) return;
-
+        if (configuration is { ActiveHighlighting: false, SavedHighlights.Count: 0 }) return;
+        
         foreach (var roll in PList)
         {
-            roll.UpdateColor(false);
-            foreach (var hl in configuration.SavedHighlights.Where(
-                         hl => hl.CompiledRegex.Match(roll.roll.ToString()).Success))
-            {
-                roll.UpdateColor(true, hl.Color);
-                break;
-            }
+            var highlight = configuration.SavedHighlights.FirstOrDefault(hl => hl.Matches(roll.Roll));
+            if (highlight == null)
+                roll.UpdateColor(false);
+            else
+                roll.UpdateColor(true, highlight.Color);
         }
     }
-
-    public void DeleteRangeFromStart(int range)
-    {
-        PList.RemoveRange(0, range);
-    }
+    
+    public Participant FindPlayer(string playerName) => PList.First(x => x.Name == playerName);
+    
+    public List<Participant> FindAll(string playerName) => PList.FindAll(x => x.Name == playerName);
+    
+    public Participant GetWithIndex(int idx) => FindPlayer(PlayerNameList[idx]);
+    
+    public string LookupDisplayName(string playerName) => FindPlayer(playerName).GetDisplayName();
+    
+    public void DeleteRangeFromStart(int range) => PList.RemoveRange(0, range);
     
     public void Reset()
     {
@@ -122,7 +105,7 @@ public class Participants
         
         DealerCards.Clear();
         PlayerBets.Clear();
-        CurrentIndex = 0;
+        currentIndex = 0;
         DealerAction = "";
         SplitDraw.Clear();
     }
@@ -141,107 +124,75 @@ public class Participants
         }
     }
 
-    public int GetCurrentIndex() => CurrentIndex;
+    public int GetCurrentIndex() => currentIndex;
     
-    public Participant GetParticipant() => PList[CurrentIndex];
+    public Participant GetParticipant() => PList[currentIndex];
     
-    public string GetParticipantName() => PlayerNameList[CurrentIndex];
+    public string GetParticipantName() => PlayerNameList[currentIndex];
     
-    public List<Participant> FindAllWithIndex() => FindAll(PList[CurrentIndex].name);
+    public List<Participant> FindAllWithIndex() => FindAll(PList[currentIndex].Name);
     
-    public void NextParticipant() => CurrentIndex++;
+    public void NextParticipant() => currentIndex++;
     
-    public void ResetParticipant() => CurrentIndex = 0;
+    public void ResetParticipant() => currentIndex = 0;
     
-    public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
+    public bool HasMoreParticipants() => currentIndex < PlayerNameList.Count;
     
-    public void SetLastPlayerAction(string action) => PlayerBets[GetParticipant().name].LastAction = action;
+    public void SetLastPlayerAction(string action) => PlayerBets[GetParticipant().Name].LastAction = action;
 }
 
 public class Participant
 {
-    public string name;
-    public string randomName = "";
-    public string fName = "";
-    
-    public readonly int outOf;
-    public readonly int roll;
+    public readonly string Name;
+    public readonly int Roll;
+    public readonly int OutOf;
 
-    public bool hasHighlight;
-    public Vector4 highlightColor;
+    public bool HasHighlight;
+    public Vector4 HighlightColor = new(0, 0, 0, 0);
     
     //blackjack
-    public Cards.Card Card = new(1, 1, false);
+    public readonly Cards.Card Card = new(1, 1);
     public bool CanSplit = false;
     
-    public Participant(string name, int roll, int outOf, Vector4 highlightColor)
+    public Participant(Roll newRoll, Highlight? highlight = null)
     {
-        this.name = name;
-        this.roll = roll;
-        this.outOf = outOf;
-        this.hasHighlight = true;
-        this.highlightColor = highlightColor;
-        
-        GenerateHashedName();
-        GenerateFancyName();
-    }
+        Name = newRoll.PlayerName;
+        Roll = newRoll.Rolled;
+        OutOf = newRoll.OutOf;
 
-    public Participant(string name, int roll, int outOf)
-    {
-        this.name = name;
-        this.roll = roll;
-        this.outOf = outOf;
-        hasHighlight = false;
-        highlightColor = new Vector4(0, 0, 0, 0);
-        
-        GenerateHashedName();
-        GenerateFancyName();
+        if (highlight != null)
+        {
+            HasHighlight = true;
+            HighlightColor = highlight.Color;
+        }
     }
     
     public Participant(string name, Cards.Card card)
     {
-        this.name = name;
+        Name = name;
         Card = card;
-
-        GenerateHashedName();
-        GenerateFancyName();
     }
     
-    public void UpdateColor(bool hasHl)
+    public void UpdateColor(bool hasHl, Vector4 hlColor = new())
     {
-        hasHighlight = hasHl;
-    }
-    
-    public void UpdateColor(bool hasHl, Vector4 hlColor)
-    {
-        hasHighlight = hasHl;
-        highlightColor = hlColor;
+        HasHighlight = hasHl;
+        HighlightColor = hlColor;
     }
 
-    public void GenerateFancyName()
+    private string GenerateHashedName()
     {
-        fName = name.Replace("\uE05D", "\uE05D ");
-    }
-    
-    public void GenerateHashedName()
-    {
-        using var sha1 = SHA1.Create();
-        var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(name));
+        var hash = SHA1.HashData(Encoding.UTF8.GetBytes(Name));
         var sb = new StringBuilder(hash.Length * 2);
 
         foreach (var b in hash)
-        {
-            // can be "x2" if you want lowercase
             sb.Append(b.ToString("X2"));
-        }
 
-        randomName = $"Player {sb.ToString()[..10]}";
+        return $"Player {sb.ToString()[..10]}";
     }
     
-    public string GetDisplayName()
-    {
-        return !DebugConfig.RandomizeNames ? fName : randomName;
-    }
+    public string GetDisplayName() => !DebugConfig.RandomizeNames ? FName : GenerateHashedName();
+    
+    private string FName => Name.Replace("\uE05D", "\uE05D ");
 }
 
 public enum SortingType

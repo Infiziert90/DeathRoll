@@ -74,7 +74,7 @@ public static class Cards
         public bool IsHidden;
         public bool IsAce;
 
-        public Card (int rank, int suit, bool isHidden)
+        public Card (int rank, int suit, bool isHidden = false)
         {
             Rank = rank;
             Suit = suit;

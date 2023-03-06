@@ -21,8 +21,8 @@ public class SimpleTournament
     public int LastStage = 1;
     public List<int> StageDepth = new();
     
-    public Participant Player1 = new("Unknown", 1000, 1000);
-    public Participant Player2 = new("Unknown", 1000, 1000);
+    public Participant Player1 = new(Roll.Dummy());
+    public Participant Player2 = new(Roll.Dummy());
     
     public SimpleTournament(Configuration configuration, Participants participants)
     {
@@ -32,15 +32,15 @@ public class SimpleTournament
         TParticipants = new Participants(configuration);
     }
 
-    public void Parser(string playerName, int parsedRoll, int parsedOutOf)
+    public void Parser(Roll roll)
     {
         switch (Plugin.State)
         {
             case GameState.Registration:
-                Registration(playerName, parsedRoll, parsedOutOf);
-                break;
+                Registration(roll);
+                return;
             case GameState.Match:
-                MatchGameMode(playerName, parsedRoll, parsedOutOf);
+                MatchGameMode(roll);
                 return;
             default:
                 return;
@@ -49,7 +49,7 @@ public class SimpleTournament
 
     public void NextMatch()
     {
-        TParticipants.NextRound.Add(participants.Winner.name);
+        TParticipants.NextRound.Add(participants.Winner.Name);
         FillCurrentStageBrackets();
         
         currentIndex += 2;
@@ -58,7 +58,7 @@ public class SimpleTournament
     
     public void ForfeitWin(Participant winner)
     {
-        TParticipants.NextRound.Add(winner.name);
+        TParticipants.NextRound.Add(winner.Name);
         participants.Winner = winner;
         FillCurrentStageBrackets();
         
@@ -66,51 +66,61 @@ public class SimpleTournament
         CalculateNextMatch();
     }
 
-    private void MatchGameMode(string playerName, int parsedRoll, int parsedOutOf)
+    private void MatchGameMode(Roll roll)
     {
-        // check if player is in playerList, if not, check if new players get accepted
-        if (!participants.PlayerNameList.Exists(x => x == playerName)) return;
+        if (configuration.Debug)
+        {
+            PluginLog.Information("Tournament Match:");
+            PluginLog.Information($"Player: {roll.PlayerName}.");
+            if (participants.PList.Count != 0)
+            {
+                PluginLog.Information($"Last Player: {participants.Last.Name}.");
+                PluginLog.Information($"Last Roll: {participants.Last.Roll}.");
+                
+            }
+            else
+            {
+                PluginLog.Information($"First roll.");
+            }
+        }
+        
+        // check if player is in playerList
+        if (!participants.PlayerNameList.Exists(x => x == roll.PlayerName)) return;
         
         if (participants.PList.Count == 0)
         {
-            if (parsedOutOf == -1) parsedOutOf = 1000;
-            participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
+            if (roll.OutOf == -1) roll.OutOf = 1000;
+            participants.Add(new Participant(roll));
             return;
         }
         
-        if (playerName == participants.Last.name || participants.Last.roll != parsedOutOf) return;
+        if (roll.PlayerName == participants.Last.Name || participants.Last.Roll != roll.OutOf) return;
         
-        if (parsedRoll >= 2)
-        {
-            participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-        }
-        else
-        {
-            participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-            participants.RoundDone = true;
-        }
+        participants.Add(new Participant(roll));
+        if (roll.Rolled >= 2) return;
+        
+        participants.RoundDone = true;
     }
     
     public string TargetRegistration()
     {
-        // get target
         var name = Plugin.GetTargetName();
         if (name == string.Empty) return "Target not found.";
         
         // check if player is already in list
         if (participants.PlayerNameList.Exists(x => x == name)) return "Target already registered.";
         
-        participants.Add(new Participant(name, 1000, 1000));
+        participants.Add(new Participant(Roll.Dummy(name)));
         return string.Empty;
     }
     
-    public void Registration(string playerName, int parsedRoll, int parsedOutOf)
+    public void Registration(Roll roll)
     {
         // check if registration roll is correct or if player is already in list
-        if (parsedOutOf != -1) return;
-        if (participants.PlayerNameList.Exists(x => x == playerName)) return;
+        if (roll.OutOf != -1) return;
+        if (participants.PlayerNameList.Exists(x => x == roll.PlayerName)) return;
         
-        participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
+        participants.Add(new Participant(roll));
     }
 
     public void Shuffle()
@@ -144,10 +154,10 @@ public class SimpleTournament
         // fill with byes if need
         for (var i = count; i < neededPlayers; i++)
         {
-            TParticipants.Add(new Participant("Byes", -1, -1));
+            TParticipants.Add(new Participant(Roll.Dummy("Byes")));
         }
         
-        foreach (var (name, idx) in TParticipants.PlayerNameList.Select((value, i) => (value, i)))
+        foreach (var (_, idx) in TParticipants.PlayerNameList.Select((value, i) => (value, i)))
         {
             InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(idx));
             InternalBrackets[currentStage].Add(TParticipants.GetWithIndex(magicNumber-idx));
@@ -187,8 +197,8 @@ public class SimpleTournament
             (Player1, Player2) = (InternalBrackets[currentStage][currentIndex], InternalBrackets[currentStage][currentIndex+1]);
 
             participants.Reset();
-            participants.PlayerNameList.Add(Player1.name);
-            participants.PlayerNameList.Add(Player2.name);
+            participants.PlayerNameList.Add(Player1.Name);
+            participants.PlayerNameList.Add(Player2.Name);
         } 
         catch (Exception e)
         {
@@ -312,13 +322,13 @@ public class SimpleTournament
             }
         }
     }
-    
-    // Code for testing
+
+    #region Testing
     public void AutoWin()
     {
         var rng = new Random(Environment.TickCount);
-        participants.Add(new Participant(rng.Next(0, 2) == 0 ? participants.PlayerNameList[0] : participants.PlayerNameList[1], -1, -1));
-        participants.Add(new Participant(rng.Next(0, 2) == 0 ? participants.PlayerNameList[0] : participants.PlayerNameList[1], -1, -1));
+        participants.Add(new Participant(Roll.Dummy(participants.PlayerNameList[rng.Next(0, 2)])));
+        participants.Add(new Participant(Roll.Dummy(participants.PlayerNameList[rng.Next(0, 2)])));
         NextMatch();
     }
     
@@ -326,7 +336,8 @@ public class SimpleTournament
     {
         for (var i = 1; i <= n; i++)
         {
-            participants.Add(new Participant($"Real Player {i}", 1000, 1000));
+            participants.Add(new Participant(Roll.Dummy($"Real Player {i}")));
         }
     }
+    #endregion
 }

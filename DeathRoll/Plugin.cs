@@ -26,7 +26,6 @@ public sealed class Plugin : IDalamudPlugin
     public static GameState State = GameState.NotRunning;
     public static string LocalPlayer = string.Empty;
 
-    [PluginService] public static DataManager Data { get; private set; } = null!;
     [PluginService] public static ChatGui Chat { get; private set; } = null!;
     [PluginService] public static Framework Framework { get; private set; } = null!;
     [PluginService] public static TargetManager TargetManager { get; private set; } = null!;
@@ -114,8 +113,9 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnChatMessage(XivChatType type, uint id, ref SeString sender, ref SeString message, ref bool handled)
     {
-        // TODO check makes no sense with Tournament Mode
-        if (!Configuration.On || State is GameState.NotRunning or GameState.Done or GameState.Crash) return;
+        if (!Configuration.On || State is GameState.NotRunning or GameState.Done or GameState.Crash) 
+            return;
+        
         var xivChatType = (ushort) type;
         var channel = xivChatType & 0x7F;
         
@@ -123,15 +123,15 @@ public sealed class Plugin : IDalamudPlugin
         {
             PluginLog.Information("Chat Event fired.");
             PluginLog.Information($"Sender: {sender}.");
-            PluginLog.Information($"ChatType: {type}.");
-            PluginLog.Information($"Channel: {channel}.");
             PluginLog.Information($"Content: {message}.");
+            PluginLog.Information($"ChatType: {type} Unmasked Channel: {channel}.");
             PluginLog.Information($"Language: {clientState.ClientLanguage}.");
         }
         
         // 2122 = Random Roll 8266 = different Player Random roll?
         // Dice Roll: FC, LS, CWLS, Party
-        if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) return;
+        if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) 
+            return;
 
         var dice = channel != 74;
         switch (dice)
@@ -141,7 +141,8 @@ public sealed class Plugin : IDalamudPlugin
                 return;
         }
         var m = Reg.Match(message.ToString(), clientState.ClientLanguage, dice);
-        if (!m.Success) return;
+        if (!m.Success) 
+            return;
         
         var local = clientState?.LocalPlayer;
         if (local == null || local.HomeWorld.GameData?.Name == null)
@@ -207,13 +208,7 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        if (Configuration.Debug)
-        {
-            PluginLog.Information($"Extracted Player Name: {playerName}.");
-            PluginLog.Information($"Message: {message} ||| Regex matches: 1: {m.Groups["player"]} 2: {m.Groups["roll"]} 3: {m.Groups["out"].Success} {m.Groups["out"]}");
-        }
-
-        Rolls.ParseRoll(m, playerName);
+        Rolls.ParseRoll(new Roll(m, playerName));
     }
 
     public static void SwitchState(GameState newState)

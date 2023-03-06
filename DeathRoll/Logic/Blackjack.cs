@@ -16,21 +16,21 @@ public class Blackjack
         this.participants = participants;
     }
 
-    public void Parser(string playerName, int parsedRoll, int parsedOutOf)
+    public void Parser(Roll roll)
     {
         switch (Plugin.State)
         {
             case GameState.Registration:
-                Registration(playerName, parsedRoll, parsedOutOf);
+                Registration(roll);
                 break;
             case GameState.Hit or GameState.DoubleDown or GameState.DrawSplit:
-                RollParse(playerName, parsedRoll, parsedOutOf);
+                RollParse(roll);
                 break;            
             case GameState.DrawFirstCards or GameState.DrawSecondCards:
-                ParseFirstCards(playerName, parsedRoll, parsedOutOf);
+                ParseFirstCards(roll);
                 break;
             case GameState.DealerFirstCards or GameState.DealerSecondCards or GameState.DrawDealerCard:
-                ParseDealerCards(playerName, parsedRoll, parsedOutOf);
+                ParseDealerCards(roll);
                 break;
             default:
                 return;
@@ -51,7 +51,7 @@ public class Blackjack
     
     public void PlayerAction()
     {
-        if (!participants.GetParticipant().name.EndsWith(" Split"))
+        if (!participants.GetParticipant().Name.EndsWith(" Split"))
         {
             if (!configuration.AutoDrawCard) return;
         }
@@ -70,45 +70,42 @@ public class Blackjack
         } 
     }
     
-    private void RollParse(string playerName, int parsedRoll, int parsedOutOf)
+    private void RollParse(Roll roll)
     {
         // check if roll is out of 13 (13 cards) and check if current player has rolled
-        if (parsedOutOf != 13) return;
-        if (participants.GetParticipant().name != playerName) return;
+        if (roll.OutOf != 13) return;
+        if (participants.GetParticipant().Name != roll.PlayerName) return;
 
-        var card = DrawCard();
+        var card = new Cards.Card(roll.Rolled, DrawCard().Suit);
         switch (Plugin.State)
         {
             case GameState.Hit:
-                Hit(new Cards.Card(parsedRoll, card.Suit, false));
+                Hit(card);
                 return;
             case GameState.DoubleDown:
-                DoubleDown(new Cards.Card(parsedRoll, card.Suit, false));
+                DoubleDown(card);
                 return;
             case GameState.DrawSplit:
-                participants.SplitDraw.Add(new Cards.Card(parsedRoll, card.Suit, false));
+                participants.SplitDraw.Add(card);
                 return;
         } 
     }
     
-    private void ParseFirstCards(string playerName, int parsedRoll, int parsedOutOf)
+    private void ParseFirstCards(Roll roll)
     {
-        if (parsedOutOf != 13) return;
-        if (participants.GetParticipantName() != playerName) return;
+        if (roll.OutOf != 13) return;
+        if (participants.GetParticipantName() != roll.PlayerName) return;
 
-        var card = DrawCard();
-        participants.Add(new Participant(playerName, new Cards.Card(parsedRoll, card.Suit, false)));
-        
+        participants.Add(new Participant(roll.PlayerName, new Cards.Card(roll.Rolled, DrawCard().Suit)));
         participants.NextParticipant();
     }
     
-    private void ParseDealerCards(string playerName, int parsedRoll, int parsedOutOf)
+    private void ParseDealerCards(Roll roll)
     {
-        if (parsedOutOf != 13) return;
-        if (Plugin.LocalPlayer != playerName) return;
+        if (roll.OutOf != 13) return;
+        if (Plugin.LocalPlayer != roll.PlayerName) return;
 
-        var card = DrawCard();
-        participants.DealerCards.Add(new Participant("", new Cards.Card(parsedRoll, card.Suit, false)));
+        participants.DealerCards.Add(new Participant("", new Cards.Card(roll.Rolled, DrawCard().Suit)));
     }
 
     public void TakePeopleIntoNextRound()
@@ -118,7 +115,7 @@ public class Blackjack
 
         foreach (var name in last.Where(name => !name.EndsWith(" Split")))
         {
-            participants.Add(new Participant(name, 1000, 1000));
+            participants.Add(new Participant(Roll.Dummy(name)));
             participants.PlayerBets[name] = new Participants.Player(configuration.DefaultBet, true);
         }
         Plugin.SwitchState(GameState.Registration);
@@ -209,7 +206,7 @@ public class Blackjack
     
     public void Hit(Cards.Card card)
     {
-        var currentPlayer = participants.GetParticipant().name;
+        var currentPlayer = participants.GetParticipant().Name;
         participants.SetLastPlayerAction("Hit");
         
         participants.Add(new Participant(currentPlayer, card)); 
@@ -223,7 +220,7 @@ public class Blackjack
 
     public void DoubleDown(Cards.Card card)
     {
-        var currentPlayer = participants.GetParticipant().name;
+        var currentPlayer = participants.GetParticipant().Name;
         participants.PlayerBets[currentPlayer].Bet *= 2;
         participants.SetLastPlayerAction("Double Down");
             
@@ -247,7 +244,7 @@ public class Blackjack
         }
 
         var cards = participants.FindAllWithIndex();
-        var currentPlayer = participants.GetParticipant().name;
+        var currentPlayer = participants.GetParticipant().Name;
         var splitName = $"{currentPlayer} Split";
         
         var card1 = participants.SplitDraw[0];
@@ -281,7 +278,7 @@ public class Blackjack
     
     public void Surrender()
     {
-        var currentPlayer = participants.GetParticipant().name;
+        var currentPlayer = participants.GetParticipant().Name;
         var player = participants.PlayerBets[currentPlayer];
         player.Bet = (player.Bet / 2) * -1;
         player.IsAlive = false;
@@ -325,10 +322,10 @@ public class Blackjack
     
     public bool CheckPlayerCards()
     {
-        var currentPlayer = participants.FindAll(participants.GetParticipant().name);
+        var currentPlayer = participants.FindAll(participants.GetParticipant().Name);
         var cards = CalculatePlayerCardValues(currentPlayer);
         
-        var player = participants.PlayerBets[currentPlayer[0].name];
+        var player = participants.PlayerBets[currentPlayer[0].Name];
         switch (cards)
         {
             case > 21:
@@ -390,19 +387,19 @@ public class Blackjack
         // check if registration roll is correct or if player is already in list
         if (participants.PlayerNameList.Exists(x => x == name)) return "Target already registered.";
         
-        participants.Add(new Participant(name, 1000, 1000));
+        participants.Add(new Participant(Roll.Dummy(name)));
         participants.PlayerBets[name] = new Participants.Player(configuration.DefaultBet, true);
         return string.Empty;
     }
     
-    public void Registration(string playerName, int parsedRoll, int parsedOutOf)
+    public void Registration(Roll roll)
     {
         // check if registration roll is correct or if player is already in list
-        if (parsedOutOf != -1) return;
-        if (participants.PlayerNameList.Exists(x => x == playerName)) return;
+        if (roll.OutOf != -1) return;
+        if (participants.PlayerNameList.Exists(x => x == roll.PlayerName)) return;
         
-        participants.Add(new Participant(playerName, parsedRoll, parsedOutOf));
-        participants.PlayerBets[playerName] = new Participants.Player(configuration.DefaultBet, true);
+        participants.Add(new Participant(roll));
+        participants.PlayerBets[roll.PlayerName] = new Participants.Player(configuration.DefaultBet, true);
     }
     
     // internal game mechanics

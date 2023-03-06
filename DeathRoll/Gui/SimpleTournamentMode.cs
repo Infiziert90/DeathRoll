@@ -62,22 +62,11 @@ public class SimpleTournamentMode
     {
         ImGui.Dummy(new Vector2(0.0f, 30.0f));
         
-        var windowWidth = ImGui.GetWindowSize().X;
-        var textWidth1   = ImGui.CalcTextSize("WINNER").X;
-        var textWidth2   = ImGui.CalcTextSize("GOAT").X;
-        var textWidth3   = ImGui.CalcTextSize("DINNER").X;
-        var textWidth4   = ImGui.CalcTextSize($"{participants.Winner.GetDisplayName()}").X;
-        
-        ImGui.SetCursorPosX((windowWidth - textWidth1) * 0.5f);
-        ImGui.TextColored(_yellowColor, $"WINNER");
-        ImGui.SetCursorPosX((windowWidth - textWidth1) * 0.5f);
-        ImGui.TextColored(_yellowColor, $"WINNER");
-        ImGui.SetCursorPosX((windowWidth - textWidth2) * 0.5f);
-        ImGui.TextColored(_yellowColor, $"GOAT");
-        ImGui.SetCursorPosX((windowWidth - textWidth3) * 0.5f);
-        ImGui.TextColored(_yellowColor, $"DINNER");
-        ImGui.SetCursorPosX((windowWidth - textWidth4) * 0.5f);
-        ImGui.TextColored(_yellowColor, $"{participants.Winner.GetDisplayName()}");
+        Helper.SetTextCenter("WINNER", _yellowColor);
+        Helper.SetTextCenter("WINNER", _yellowColor);
+        Helper.SetTextCenter("GOAT", _yellowColor);
+        Helper.SetTextCenter("DINNER", _yellowColor);
+        Helper.SetTextCenter($"{participants.Winner.GetDisplayName()}", _yellowColor);
         
         ImGui.Dummy(new Vector2(0.0f, 210.0f));
         
@@ -119,14 +108,12 @@ public class SimpleTournamentMode
     public void PreparePhaseRender()
     {
         if (ImGui.Button("Show Bracket"))
-        {
             bracketVisible = true;
-        }
-        
-        if (spTourn.Player2.name != "Byes")
+
+        if (spTourn.Player2.Name != "Byes")
         {
-            ImGui.Text("Next Match:");
-            ImGui.Text($"{spTourn.Player1.GetDisplayName()} vs {(spTourn.Player2.GetDisplayName())}");
+            ImGui.TextUnformatted("Next Match:");
+            ImGui.TextUnformatted($"{spTourn.Player1.GetDisplayName()} vs {(spTourn.Player2.GetDisplayName())}");
             
             if (ImGui.Button("Begin Match"))
             {
@@ -134,10 +121,10 @@ public class SimpleTournamentMode
                 Plugin.SwitchState(GameState.Match);
             }
 
-            if (!configuration.Debug) return;
-            if (ImGui.Button("Auto Win Match"))
+            if (configuration.Debug)
             {
-                spTourn.AutoWin();
+                if (ImGui.Button("Auto Win Match"))
+                    spTourn.AutoWin();
             }
         }
         else
@@ -145,16 +132,18 @@ public class SimpleTournamentMode
             ImGui.Text($"{spTourn.Player1.GetDisplayName()} got lucky and automatically won~");
             
             if (ImGui.Button("Continue to next Round"))
-            {
                 spTourn.ForfeitWin(spTourn.Player1);
-            }
         }
     }
 
     public void DrawGeneratedBracket()
     {
-        if (!bracketVisible) return;
-        if (Plugin.State is GameState.NotRunning or GameState.Crash) return;
+        if (!bracketVisible) 
+            return;
+        
+        if (Plugin.State is GameState.NotRunning or GameState.Crash) 
+            return;
+        
         if (lastSeenSetting != DebugConfig.RandomizeNames)
         {
             lastSeenSetting = DebugConfig.RandomizeNames;
@@ -199,45 +188,50 @@ public class SimpleTournamentMode
         {
             if (participants.RoundDone)
             {
-                ImGui.Dummy(new Vector2(0.0f, 10.0f));
                 pluginUi.DeathRollMode.RenderLoserPanel();  
             }
             else
             {
-                ImGui.Text($"Player 1: {spTourn.Player1.GetDisplayName()}");
-                ImGui.Text($"Player 2: {spTourn.Player2.GetDisplayName()}");
+                Helper.SetTextCenter($"{spTourn.Player1.GetDisplayName()} vs {spTourn.Player2.GetDisplayName()}");
             }
-        
-            ImGui.Dummy(new Vector2(0.0f, 10.0f));
-            pluginUi.DeathRollMode.ParticipantRender();
 
-            if (participants.RoundDone)
+            if (ImGui.BeginChild("Content", new Vector2(0, -60), false, 0))
             {
-                if (ImGui.Button("End Match"))
-                {
-                    spTourn.NextMatch();
-                    matchVisible = false;
-                }  
+                ImGui.Dummy(new Vector2(0.0f, 10.0f));
+                pluginUi.DeathRollMode.ParticipantRender();
             }
-            else
+            ImGui.EndChild();
+
+            if (ImGui.BeginChild("BottomBar", new Vector2(0, 0), false, 0))
             {
-                ImGui.Dummy(new Vector2(0.0f, 20.0f));
-                ImGui.Text($"Player isn't responding? Forfeit the match~");
-                
-                if (ImGui.Button("Forfeit to P1"))
+                if (participants.RoundDone)
                 {
-                    spTourn.ForfeitWin(spTourn.Player1);
-                    matchVisible = false;
-                }  
-                
-                ImGui.SameLine();
-                
-                if (ImGui.Button("Forfeit to P2"))
+                    if (ImGui.Button("End Match"))
+                    {
+                        spTourn.NextMatch();
+                        matchVisible = false;
+                    }  
+                }
+                else
                 {
-                    spTourn.ForfeitWin(spTourn.Player2);
-                    matchVisible = false;
-                }  
+                    ImGui.Text($"Player isn't responding? Forfeit the match~");
+                
+                    if (ImGui.Button("Forfeit to P1"))
+                    {
+                        spTourn.ForfeitWin(spTourn.Player1);
+                        matchVisible = false;
+                    }  
+                
+                    ImGui.SameLine();
+                
+                    if (ImGui.Button("Forfeit to P2"))
+                    {
+                        spTourn.ForfeitWin(spTourn.Player2);
+                        matchVisible = false;
+                    }  
+                }
             }
+            ImGui.EndChild();
         }
 
         ImGui.End();
@@ -308,11 +302,32 @@ public class SimpleTournamentMode
                 : $"Awaiting more players ...");
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ImGui.TextWrapped("Players can automatically enter by typing /random or /dice respectively while round registration is active.");
-        ImGui.TextWrapped("Alternatively players can be manually entered by targetting the character and pressing 'Add Target' below.");
+        ImGui.TextWrapped("Alternatively players can be manually entered by targeting the character and pressing 'Add Target' below.");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         if (ImGui.Button("Add Target")) { ErrorMsg = spTourn.TargetRegistration(); }
-        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-        
-        Helper.PlayerListRender("Entries", participants, ImGuiTreeNodeFlags.DefaultOpen);
+        ImGui.Dummy(new Vector2(0.0f, 10.0f));
+        PlayerListRender();
+    }
+    
+    private void PlayerListRender()
+    {
+        if (!participants.PlayerNameList.Any()) return;
+
+        if (ImGui.CollapsingHeader("Players", ImGuiTreeNodeFlags.DefaultOpen))
+        {
+            if (ImGui.BeginTable("##tournament_table", 1, ImGuiTableFlags.None))
+            {
+                ImGui.TableSetupColumn("##tournament_name");
+
+                foreach (var participant in participants.PList)
+                {
+                    ImGui.TableNextColumn();
+                    if (Helper.SelectableDelete(participant, participants))
+                        break; // break because we deleted an entry
+                }
+            
+                ImGui.EndTable();
+            }
+        }
     }
 }

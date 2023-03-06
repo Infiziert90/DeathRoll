@@ -3,15 +3,18 @@ using System.Text.RegularExpressions;
 
 namespace DeathRoll;
 
-public class Highlight
+public partial class Highlight
 {
     private Regex? _compiled;
     public Vector4 Color;
 
-    public string Regex;
+    public string Regex = null!;
     public Regex CompiledRegex => _compiled ??= Compile();
     // and clear _compiled to null when Regex changes
-
+    
+    [GeneratedRegex("\\A(?!x)x")]
+    private static partial Regex Unmatchable();
+    
     public Highlight() { }
 
     public Highlight(string r, Vector4 c)
@@ -24,9 +27,12 @@ public class Highlight
     {
         Regex = r;
         Color = c;
+        
         _compiled = null;
     }
 
+    public bool Matches(int number) => CompiledRegex.Match(number.ToString()).Success;
+    
     private Regex Compile()
     {
         try
@@ -35,7 +41,7 @@ public class Highlight
         }
         catch (RegexParseException)
         {
-            return new Regex(@"\A(?!x)x");
-        } // unmatchable regex
+            return Unmatchable();
+        }
     }
 }
