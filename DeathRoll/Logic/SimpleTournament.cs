@@ -99,6 +99,7 @@ public class SimpleTournament
         participants.Add(new Participant(roll));
         if (roll.Rolled >= 2) return;
         
+        // player lost this round
         participants.RoundDone = true;
     }
     

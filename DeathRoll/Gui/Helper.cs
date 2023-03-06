@@ -12,8 +12,13 @@ public static class Helper
     private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize;
 
     // https://www.programcreek.com/cpp/?code=kswaldemar%2Frewind-viewer%2Frewind-viewer-master%2Fsrc%2Fimgui_impl%2Fimgui_widgets.cpp
-    public static void ShowHelpMarker(string desc) {
-        ImGui.TextDisabled("(?)");
+    public static void ShowHelpMarker(string desc, string markerText = "(?)", bool disabled = true)
+    {
+        if (disabled) 
+            ImGui.TextDisabled(markerText);
+        else 
+            ImGui.TextUnformatted(markerText);
+        
         if (!ImGui.IsItemHovered()) return;
         
         ImGui.BeginTooltip();

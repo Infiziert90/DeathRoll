@@ -195,14 +195,14 @@ public class SimpleTournamentMode
                 Helper.SetTextCenter($"{spTourn.Player1.GetDisplayName()} vs {spTourn.Player2.GetDisplayName()}");
             }
 
-            if (ImGui.BeginChild("Content", new Vector2(0, -60), false, 0))
+            if (ImGui.BeginChild("Content##SimpleTournament", new Vector2(0, -60), false, 0))
             {
                 ImGui.Dummy(new Vector2(0.0f, 10.0f));
                 pluginUi.DeathRollMode.ParticipantRender();
             }
             ImGui.EndChild();
 
-            if (ImGui.BeginChild("BottomBar", new Vector2(0, 0), false, 0))
+            if (ImGui.BeginChild("BottomBar##SimpleTournament", new Vector2(0, 0), false, 0))
             {
                 if (participants.RoundDone)
                 {
