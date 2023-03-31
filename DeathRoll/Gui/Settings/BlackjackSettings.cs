@@ -96,6 +96,19 @@ Alternative Soft16 Example:
             Helper.ShowHelpMarker("Automatically draw all dealer cards (first two cards are excluded).");
         }
         
+        if (configuration.BlackjackMode == 1)
+        {
+            var dealerDrawsAll = configuration.DealerDrawsAll;
+            if (ImGui.Checkbox("Dealer draws all cards", ref dealerDrawsAll))
+            {
+                configuration.VenueDealer = true;
+                configuration.DealerDrawsAll = dealerDrawsAll;
+                configuration.Save();
+            }
+            ImGui.SameLine();
+            Helper.ShowHelpMarker("Dealer draws all cards instead of players. Faster gameplay!");
+        }
+        
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
         
         var autoOpenField = configuration.AutoOpenField;
