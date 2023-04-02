@@ -218,9 +218,10 @@ Round continues as before, with the split hands turn happening later";
     
     public void CardDeckRender()
     {
-        if (!ImGui.BeginTable("##blackjackdeck", 4)) return;
+        if (!ImGui.BeginTable("##blackjackdeck", 5)) return;
         ImGui.TableSetupColumn("Name");
         ImGui.TableSetupColumn("Cards");
+        ImGui.TableSetupColumn("Total", ImGuiTableColumnFlags.None, 0.3f);
         ImGui.TableSetupColumn("Bet", ImGuiTableColumnFlags.None, 0.4f);
         ImGui.TableSetupColumn("Last Action", ImGuiTableColumnFlags.None, 0.3f);
 
@@ -228,6 +229,7 @@ Round continues as before, with the split hands turn happening later";
         foreach (var player in participants.PlayerNameList.Select(value => value))
         {
             var p = participants.FindAll(player);
+            var cards = blackjack.CalculatePlayerCardValues(p);
             ImGui.TableNextColumn();
             ImGui.Text(p[0].GetDisplayName());
 
@@ -235,6 +237,9 @@ Round continues as before, with the split hands turn happening later";
             ImGui.PushFont(plugin.FontManager.Font2);
             ImGui.Text(string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card))));
             ImGui.PopFont();
+
+            ImGui.TableNextColumn();
+            ImGui.Text($"{cards}");
             
             ImGui.TableNextColumn();
             ImGui.Text($"{participants.PlayerBets[player].Bet:N0}");
@@ -246,6 +251,8 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TableNextRow();
         ImGui.TableNextRow();
         
+        var dcards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
+
         ImGui.TableNextColumn();
         ImGui.Text("Dealer");
 
@@ -253,7 +260,10 @@ Round continues as before, with the split hands turn happening later";
         ImGui.PushFont(plugin.FontManager.Font2);
         ImGui.Text(string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card))));
         ImGui.PopFont();
-        
+
+        ImGui.TableNextColumn();
+        ImGui.Text($"{dcards}");
+
         ImGui.TableNextColumn();
         
         ImGui.TableNextColumn();
