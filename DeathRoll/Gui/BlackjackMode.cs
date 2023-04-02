@@ -158,7 +158,7 @@ Round continues as before, with the split hands turn happening later";
         if (ImGui.Button("Copy Dealer"))
         {
             var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
-            ImGui.SetClipboardText($"Dealer: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} Value: {cards}");
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}");
         }
     }
     
@@ -171,7 +171,7 @@ Round continues as before, with the split hands turn happening later";
         if (ImGui.Button("Copy Dealer"))
         {
             var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
-            ImGui.SetClipboardText($"Dealer: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} Value: {cards}");
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}");
         }
     }
 
@@ -206,13 +206,13 @@ Round continues as before, with the split hands turn happening later";
         {
             var currentPlayer = participants.FindAllWithIndex();
             var cards = blackjack.CalculatePlayerCardValues(currentPlayer);
-            var playerString = $"Player: {string.Join(" ", currentPlayer.Select(x => Cards.ShowCardSimple(x.Card)))} Value: {cards}";
+            var playerString = $"{participants.GetParticipant().GetDisplayName()}'s hand: {string.Join(" ", currentPlayer.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}";
             ImGui.SetClipboardText(playerString);
         }
 
         if (ImGui.Button("Copy Dealer"))
         {
-            ImGui.SetClipboardText($"Dealer: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))}");
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))}");
         }
     }
     
