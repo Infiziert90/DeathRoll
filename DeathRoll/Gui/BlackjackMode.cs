@@ -11,6 +11,7 @@ public static class ImGuiColors
 {
     public static Vector4 CopyColor { get; internal set; } = new(0.031f, 0.376f, 0.768f, 1.0f); // A soft blue
 }
+
 public class BlackjackMode
 {
     private readonly Vector4 _redColor = new(0.980f, 0.245f, 0.245f, 1.0f);
