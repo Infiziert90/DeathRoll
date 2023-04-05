@@ -244,8 +244,6 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TableSetupColumn("Total", ImGuiTableColumnFlags.None, 0.3f);
         ImGui.TableSetupColumn("Bet", ImGuiTableColumnFlags.None, 0.4f);
         ImGui.TableSetupColumn("Last Action", ImGuiTableColumnFlags.None, 0.3f);
-        //ImGui.TableSetupColumn("Copy", ImGuiTableColumnFlags.None, 0.3f);
-
 
         ImGui.TableHeadersRow();
         foreach (var player in participants.PlayerNameList.Select(value => value))
@@ -255,7 +253,6 @@ Round continues as before, with the split hands turn happening later";
 
             // Feature by request so a player's hand can always be copied out
             ImGui.TableNextColumn();
-            //Vector4 CopyColor { get, internal set; } = new(1.0f, 1.0f, 1.0f, 1.0f);
             ImGui.PushStyleColor(ImGuiCol.Button, ImGuiColors.CopyColor);
             if (ImGui.Button(p[0].GetDisplayName()))
             {
@@ -303,7 +300,6 @@ Round continues as before, with the split hands turn happening later";
         
         ImGui.EndTable();
         
-        //if (ImGui.Button($"{(!fieldVisible ? "Open" : "Close")} Game Field")) { fieldVisible = !fieldVisible; }
     }
 
     public void MatchBeginDraw()
