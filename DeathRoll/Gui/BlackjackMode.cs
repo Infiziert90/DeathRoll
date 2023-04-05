@@ -140,6 +140,21 @@ Round continues as before, with the split hands turn happening later";
             blackjack.TakePeopleIntoNextRound();
             fieldVisible = false;
         }
+
+        // Copy out all winnings to a single string to show all players the final standings (and leave a record if a player wants to play their push/winnings into the next round)
+        var finalPayout = $"Payouts: [] ";
+        if (ImGui.Button("Copy Payout"))
+        {
+            foreach (var (name, player) in participants.PlayerBets)
+            {
+                if (player.Bet < 1)
+                { finalPayout += $"{name.Split()[0]} -> Lost! [] "; }
+                else
+                { finalPayout += $"{name.Split()[0]} -> {player.Bet} [] "; }
+            }
+            ImGui.SetClipboardText(finalPayout);
+        }
+
         // Let's allow 'Copy Dealer' everywhere so newbies can be shown the dealer's hand (especially if it resolves on the first two cards)
         if (ImGui.Button("Copy Dealer"))
         {
