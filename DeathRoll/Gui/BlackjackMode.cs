@@ -130,6 +130,12 @@ Round continues as before, with the split hands turn happening later";
             blackjack.TakePeopleIntoNextRound();
             fieldVisible = false;
         }
+        // Let's allow 'Copy Dealer' everywhere so newbies can be shown the dealer's hand (especially if it resolves on the first two cards)
+        if (ImGui.Button("Copy Dealer"))
+        {
+            var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}");
+        }
     }
 
     public void DealerDoneRender()
@@ -137,6 +143,11 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TextColored(_yellowColor, $"The dealer is not allowed to hit anymore!");
         ImGui.TextColored(_yellowColor, $"Please proceed by pressing 'Calculate Winnings' below.");
         if (ImGui.Button("Calculate Winnings")) { blackjack.EndMatch(); }
+        if (ImGui.Button("Copy Dealer"))
+        {
+            var cards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}");
+        }
     }
     
     public void DealerDrawRender()
