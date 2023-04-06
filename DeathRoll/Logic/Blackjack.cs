@@ -74,7 +74,13 @@ public class Blackjack
     {
         // check if roll is out of 13 (13 cards) and check if current player has rolled
         if (roll.OutOf != 13) return;
-        if (participants.GetParticipant().Name != roll.PlayerName) return;
+        // Check if 'dealer draws all cards' is enabled. If so, spaghetti swap out the player var so it doesn't try to insert the dealer as a player
+        if (!configuration.DealerDrawsAll) { if (participants.GetParticipantName() != roll.PlayerName) return; }
+        else
+        {
+            if (Plugin.LocalPlayer != roll.PlayerName) return;
+            roll.PlayerName = participants.GetParticipantName();
+        }
 
         var card = new Cards.Card(roll.Rolled, DrawCard().Suit);
         switch (Plugin.State)
@@ -90,11 +96,16 @@ public class Blackjack
                 return;
         } 
     }
-    
+
     private void ParseFirstCards(Roll roll)
     {
         if (roll.OutOf != 13) return;
-        if (participants.GetParticipantName() != roll.PlayerName) return;
+        if (!configuration.DealerDrawsAll) { if (participants.GetParticipantName() != roll.PlayerName) return; }
+        else
+        { 
+            if (Plugin.LocalPlayer != roll.PlayerName) return;
+            roll.PlayerName = participants.GetParticipantName();
+        }
 
         participants.Add(new Participant(roll.PlayerName, new Cards.Card(roll.Rolled, DrawCard().Suit)));
         participants.NextParticipant();
