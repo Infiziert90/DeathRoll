@@ -44,7 +44,7 @@ public class Configuration : IPluginConfiguration
     public bool AutoDrawCard = true;
     public bool AutoDrawOpening = true;
     public bool AutoDrawDealer = true;
-    public bool DealerDrawsAll = true;
+    public bool DealerDrawsAll = false;
     public bool VenueDealer = false;
     public int BlackjackMode = 0;
     public bool AutoOpenField = true;

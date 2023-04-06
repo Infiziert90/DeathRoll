@@ -96,7 +96,7 @@ Alternative Soft16 Example:
             Helper.ShowHelpMarker("Automatically draw all dealer cards (first two cards are excluded).");
         }
         
-        if (configuration.BlackjackMode == 1)
+        else
         {
             var dealerDrawsAll = configuration.DealerDrawsAll;
             if (ImGui.Checkbox("Dealer draws all cards", ref dealerDrawsAll))

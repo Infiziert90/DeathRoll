@@ -150,7 +150,7 @@ Round continues as before, with the split hands turn happening later";
                 if (player.Bet < 1)
                 { finalPayout += $"{name.Split()[0]} -> Lost! [] "; }
                 else
-                { finalPayout += $"{name.Split()[0]} -> {player.Bet} [] "; }
+                { finalPayout += $"{name.Split()[0]} -> {player.Bet:N0} [] "; }
             }
             ImGui.SetClipboardText(finalPayout);
         }
