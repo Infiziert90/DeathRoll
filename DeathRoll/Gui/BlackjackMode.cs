@@ -1,6 +1,6 @@
 using System.Linq;
 using System.Numerics;
-using Dalamud.Interface.Colors;
+using Dalamud.Interface;
 using DeathRoll.Data;
 using DeathRoll.Logic;
 using ImGuiNET;
@@ -47,7 +47,7 @@ Round continues as before, with the split hands turn happening later";
     public void MainRender()
     {
         RenderControlPanel();
-        ImGui.Dummy(new Vector2(0.0f, 10.0f));
+        ImGuiHelpers.ScaledDummy(new Vector2(5.0f));
 
         switch (Plugin.State)
         {
@@ -83,8 +83,6 @@ Round continues as before, with the split hands turn happening later";
                 break;
         }
 
-        ImGui.Dummy(new Vector2(0.0f, 10.0f));
-
         switch (Plugin.State)
         {
             case GameState.PlayerRound:
@@ -102,7 +100,9 @@ Round continues as before, with the split hands turn happening later";
 
         ImGui.SameLine();
 
-        if (ImGui.Button($"{(!fieldVisible ? "Open" : "Close")} Game Field")) { fieldVisible = !fieldVisible; }
+        if (Plugin.State is not GameState.NotRunning and not GameState.Crash and not GameState.Registration)
+            if (ImGui.Button($"{(!fieldVisible ? "Open" : "Close")} Game Field"))
+                fieldVisible = !fieldVisible;
 
         var spacing = ImGui.GetScrollMaxY() == 0 ? 85.0f : 120.0f;
         ImGui.SameLine(ImGui.GetWindowWidth() - spacing);
@@ -235,31 +235,27 @@ Round continues as before, with the split hands turn happening later";
         if (ImGui.Button("Surrender")) { blackjack.Surrender(); }
         if (ImGui.Button("Double Down")) { Plugin.SwitchState(GameState.DoubleDown); blackjack.PlayerAction(); }
 
-        if (participants.GetParticipant().CanSplit) { if (ImGui.Button("Split")) { blackjack.Split(); } }
-
-        ImGui.Dummy(new Vector2(0.0f, 5.0f));
-        if (ImGui.Button("Copy Player"))
+        if (participants.GetParticipant().CanSplit)
         {
-            var currentPlayer = participants.FindAllWithIndex();
-            var cards = blackjack.CalculatePlayerCardValues(currentPlayer);
-            var playerString = $"{participants.GetParticipant().GetDisplayName()}'s hand: {string.Join(" ", currentPlayer.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}";
-            ImGui.SetClipboardText(playerString);
-        }
-
-        if (ImGui.Button("Copy Dealer"))
-        {
-            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))}");
+            if (ImGui.Button("Split"))
+            {
+                blackjack.Split();
+            }
         }
     }
 
     public void CardDeckRender()
     {
+        ImGuiHelpers.ScaledDummy(5.0f);
+        ImGui.Separator();
+        ImGuiHelpers.ScaledDummy(5.0f);
+
         if (!ImGui.BeginTable("##blackjackdeck", 5)) return;
-        ImGui.TableSetupColumn("Name - (Click to Copy)");
+        ImGui.TableSetupColumn("Name - (Click to Copy)", 0, 0.6f);
         ImGui.TableSetupColumn("Cards");
-        ImGui.TableSetupColumn("Total", ImGuiTableColumnFlags.None, 0.3f);
-        ImGui.TableSetupColumn("Bet", ImGuiTableColumnFlags.None, 0.4f);
-        ImGui.TableSetupColumn("Last Action", ImGuiTableColumnFlags.None, 0.3f);
+        ImGui.TableSetupColumn("Total", 0, 0.3f);
+        ImGui.TableSetupColumn("Bet", 0, 0.4f);
+        ImGui.TableSetupColumn("Last Action", 0, 0.3f);
 
         ImGui.TableHeadersRow();
         foreach (var player in participants.PlayerNameList.Select(value => value))
@@ -270,10 +266,10 @@ Round continues as before, with the split hands turn happening later";
             // Feature by request so a player's hand can always be copied out
             ImGui.TableNextColumn();
             ImGui.PushStyleColor(ImGuiCol.Button, ImGuiColors.CopyColor);
-            if (ImGui.Button(p[0].GetDisplayName()))
+            var pFlavor = $"{p[0].GetDisplayName().Split("\uE05D ").First()}";
+            if (ImGui.Button($"{pFlavor}##{p[0].GetDisplayName()}"))
             {
-                var pFlavor = $" ";
-                var participantsString = $"{p[0].GetDisplayName()}'s hand: {string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}";
+                var participantsString = $"{pFlavor}'s hand: {string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}";
                 ImGui.SetClipboardText(participantsString);
             }
             ImGui.PopStyleColor();
@@ -285,21 +281,24 @@ Round continues as before, with the split hands turn happening later";
 
             ImGui.TableNextColumn();
             ImGui.Text($"{cards}");
-            
+
             ImGui.TableNextColumn();
             ImGui.Text($"{participants.PlayerBets[player].Bet:N0}");
-            
+
             ImGui.TableNextColumn();
             ImGui.Text(participants.PlayerBets[player].LastAction);
         }
-        
+
         ImGui.TableNextRow();
         ImGui.TableNextRow();
-        
+
         var dcards = blackjack.CalculatePlayerCardValues(participants.DealerCards);
 
         ImGui.TableNextColumn();
-        ImGui.Text("Dealer");
+        if (ImGui.Button($"Dealer"))
+        {
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))}");
+        }
 
         ImGui.TableNextColumn();
         ImGui.PushFont(plugin.FontManager.Font2);
@@ -310,12 +309,12 @@ Round continues as before, with the split hands turn happening later";
         ImGui.Text($"{dcards}");
 
         ImGui.TableNextColumn();
-        
+
         ImGui.TableNextColumn();
         ImGui.Text(participants.DealerAction);
-        
+
         ImGui.EndTable();
-        
+
     }
 
     public void MatchBeginDraw()
@@ -350,14 +349,14 @@ Round continues as before, with the split hands turn happening later";
             }
         }
     }
-    
+
     public void MatchBeginningPanel()
     {
         blackjack.StartRound();
         blackjack.PreparePlayers();
         if (configuration.AutoOpenField) fieldVisible = true;
     }
-    
+
     public void DealerStartingDraw()
     {
         switch (Plugin.State)
@@ -374,11 +373,11 @@ Round continues as before, with the split hands turn happening later";
         ImGui.TextColored(_greenColor, $"Waiting for dealer roll ...");
         ImGui.TextColored(_greenColor, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
     }
-    
+
     public void RegistrationPanel()
     {
         if (ErrorMsg != string.Empty) { Helper.ErrorWindow(ref ErrorMsg); }
-        
+
         if (participants.PlayerNameList.Any())
         {
             if (ImGui.Button("Close Registration"))
@@ -394,7 +393,7 @@ Round continues as before, with the split hands turn happening later";
                 return;
             }
         }
-        
+
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
         ImGui.TextColored(_greenColor,$"Awaiting more players ...");
         ImGui.Dummy(new Vector2(0.0f, 5.0f));
@@ -409,7 +408,7 @@ Round continues as before, with the split hands turn happening later";
     public void TableBetRender()
     {
         if (!participants.PlayerBets.Any()) return;
-        
+
         ImGui.TextColored(_yellowColor, "Player Bets:");
         if (!ImGui.BeginTable("##bj_table", 3, ImGuiTableFlags.None))
             return;
@@ -428,10 +427,10 @@ Round continues as before, with the split hands turn happening later";
             ImGui.TableNextColumn();
             if (Helper.SelectableDelete(participant, participants))
                 break; // break because we deleted an entry
-                
+
             ImGui.TableNextColumn();
             ImGui.Text($"{currentBet:N0}");
-                
+
             ImGui.TableNextColumn();
             var p = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new Vector2(p.X, p.Y-3));
@@ -447,7 +446,7 @@ Round continues as before, with the split hands turn happening later";
         {
             participants.PlayerBets[updateName].Bet = newBet;
         }
-            
+
         ImGui.EndTable();
     }
 
@@ -457,9 +456,9 @@ Round continues as before, with the split hands turn happening later";
         ImGui.PushFont(plugin.FontManager.Font);
         ImGui.Text(s[0]);
         ImGui.PopFont();
-        
+
         ImGui.SameLine();
-        
+
         var p = ImGui.GetCursorPos();
         ImGui.SetCursorPos(new Vector2(p.X-70, p.Y+100));
         ImGui.PushFont(plugin.FontManager.Font1);
@@ -473,7 +472,7 @@ Round continues as before, with the split hands turn happening later";
         if (!fieldVisible) return;
         if (Plugin.State is GameState.NotRunning or GameState.Crash) return;
         if (participants.PList.Count == 0) return;
-        
+
         ImGui.SetNextWindowSize(new Vector2(600, 600), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Vector2(600, 600), new Vector2(float.MaxValue, float.MaxValue));
         if (ImGui.Begin("DeathRoll Blackjack Visual", ref fieldVisible))

@@ -19,8 +19,7 @@ public class PluginCommandManager<THost> : IDisposable
         this.commandManager = commandManager;
         this.host = host;
 
-        pluginCommands = host.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static |
-                                                   BindingFlags.Instance)
+        pluginCommands = host!.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
             .Where(method => method.GetCustomAttribute<CommandAttribute>() != null)
             .SelectMany(GetCommandInfoTuple)
             .ToArray();
