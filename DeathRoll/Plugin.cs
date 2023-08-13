@@ -1,5 +1,4 @@
-﻿using System;
-using Dalamud.Data;
+﻿using System.Reflection;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Objects;
@@ -9,66 +8,96 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using DeathRoll.Attributes;
 using DeathRoll.Data;
 using DeathRoll.Logic;
+using DeathRoll.Windows.Bracket;
+using DeathRoll.Windows.CardField;
+using DeathRoll.Windows.Config;
+using DeathRoll.Windows.Main;
+using DeathRoll.Windows.Match;
 
 namespace DeathRoll;
 
 public sealed class Plugin : IDalamudPlugin
 {
-    private readonly PluginCommandManager<Plugin> commandManager;
-    private readonly ClientState clientState;
-    public static Participants? Participants;
-    public static GameState State = GameState.NotRunning;
-    public static string LocalPlayer = string.Empty;
-
-    [PluginService] public static ChatGui Chat { get; private set; } = null!;
     [PluginService] public static Framework Framework { get; private set; } = null!;
+    [PluginService] public static CommandManager Commands { get; private set; } = null!;
+    [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService] public static ClientState ClientState { get; private set; } = null!;
+    [PluginService] public static ChatGui Chat { get; private set; } = null!;
     [PluginService] public static TargetManager TargetManager { get; private set; } = null!;
 
     public string Name => "Death Roll Helper";
 
-    private DalamudPluginInterface PluginInterface { get; init; }
-    private Configuration Configuration { get; init; }
-    private PluginUI PluginUi { get; init; }
-    private Rolls Rolls { get; init; }
-    public FontManager FontManager { get; init; }
-    
-    public Plugin(
-        [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-        [RequiredVersion("1.0")] CommandManager commands,
-        [RequiredVersion("1.0")] ClientState clientState)
-    {
-        PluginInterface = pluginInterface;
-        this.clientState = clientState;
+    public const string Authors = "Infi";
+    public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
 
+    private readonly WindowSystem WindowSystem = new("DeathRoll Helper");
+    public MainWindow MainWindow { get; init; }
+    public ConfigWindow ConfigWindow { get; init; }
+    private MatchWindow MatchWindow { get; init; }
+    private BracketWindow BracketWindow { get; init; }
+    private CardFieldWindow CardFieldWindow { get; init; }
+
+    public readonly Configuration Configuration;
+    public readonly RollManager RollManager;
+    public readonly FontManager FontManager;
+
+    public string LocalPlayer = string.Empty;
+    public readonly Participants Participants;
+    public GameState State = GameState.NotRunning;
+
+    private readonly PluginCommandManager<Plugin> CommandManager;
+
+    public Plugin()
+    {
         FontManager = new FontManager();
-        
+
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.Initialize(PluginInterface);
-        
+
         Participants = new Participants(Configuration);
-        Rolls = new Rolls(Configuration, Participants);
-        
-        PluginUi = new PluginUI(this, Configuration, Participants, Rolls);
-        commandManager = new PluginCommandManager<Plugin>(this, commands);
+        RollManager = new RollManager(this);
+
+        MainWindow = new MainWindow(this);
+        ConfigWindow = new ConfigWindow(this);
+        MatchWindow = new MatchWindow(this);
+        BracketWindow = new BracketWindow(this);
+        CardFieldWindow = new CardFieldWindow(this);
+
+        WindowSystem.AddWindow(MainWindow);
+        WindowSystem.AddWindow(ConfigWindow);
+        WindowSystem.AddWindow(MatchWindow);
+        WindowSystem.AddWindow(BracketWindow);
+        WindowSystem.AddWindow(CardFieldWindow);
+
+        CommandManager = new PluginCommandManager<Plugin>(this, Commands);
 
         Chat.ChatMessage += OnChatMessage;
         PluginInterface.UiBuilder.Draw += DrawUI;
-        PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+        PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
         PluginInterface.UiBuilder.BuildFonts += FontManager.BuildFonts;
         PluginInterface.UiBuilder.RebuildFonts();
     }
 
     public void Dispose()
     {
+        WindowSystem.RemoveAllWindows();
+
+        ConfigWindow.Dispose();
+        MainWindow.Dispose();
+
+        PluginInterface.UiBuilder.Draw -= DrawUI;
+        PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
         Chat.ChatMessage -= OnChatMessage;
-        PluginUi.Dispose();
-        commandManager.Dispose();
+
+        CommandManager.Dispose();
+
         PluginInterface.UiBuilder.BuildFonts -= FontManager.BuildFonts;
         PluginInterface.UiBuilder.RebuildFonts();
     }
@@ -76,7 +105,7 @@ public sealed class Plugin : IDalamudPlugin
     [Command("/drh")]
     [Aliases("/deathroll")]
     [HelpMessage("Toggles UI\nArguments:\non - Turns on\noff - Turns off\nconfig - Opens config\ntimer - Toggles timer")]
-    public void PluginCommand(string command, string args)
+    public void PluginCommand(string _, string args)
     {
         switch (args)
         {
@@ -89,48 +118,49 @@ public sealed class Plugin : IDalamudPlugin
                 Configuration.Save();
                 break;
             case "config":
-                PluginUi.SettingsVisible = true;
+                ConfigWindow.IsOpen = true;
                 break;
             case "timer":
-                if (PluginUi.RollTable.Timers.IsStopwatchRunning()) 
-                    PluginUi.RollTable.Timers.StopTimer();
-                else 
-                    PluginUi.RollTable.StartTimer();
+                if (MainWindow.IsTimerActive())
+                    MainWindow.StopTimer();
+                else
+                    MainWindow.BeginTimer();
                 break;
             default:
-                PluginUi.Visible = true;
+                MainWindow.IsOpen = true;
                 break;
         }
     }
-    
+
     public static string GetTargetName()
     {
         var target = TargetManager.SoftTarget ?? TargetManager.Target;
-        if (target is not PlayerCharacter pc || pc.HomeWorld.GameData == null) return string.Empty;
-        
+        if (target is not PlayerCharacter pc || pc.HomeWorld.GameData == null)
+            return string.Empty;
+
         return $"{pc.Name}\uE05D{pc.HomeWorld.GameData.Name}";
     }
 
     private void OnChatMessage(XivChatType type, uint id, ref SeString sender, ref SeString message, ref bool handled)
     {
-        if (!Configuration.On || State is GameState.NotRunning or GameState.Done or GameState.Crash) 
+        if (!Configuration.On || State is GameState.NotRunning or GameState.Done or GameState.Crash)
             return;
-        
+
         var xivChatType = (ushort) type;
         var channel = xivChatType & 0x7F;
-        
+
         if (Configuration.Debug)
         {
             PluginLog.Information("Chat Event fired.");
             PluginLog.Information($"Sender: {sender}.");
             PluginLog.Information($"Content: {message}.");
             PluginLog.Information($"ChatType: {type} Unmasked Channel: {channel}.");
-            PluginLog.Information($"Language: {clientState.ClientLanguage}.");
+            PluginLog.Information($"Language: {ClientState.ClientLanguage}.");
         }
-        
+
         // 2122 = Random Roll 8266 = different Player Random roll?
         // Dice Roll: FC, LS, CWLS, Party
-        if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74) 
+        if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74)
             return;
 
         var dice = channel != 74;
@@ -140,17 +170,17 @@ public sealed class Plugin : IDalamudPlugin
             case false when Configuration.OnlyDice: // only /dice is accepted
                 return;
         }
-        var m = Reg.Match(message.ToString(), clientState.ClientLanguage, dice);
-        if (!m.Success) 
+        var m = Reg.Match(message.ToString(), ClientState.ClientLanguage, dice);
+        if (!m.Success)
             return;
-        
-        var local = clientState?.LocalPlayer;
+
+        var local = ClientState.LocalPlayer;
         if (local == null || local.HomeWorld.GameData?.Name == null)
         {
-            PluginLog.Information("Unable to fetch character name.");
+            PluginLog.Error("Unable to fetch character name.");
             return;
         }
-        
+
         var diceCommand = 0;
         var playerName = $"{local.Name}\uE05D{local.HomeWorld.GameData.Name}";
         LocalPlayer = playerName;
@@ -160,7 +190,8 @@ public sealed class Plugin : IDalamudPlugin
             var found = isLocalPlayer;
             foreach (var payload in message.Payloads) // try to get name and check for dice cheating
             {
-                if (Configuration.Debug) PluginLog.Information($"message: {payload}");
+                if (Configuration.Debug)
+                    PluginLog.Information($"message: {payload}");
                 switch (payload)
                 {
                     case PlayerPayload playerPayload:
@@ -184,7 +215,8 @@ public sealed class Plugin : IDalamudPlugin
             if (!found) // get playerName from payload
                 foreach (var payload in sender.Payloads)
                 {
-                    if (Configuration.Debug) PluginLog.Information($"Sender: {payload}");
+                    if (Configuration.Debug)
+                        PluginLog.Information($"Sender: {payload}");
                     playerName = payload switch
                     {
                         PlayerPayload playerPayload => $"{playerPayload.PlayerName}\uE05D{playerPayload.World.Name}",
@@ -192,10 +224,11 @@ public sealed class Plugin : IDalamudPlugin
                     };
                 }
         }
-        
+
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
         {
-            if (Configuration.Debug) PluginLog.Information("Blocked player tried to roll.");
+            if (Configuration.Debug)
+                PluginLog.Information("Blocked player tried to roll.");
             return;
         }
 
@@ -208,22 +241,29 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
-        Rolls.ParseRoll(new Roll(m, playerName));
+        RollManager.ParseRoll(new Roll(m, playerName));
     }
 
-    public static void SwitchState(GameState newState)
+    public void SwitchState(GameState newState)
     {
         State = newState;
-        if (newState is GameState.NotRunning) Participants?.Reset();
-    }
-    
-    private void DrawUI()
-    {
-        PluginUi.Draw();
+        if (newState is GameState.NotRunning)
+            Participants.Reset();
     }
 
-    private void DrawConfigUI()
+    private void DrawUI() => WindowSystem.Draw();
+    public void OpenMain() => MainWindow.IsOpen = true;
+    public void OpenConfig() => ConfigWindow.IsOpen = true;
+    public void OpenMatch() => MatchWindow.IsOpen = true;
+    public void OpenBracket() => BracketWindow.IsOpen = true;
+    public void OpenCardField() => CardFieldWindow.IsOpen = true;
+
+    public void ToggleCardField() => CardFieldWindow.IsOpen ^= true;
+
+    public void ClosePlayWindows()
     {
-        PluginUi.SettingsVisible = true;
+        MatchWindow.IsOpen = false;
+        BracketWindow.IsOpen = false;
+        CardFieldWindow.IsOpen = false;
     }
 }

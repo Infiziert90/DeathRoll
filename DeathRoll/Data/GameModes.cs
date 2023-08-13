@@ -7,3 +7,23 @@ public enum GameModes
     Tournament = 2,
     Blackjack = 3,
 }
+
+public static class GameModeUtils
+{
+    public static string GetName(this GameModes n)
+    {
+        return n switch
+        {
+            GameModes.Venue => "Venue",
+            GameModes.DeathRoll => "DeathRoll",
+            GameModes.Tournament => "Tournament",
+            GameModes.Blackjack => "Blackjack",
+            _ => "Unknown"
+        };
+    }
+
+    public static string[] ListOfNames()
+    {
+        return Enum.GetValues<GameModes>().Select(n => n.GetName()).ToArray();
+    }
+}

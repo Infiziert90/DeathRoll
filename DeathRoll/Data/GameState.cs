@@ -5,14 +5,14 @@ public enum GameState
     NotRunning = 0,
     Match = 1,
     Done = 2,
-    
-    // tournament
+
+    // Tournament
     Registration = 101,
     Shuffling = 102,
     Prepare = 103,
     Crash = 199,
-    
-    // blackjack
+
+    // Blackjack
     PrepareRound = 200,
     DrawFirstCards = 201,
     DrawSecondCards = 202,

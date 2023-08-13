@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
 
 public class Blackjack
 {
-    private readonly Configuration configuration;
-    private readonly Participants participants;
+    private readonly Plugin Plugin;
 
-    public Blackjack(Configuration configuration, Participants participants)
+    public Blackjack(Plugin plugin)
     {
-        this.configuration = configuration;
-        this.participants = participants;
+        Plugin = plugin;
     }
 
     public void Parser(Roll roll)
@@ -27,7 +22,7 @@ public class Blackjack
                 RollParse(roll);
                 break;
             case GameState.DrawFirstCards or GameState.DrawSecondCards:
-                ParseFirstCards(roll);
+                ParseStartingCards(roll);
                 break;
             case GameState.DealerFirstCards or GameState.DealerSecondCards or GameState.DrawDealerCard:
                 ParseDealerCards(roll);
@@ -39,14 +34,18 @@ public class Blackjack
 
     public void DealerAction()
     {
-        if (!configuration.AutoDrawDealer)
+        if (!Plugin.Configuration.AutoDrawDealer)
         {
             Plugin.SwitchState(GameState.DrawDealerCard);
             return;
         }
-        while (DealerCheckHand()) { GiveDealerCard(false); }
+
+        while (DealerCheckHand())
+            GiveDealerCard(false);
         DealerRound();
-        if (Plugin.State != GameState.Done) Plugin.SwitchState(GameState.DealerDone);
+
+        if (Plugin.State != GameState.Done)
+            Plugin.SwitchState(GameState.DealerDone);
     }
 
     public void PlayerAction()
@@ -57,7 +56,7 @@ public class Blackjack
         //         return;
         // }
 
-        if (!configuration.AutoDrawCard)
+        if (!Plugin.Configuration.AutoDrawCard)
             return;
 
         var card = DrawCard();
@@ -81,26 +80,26 @@ public class Blackjack
             return;
 
         // Check if 'dealer draws all cards' is enabled. If so, spaghetti swap out the player var so it doesn't try to insert the dealer as a player
-        if (!configuration.DealerDrawsAll)
+        if (Plugin.Configuration.DealerDrawsAll)
         {
-            var checkableName = participants.GetParticipantName();
+            if (Plugin.LocalPlayer != roll.PlayerName)
+                return;
+        }
+        else
+        {
+            var checkableName = Plugin.Participants.GetParticipantName();
             if (checkableName.EndsWith(" Split"))
                 checkableName = checkableName.Split(" Split").First();
 
             if (checkableName != roll.PlayerName)
                 return;
         }
-        else
-        {
-            if (Plugin.LocalPlayer != roll.PlayerName)
-                return;
-        }
 
         // make sure that Participant has correct name
         // TODO Check if this is needed at all
-        roll.PlayerName = participants.GetParticipantName();
+        roll.PlayerName = Plugin.Participants.GetParticipantName();
 
-        var card = new Cards.Card(roll.Rolled, DrawCard().Suit);
+        var card = new Cards.Card(roll.Result, DrawCard().Suit);
         switch (Plugin.State)
         {
             case GameState.Hit:
@@ -110,69 +109,81 @@ public class Blackjack
                 DoubleDown(card);
                 return;
             case GameState.DrawSplit:
-                participants.SplitDraw.Add(card);
+                Plugin.Participants.SplitDraw.Add(card);
                 return;
         }
     }
 
-    private void ParseFirstCards(Roll roll)
+    private void ParseStartingCards(Roll roll)
     {
-        if (roll.OutOf != 13) return;
-        if (!configuration.DealerDrawsAll) { if (participants.GetParticipantName() != roll.PlayerName) return; }
+        if (roll.OutOf != 13)
+            return;
+
+        if (Plugin.Configuration.DealerDrawsAll)
+        {
+            if (Plugin.LocalPlayer != roll.PlayerName)
+                return;
+
+            roll.PlayerName = Plugin.Participants.GetParticipantName();
+        }
         else
         {
-            if (Plugin.LocalPlayer != roll.PlayerName) return;
-            roll.PlayerName = participants.GetParticipantName();
+            if (Plugin.Participants.GetParticipantName() != roll.PlayerName)
+                return;
         }
 
-        participants.Add(new Participant(roll.PlayerName, new Cards.Card(roll.Rolled, DrawCard().Suit)));
-        participants.NextParticipant();
+        Plugin.Participants.Add(new Participant(roll.PlayerName, new Cards.Card(roll.Result, DrawCard().Suit)));
+        if (!Plugin.Configuration.StartingDraw || Plugin.State is GameState.DrawSecondCards)
+            Plugin.Participants.NextParticipant();
     }
 
     private void ParseDealerCards(Roll roll)
     {
-        if (roll.OutOf != 13) return;
-        if (Plugin.LocalPlayer != roll.PlayerName) return;
+        if (roll.OutOf != 13)
+            return;
 
-        participants.DealerCards.Add(new Participant("", new Cards.Card(roll.Rolled, DrawCard().Suit)));
+        if (Plugin.LocalPlayer != roll.PlayerName)
+            return;
+
+        Plugin.Participants.DealerCards.Add(new Participant("", new Cards.Card(roll.Result, DrawCard().Suit)));
     }
 
     public void TakePeopleIntoNextRound()
     {
-        var last = new List<string>(participants.PlayerNameList);
-        participants.Reset();
+        var last = new List<string>(Plugin.Participants.PlayerNameList);
+        Plugin.Participants.Reset();
 
         foreach (var name in last.Where(name => !name.EndsWith(" Split")))
         {
-            participants.Add(new Participant(Roll.Dummy(name)));
-            participants.PlayerBets[name] = new Participants.Player(configuration.DefaultBet, true);
+            Plugin.Participants.Add(new Participant(Roll.Dummy(name)));
+            Plugin.Participants.PlayerBets[name] = new Participants.Player(Plugin.Configuration.DefaultBet, true);
         }
         Plugin.SwitchState(GameState.Registration);
     }
 
     public void EndMatch()
     {
-        var dealerCards = CalculatePlayerCardValues(participants.DealerCards);
-        foreach (var (name, player) in participants.PlayerBets)
+        var dealerCards = CalculateCardValues(Plugin.Participants.DealerCards);
+        foreach (var (name, player) in Plugin.Participants.PlayerBets)
         {
-            if (!player.IsAlive) continue;
+            if (!player.IsAlive)
+                continue;
 
-            var currentPlayer = participants.FindAll(name);
-            var cards = CalculatePlayerCardValues(currentPlayer);
+            var currentPlayer = Plugin.Participants.FindAll(name);
+            var cards = CalculateCardValues(currentPlayer);
 
             if (cards != dealerCards)
-            {
                 player.Bet *= cards > dealerCards ? 2 : -1;
-            }
         }
+
         Plugin.SwitchState(GameState.Done);
     }
 
     public bool DealerCheckHand()
     {
-        var cards = CalculatePlayerCardValues(participants.DealerCards);
-        var hasAce = participants.DealerCards.Any(x => x.Card.IsAce);
-        var check = configuration.DealerRule switch
+        var cards = CalculateCardValues(Plugin.Participants.DealerCards);
+        var hasAce = Plugin.Participants.DealerCards.Any(x => x.Card.IsAce);
+        var check = Plugin.Configuration.DealerRule switch
         {
             DealerRules.DealerHard17 => cards < 17,
             DealerRules.DealerHard16 => cards < 16,
@@ -184,11 +195,11 @@ public class Blackjack
         return check;
     }
 
-    public void DealerBust()
+    private void DealerBust()
     {
-        participants.DealerAction = "Bust";
+        Plugin.Participants.DealerAction = "Bust";
 
-        foreach (var player in participants.PlayerBets.Values.Where(x => x.IsAlive))
+        foreach (var player in Plugin.Participants.PlayerBets.Values.Where(x => x.IsAlive))
         {
             player.Bet *= 2;
             player.IsAlive = false;
@@ -196,11 +207,11 @@ public class Blackjack
         Plugin.SwitchState(GameState.Done);
     }
 
-    public void DealerBlackjack()
+    private void DealerBlackjack()
     {
-        participants.DealerAction = "Blackjack";
+        Plugin.Participants.DealerAction = "Blackjack";
 
-        foreach (var player in participants.PlayerBets.Values.Where(x => x.IsAlive))
+        foreach (var player in Plugin.Participants.PlayerBets.Values.Where(x => x.IsAlive))
         {
             player.Bet *= -1;
             player.IsAlive = false;
@@ -210,21 +221,22 @@ public class Blackjack
 
     public void DealerRound()
     {
-        var cards = CalculatePlayerCardValues(participants.DealerCards);
+        var cards = CalculateCardValues(Plugin.Participants.DealerCards);
         switch (cards)
         {
             case > 21:
                 DealerBust();
                 break;
             case 21:
-                DealerBlackjack();
+                if (!Plugin.Configuration.StartingBlackjack || Plugin.Participants.DealerCards.Count == 2)
+                    DealerBlackjack();
                 break;
         }
     }
 
     public void CheckForRemainingPlayers()
     {
-        if (!participants.PlayerBets.Values.Any(x => x.IsAlive))
+        if (!Plugin.Participants.PlayerBets.Values.Any(x => x.IsAlive))
         {
             Plugin.SwitchState(GameState.Done);
             return;
@@ -233,12 +245,12 @@ public class Blackjack
         DealerRound();
     }
 
-    public void Hit(Cards.Card card)
+    private void Hit(Cards.Card card)
     {
-        var currentPlayer = participants.GetParticipant().Name;
-        participants.SetLastPlayerAction("Hit");
+        var currentPlayer = Plugin.Participants.GetParticipant().Name;
+        Plugin.Participants.SetLastPlayerAction("Hit");
 
-        participants.Add(new Participant(currentPlayer, card));
+        Plugin.Participants.Add(new Participant(currentPlayer, card));
         if (!CheckPlayerCards())
         {
             NextPlayer();
@@ -247,68 +259,68 @@ public class Blackjack
         Plugin.SwitchState(GameState.PlayerRound);
     }
 
-    public void DoubleDown(Cards.Card card)
+    private void DoubleDown(Cards.Card card)
     {
-        var currentPlayer = participants.GetParticipant().Name;
-        participants.PlayerBets[currentPlayer].Bet *= 2;
-        participants.SetLastPlayerAction("Double Down");
+        var currentPlayer = Plugin.Participants.GetParticipant().Name;
+        Plugin.Participants.PlayerBets[currentPlayer].Bet *= 2;
+        Plugin.Participants.SetLastPlayerAction("Double Down");
 
-        participants.Add(new Participant(currentPlayer, card));
+        Plugin.Participants.Add(new Participant(currentPlayer, card));
         CheckPlayerCards();
         NextPlayer();
     }
 
     public void Split()
     {
-        if (!configuration.VenueDealer && configuration.AutoDrawCard)
+        if (Plugin.Configuration is { VenueDealer: false, AutoDrawCard: true })
         {
-            participants.SplitDraw.Add(DrawCard());
-            participants.SplitDraw.Add(DrawCard());
+            Plugin.Participants.SplitDraw.Add(DrawCard());
+            Plugin.Participants.SplitDraw.Add(DrawCard());
         }
 
-        if (participants.SplitDraw.Count != 2)
+        if (Plugin.Participants.SplitDraw.Count != 2)
         {
             Plugin.SwitchState(GameState.DrawSplit);
             return;
         }
 
-        var cards = participants.FindAllWithIndex();
-        var currentPlayer = participants.GetParticipant().Name;
+        var cards = Plugin.Participants.FindAllWithIndex();
+        var currentPlayer = Plugin.Participants.GetParticipant().Name;
         var splitName = $"{currentPlayer} Split";
 
-        var card1 = participants.SplitDraw[0];
-        var card2 = participants.SplitDraw[1];
+        var card1 = Plugin.Participants.SplitDraw[0];
+        var card2 = Plugin.Participants.SplitDraw[1];
 
         var tmp = new Participant(splitName, cards[1].Card);
-        participants.PList[participants.GetCurrentIndex() + participants.PlayerNameList.Count] = tmp;
+        Plugin.Participants.PList[Plugin.Participants.GetCurrentIndex() + Plugin.Participants.PlayerNameList.Count] = tmp;
         cards[1] = tmp;
 
-        participants.Add(new Participant(currentPlayer, card1));
+        Plugin.Participants.Add(new Participant(currentPlayer, card1));
 
-        participants.PlayerNameList.Add(splitName);
-        participants.PList.Insert(participants.PlayerNameList.Count-1, new Participant(splitName, card2));
+        Plugin.Participants.PlayerNameList.Add(splitName);
+        Plugin.Participants.PList.Insert(Plugin.Participants.PlayerNameList.Count-1, new Participant(splitName, card2));
 
-        var player = participants.PlayerBets[currentPlayer];
+        var player = Plugin.Participants.PlayerBets[currentPlayer];
         player.LastAction = "Split";
 
-        participants.PlayerBets[splitName] = new Participants.Player(player.Bet, true);
+        Plugin.Participants.PlayerBets[splitName] = new Participants.Player(player.Bet, true);
 
-        participants.GetParticipant().CanSplit = false;
-        participants.SplitDraw.Clear();
+        Plugin.Participants.GetParticipant().CanSplit = false;
+        Plugin.Participants.SplitDraw.Clear();
         Plugin.SwitchState(GameState.PlayerRound);
     }
 
     public void Stay()
     {
-        participants.SetLastPlayerAction("Stay");
+        Plugin.Participants.SetLastPlayerAction("Stay");
 
         NextPlayer();
     }
 
     public void Surrender()
     {
-        var currentPlayer = participants.GetParticipant().Name;
-        var player = participants.PlayerBets[currentPlayer];
+        var currentPlayer = Plugin.Participants.GetParticipant().Name;
+        var player = Plugin.Participants.PlayerBets[currentPlayer];
         player.Bet = (player.Bet / 2) * -1;
         player.IsAlive = false;
         player.LastAction = "Surrender";
@@ -316,30 +328,31 @@ public class Blackjack
         NextPlayer();
     }
 
-    public void NextPlayer()
+    private void NextPlayer()
     {
-        participants.NextParticipant();
+        Plugin.Participants.NextParticipant();
 
-        if (participants.HasMoreParticipants())
+        if (Plugin.Participants.HasMoreParticipants())
         {
             Plugin.SwitchState(GameState.PlayerRound);
-            if (CheckPlayerCards()) return;
+            if (CheckPlayerCards())
+                return;
             NextPlayer();
             return;
         }
 
-        if (configuration.VenueDealer)
+        if (Plugin.Configuration.VenueDealer)
         {
             Plugin.SwitchState(GameState.DealerSecondCards);
             return;
         }
 
-        participants.DealerCards[0].Card.IsHidden = false;
+        Plugin.Participants.DealerCards[0].Card.IsHidden = false;
         Plugin.SwitchState(GameState.DealerRound);
         CheckForRemainingPlayers();
     }
 
-    public void FirstPlayer()
+    private void FirstPlayer()
     {
         if (!CheckPlayerCards())
         {
@@ -349,12 +362,12 @@ public class Blackjack
         Plugin.SwitchState(GameState.PlayerRound);
     }
 
-    public bool CheckPlayerCards()
+    private bool CheckPlayerCards()
     {
-        var currentPlayer = participants.FindAll(participants.GetParticipant().Name);
-        var cards = CalculatePlayerCardValues(currentPlayer);
+        var currentPlayer = Plugin.Participants.FindAll(Plugin.Participants.GetParticipant().Name);
+        var cards = CalculateCardValues(currentPlayer);
 
-        var player = participants.PlayerBets[currentPlayer[0].Name];
+        var player = Plugin.Participants.PlayerBets[currentPlayer[0].Name];
         switch (cards)
         {
             case > 21:
@@ -363,9 +376,16 @@ public class Blackjack
                 player.LastAction = "Bust";
                 return false;
             case 21:
-                player.Bet += (int) (player.Bet * ((float) 3 / 2));
                 player.IsAlive = false;
-                player.LastAction = "Blackjack";
+                if (!Plugin.Configuration.StartingBlackjack || currentPlayer.Count == 2)
+                {
+                    player.Bet += (int) (player.Bet * ((float) 3 / 2));
+                    player.LastAction = "Blackjack";
+                }
+                else
+                {
+                    player.LastAction = "Stay";
+                }
                 return false;
         }
         return true;
@@ -373,28 +393,28 @@ public class Blackjack
 
     public void FinishDrawingRound(GameState state)
     {
-        participants.ResetParticipant();
+        Plugin.Participants.ResetParticipant();
 
         Plugin.SwitchState(state);
     }
 
     public void SetDrawingRound()
     {
-        if (!configuration.VenueDealer) GiveDealerCard(true);
+        if (!Plugin.Configuration.VenueDealer) GiveDealerCard(true);
 
-        if (configuration.AutoDrawOpening)
+        if (Plugin.Configuration.AutoDrawOpening)
         {
             Plugin.SwitchState(GameState.PrepareRound);
             return;
         }
 
-        Plugin.SwitchState(participants.FindAllWithIndex().Count == 1 ? GameState.DrawFirstCards : GameState.DrawSecondCards);
+        Plugin.SwitchState(Plugin.Participants.FindAllWithIndex().Count == 1 ? GameState.DrawFirstCards : GameState.DrawSecondCards);
     }
 
     public void PreparePlayers()
     {
-        if (!configuration.VenueDealer) GiveDealerCard(false);
-        participants.DeleteRangeFromStart(participants.PlayerNameList.Count);
+        if (!Plugin.Configuration.VenueDealer) GiveDealerCard(false);
+        Plugin.Participants.DeleteRangeFromStart(Plugin.Participants.PlayerNameList.Count);
         CheckIfPlayersCanSplits();
         FirstPlayer();
     }
@@ -404,89 +424,84 @@ public class Blackjack
         GiveEachPlayerOneCard();
         GiveEachPlayerOneCard();
 
-        participants.ResetParticipant();
+        Plugin.Participants.ResetParticipant();
     }
 
     public string TargetRegistration()
     {
         // get target
         var name = Plugin.GetTargetName();
-        if (name == string.Empty) return "Target not found.";
+        if (name == string.Empty)
+            return "Target not found.";
 
         // check if registration roll is correct or if player is already in list
-        if (participants.PlayerNameList.Exists(x => x == name)) return "Target already registered.";
+        if (Plugin.Participants.PlayerNameList.Exists(x => x == name))
+            return "Target already registered.";
 
-        participants.Add(new Participant(Roll.Dummy(name)));
-        participants.PlayerBets[name] = new Participants.Player(configuration.DefaultBet, true);
+        Plugin.Participants.Add(new Participant(Roll.Dummy(name)));
+        Plugin.Participants.PlayerBets[name] = new Participants.Player(Plugin.Configuration.DefaultBet, true);
         return string.Empty;
     }
 
-    public void Registration(Roll roll)
+    private void Registration(Roll roll)
     {
         // check if registration roll is correct or if player is already in list
-        if (roll.OutOf != -1) return;
-        if (participants.PlayerNameList.Exists(x => x == roll.PlayerName)) return;
+        if (roll.OutOf != -1)
+            return;
 
-        participants.Add(new Participant(roll));
-        participants.PlayerBets[roll.PlayerName] = new Participants.Player(configuration.DefaultBet, true);
+        if (Plugin.Participants.PlayerNameList.Exists(x => x == roll.PlayerName))
+            return;
+
+        Plugin.Participants.Add(new Participant(roll));
+        Plugin.Participants.PlayerBets[roll.PlayerName] = new Participants.Player(Plugin.Configuration.DefaultBet, true);
     }
 
     // internal game mechanics
-    private Random rng = new Random(unchecked(Environment.TickCount * 31));
-    public Cards.Card DrawCard()
+    private readonly Random RNG = new(unchecked(Environment.TickCount * 31));
+    private Cards.Card DrawCard()
     {
-        return new Cards.Card(rng.Next(1, 14), rng.Next(0, 4), false);
+        return new Cards.Card(RNG.Next(1, 14), RNG.Next(0, 4), false);
     }
 
-    public void CheckIfPlayersCanSplits()
+    private void CheckIfPlayersCanSplits()
     {
-        foreach (var cards in participants.PlayerNameList.Select(player =>
-                     participants.FindAll(player)).Where(cards => cards[0].Card.Rank == cards[1].Card.Rank))
-        {
+        foreach (var cards in Plugin.Participants.PlayerNameList.Select(player => Plugin.Participants.FindAll(player)).Where(cards => cards[0].Card.Rank == cards[1].Card.Rank))
             cards[0].CanSplit = true;
-        }
     }
 
-    public void GiveEachPlayerOneCard()
+    private void GiveEachPlayerOneCard()
     {
-        foreach (var player in participants.PlayerNameList)
+        foreach (var player in Plugin.Participants.PlayerNameList)
         {
             var card = DrawCard();
-            participants.Add(new Participant(player, card));
+            Plugin.Participants.Add(new Participant(player, card));
         }
     }
 
-    public void GiveDealerCard(bool isHidden)
+    private void GiveDealerCard(bool isHidden)
     {
         var card = DrawCard();
         card.IsHidden = isHidden;
-        participants.DealerCards.Add(new Participant("", card));
+        Plugin.Participants.DealerCards.Add(new Participant("", card));
 
     }
 
-    public int CalculatePlayerCardValues(List<Participant> playersHand)
+    public static int CalculateCardValues(IEnumerable<Participant> playersHand)
     {
         var cards = 0;
         var hasAce = false;
         foreach (var card in playersHand.Select(x => x.Card))
         {
             cards += card.Value;
-            if (card.IsAce) hasAce = true;
+            if (card.IsAce)
+                hasAce = true;
         }
 
         return !hasAce ? cards : cards - 1 < 11 ? cards + 10 : cards;
     }
 
-    public int HasDealerSoftHand()
+    private int HasDealerSoftHand()
     {
-        return participants.DealerCards.Select(x => x.Card).Sum(card => card.Value) + 10;
+        return Plugin.Participants.DealerCards.Select(x => x.Card).Sum(card => card.Value) + 10;
     }
-}
-
-public enum DealerRules
-{
-    DealerHard17 = 0,
-    DealerSoft17 = 1,
-    DealerHard16 = 2,
-    DealerSoft16 = 3
 }

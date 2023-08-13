@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Dalamud.Logging;
-using ImGuiNET;
 
 namespace DeathRoll;
 
@@ -12,10 +9,10 @@ public class FontManager
     public ImFontPtr Font;
     public ImFontPtr Font1;
     public ImFontPtr Font2;
-    
+
     private ImVector Ranges;
     private ImFontConfigPtr FontConfig;
-    
+
     private unsafe void SetUpRanges()
     {
         ImVector BuildRange(IReadOnlyList<ushort>? chars, params IntPtr[] ranges)
@@ -44,7 +41,7 @@ public class FontManager
             // various symbols
             builder.AddText("♠♥♦♣─＼～┐│┌┘└ςΔΗΓ╲╱∨∧");
             builder.AddText("←→↑↓《》■※☀★★☆♥♡ヅツッシ☀☁☂℃℉°♀♂♠♣♦♣♧®©™€$£♯♭♪✓√◎◆◇♦■□〇●△▽▼▲‹›≤≥<«“”─＼～");
-            
+
             var result = new ImVector();
             builder.BuildRanges(out result);
             builder.Destroy();
@@ -62,7 +59,7 @@ public class FontManager
             FontDataOwnedByAtlas = false,
         };
     }
-    
+
     public void BuildFonts()
     {
         SetUpRanges();

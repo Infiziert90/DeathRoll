@@ -2,7 +2,7 @@ namespace DeathRoll.Data;
 
 public static class Cards
 {
-    public const string BaseCard = @"
+    private const string BaseCard = @"
 ┌─────────┐
 │{0}{1}       │
 │         │
@@ -11,10 +11,10 @@ public static class Cards
 │         │
 │         │
 │       {1}{0}│
-└─────────┘";        
-    public const string SuitCard = @"{0}";
-    
-    public const string BlankCard = @"
+└─────────┘";
+    private const string SuitCard = @"{0}";
+
+    private const string BlankCard = @"
 ┌─────────┐
 │         │
 │         │
@@ -29,18 +29,18 @@ public static class Cards
     {
         var space = card.Rank != 10 ? " " : "";
         var (rank, suit) = ParseRankAndSuit(card);
-        
+
         return new[]
         {
-            !card.IsHidden ? string.Format(BaseCard, rank, space) : BlankCard, 
+            !card.IsHidden ? string.Format(BaseCard, rank, space) : BlankCard,
             !card.IsHidden ? string.Format(SuitCard, suit) : "",
         };
     }
-    
+
     public static string ShowCardSimple(Card card)
     {
         var (rank, suit) = ParseRankAndSuit(card);
-        
+
         return !card.IsHidden ? $"{rank} {suit}" : "Hidden";
     }
 
@@ -54,7 +54,7 @@ public static class Cards
                 12 => "Q",
                 13 => "K",
                 _ => card.Rank.ToString()
-            }, 
+            },
             card.Suit switch
             {
                 0 => "♠",

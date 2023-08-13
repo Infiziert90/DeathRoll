@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Text.RegularExpressions;
 
-namespace DeathRoll;
+namespace DeathRoll.Data;
 
 public partial class Highlight
 {
@@ -11,10 +11,10 @@ public partial class Highlight
     public string Regex = null!;
     public Regex CompiledRegex => _compiled ??= Compile();
     // and clear _compiled to null when Regex changes
-    
+
     [GeneratedRegex("\\A(?!x)x")]
     private static partial Regex Unmatchable();
-    
+
     public Highlight() { }
 
     public Highlight(string r, Vector4 c)
@@ -27,12 +27,12 @@ public partial class Highlight
     {
         Regex = r;
         Color = c;
-        
+
         _compiled = null;
     }
 
     public bool Matches(int number) => CompiledRegex.Match(number.ToString()).Success;
-    
+
     private Regex Compile()
     {
         try
