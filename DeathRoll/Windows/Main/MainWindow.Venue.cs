@@ -4,10 +4,10 @@ namespace DeathRoll.Windows.Main;
 
 public partial class MainWindow
 {
-    private void Venue()
+    private void VenueMode()
     {
         ControlPanel();
-        ImGuiHelpers.ScaledDummy(5);
+        ImGuiHelpers.ScaledDummy(5.0f);
         VenueRollTable();
     }
 
@@ -36,9 +36,9 @@ public partial class MainWindow
             }
         }
 
-        ImGuiHelpers.ScaledDummy(5);
+        ImGuiHelpers.ScaledDummy(5.0f);
         ImGui.Separator();
-        ImGuiHelpers.ScaledDummy(5);
+        ImGuiHelpers.ScaledDummy(5.0f);
 
         if (Configuration.UseTimer)
             Timer();

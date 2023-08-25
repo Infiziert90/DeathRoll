@@ -85,19 +85,6 @@ public class SimpleTournament
         Plugin.Participants.RoundDone = true;
     }
 
-    public string TargetRegistration()
-    {
-        var name = Plugin.GetTargetName();
-        if (name == string.Empty)
-            return "Target not found.";
-
-        if (Plugin.Participants.PlayerNameList.Exists(x => x == name))
-            return "Target already registered.";
-
-        Plugin.Participants.Add(new Participant(Roll.Dummy(name)));
-        return string.Empty;
-    }
-
     private void Registration(Roll roll)
     {
         // check if registration roll is correct or if player is already in list

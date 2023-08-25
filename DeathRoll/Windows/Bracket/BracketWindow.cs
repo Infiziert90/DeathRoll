@@ -30,28 +30,28 @@ public class BracketWindow : Window, IDisposable
         if (UsedNameSetting != DebugConfig.RandomizeNames)
         {
             UsedNameSetting = DebugConfig.RandomizeNames;
-            Plugin.MainWindow.SimpleTournament.FillBracketTable();
+            Plugin.MainWindow.Tournament.FillBracketTable();
         }
 
-        if (ImGui.BeginTable("##Brackets", Plugin.MainWindow.SimpleTournament.LastStage))
+        if (ImGui.BeginTable("##Brackets", Plugin.MainWindow.Tournament.LastStage))
         {
-            foreach (var idx in Enumerable.Range(0, Plugin.MainWindow.SimpleTournament.LastStage))
+            foreach (var idx in Enumerable.Range(0, Plugin.MainWindow.Tournament.LastStage))
                 ImGui.TableSetupColumn($"Stage {idx+1}");
 
             ImGui.TableHeadersRow();
-            for (var idx = 0; idx < Plugin.MainWindow.SimpleTournament.InternalBrackets[0].Count * 2 - 1; idx++)
+            for (var idx = 0; idx < Plugin.MainWindow.Tournament.InternalBrackets[0].Count * 2 - 1; idx++)
             {
-                for (var stage = 0; stage < Plugin.MainWindow.SimpleTournament.LastStage; stage++)
+                for (var stage = 0; stage < Plugin.MainWindow.Tournament.LastStage; stage++)
                 {
-                    if (stage >= Plugin.MainWindow.SimpleTournament.FilledBrackets[idx].Count)
+                    if (stage >= Plugin.MainWindow.Tournament.FilledBrackets[idx].Count)
                         break;
 
-                    if (Plugin.MainWindow.SimpleTournament.FilledBrackets[idx][stage] == "x")
+                    if (Plugin.MainWindow.Tournament.FilledBrackets[idx][stage] == "x")
                         break;
 
                     ImGui.TableNextColumn();
-                    if (Plugin.MainWindow.SimpleTournament.FilledBrackets[idx][stage] != "  ")
-                        ImGui.Text(Plugin.MainWindow.SimpleTournament.FilledBrackets[idx][stage]);
+                    if (Plugin.MainWindow.Tournament.FilledBrackets[idx][stage] != "  ")
+                        ImGui.Text(Plugin.MainWindow.Tournament.FilledBrackets[idx][stage]);
                 }
                 ImGui.TableNextRow();
             }

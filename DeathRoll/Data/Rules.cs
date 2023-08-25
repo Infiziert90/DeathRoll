@@ -10,6 +10,8 @@ public enum DealerRules
 
 public static class RuleUtils
 {
+    public static readonly string[] ListOfNames = Enum.GetValues<DealerRules>().Select(n => n.GetName()).ToArray();
+
     public static string GetName(this DealerRules n)
     {
         return n switch
@@ -20,10 +22,5 @@ public static class RuleUtils
             DealerRules.DealerSoft17 => "Soft16",
             _ => "Unknown"
         };
-    }
-
-    public static string[] ListOfNames()
-    {
-        return Enum.GetValues<DealerRules>().Select(n => n.GetName()).ToArray();
     }
 }

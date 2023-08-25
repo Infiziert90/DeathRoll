@@ -133,7 +133,7 @@ public class Blackjack
         }
 
         Plugin.Participants.Add(new Participant(roll.PlayerName, new Cards.Card(roll.Result, DrawCard().Suit)));
-        if (!Plugin.Configuration.StartingDraw || Plugin.State is GameState.DrawSecondCards)
+        if (!Plugin.Configuration.StartingDraw || Plugin.Participants.FindAll(roll.PlayerName).Skip(1).Count() >= 2)
             Plugin.Participants.NextParticipant();
     }
 
@@ -359,6 +359,7 @@ public class Blackjack
             NextPlayer();
             return;
         }
+
         Plugin.SwitchState(GameState.PlayerRound);
     }
 
@@ -400,7 +401,8 @@ public class Blackjack
 
     public void SetDrawingRound()
     {
-        if (!Plugin.Configuration.VenueDealer) GiveDealerCard(true);
+        if (!Plugin.Configuration.VenueDealer)
+            GiveDealerCard(true);
 
         if (Plugin.Configuration.AutoDrawOpening)
         {
@@ -413,7 +415,9 @@ public class Blackjack
 
     public void PreparePlayers()
     {
-        if (!Plugin.Configuration.VenueDealer) GiveDealerCard(false);
+        if (!Plugin.Configuration.VenueDealer)
+            GiveDealerCard(false);
+
         Plugin.Participants.DeleteRangeFromStart(Plugin.Participants.PlayerNameList.Count);
         CheckIfPlayersCanSplits();
         FirstPlayer();
@@ -425,22 +429,6 @@ public class Blackjack
         GiveEachPlayerOneCard();
 
         Plugin.Participants.ResetParticipant();
-    }
-
-    public string TargetRegistration()
-    {
-        // get target
-        var name = Plugin.GetTargetName();
-        if (name == string.Empty)
-            return "Target not found.";
-
-        // check if registration roll is correct or if player is already in list
-        if (Plugin.Participants.PlayerNameList.Exists(x => x == name))
-            return "Target already registered.";
-
-        Plugin.Participants.Add(new Participant(Roll.Dummy(name)));
-        Plugin.Participants.PlayerBets[name] = new Participants.Player(Plugin.Configuration.DefaultBet, true);
-        return string.Empty;
     }
 
     private void Registration(Roll roll)
@@ -460,7 +448,7 @@ public class Blackjack
     private readonly Random RNG = new(unchecked(Environment.TickCount * 31));
     private Cards.Card DrawCard()
     {
-        return new Cards.Card(RNG.Next(1, 14), RNG.Next(0, 4), false);
+        return new Cards.Card(RNG.Next(1, 14), RNG.Next(0, 4));
     }
 
     private void CheckIfPlayersCanSplits()

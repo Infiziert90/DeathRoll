@@ -44,17 +44,17 @@ public class MatchWindow : Window, IDisposable
                 if (ImGui.Button("End Match"))
                 {
                     IsOpen = false;
-                    Plugin.MainWindow.SimpleTournament.NextMatch();
+                    Plugin.MainWindow.Tournament.NextMatch();
                 }
             }
             else
             {
-                ImGui.Text($"Player isn't responding? Forfeit the match~");
+                ImGui.TextColored(ImGuiColors.DalamudOrange, $"Player isn't responding? Forfeit the match~");
 
                 if (ImGui.Button("Forfeit to P1"))
                 {
                     IsOpen = false;
-                    Plugin.MainWindow.SimpleTournament.ForfeitWin(Plugin.MainWindow.SimpleTournament.Player1);
+                    Plugin.MainWindow.Tournament.ForfeitWin(Plugin.MainWindow.Tournament.Player1);
                 }
 
                 ImGui.SameLine();
@@ -62,7 +62,7 @@ public class MatchWindow : Window, IDisposable
                 if (ImGui.Button("Forfeit to P2"))
                 {
                     IsOpen = false;
-                    Plugin.MainWindow.SimpleTournament.ForfeitWin(Plugin.MainWindow.SimpleTournament.Player2);
+                    Plugin.MainWindow.Tournament.ForfeitWin(Plugin.MainWindow.Tournament.Player2);
                 }
             }
         }

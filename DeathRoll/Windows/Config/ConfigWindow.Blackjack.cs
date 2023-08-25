@@ -96,7 +96,7 @@ public partial class ConfigWindow
 
 
         var dealerRule = (int) Configuration.DealerRule;
-        var rules = RuleUtils.ListOfNames();
+        var rules = RuleUtils.ListOfNames;
         ImGui.PushItemWidth(120f);
         if (ImGui.Combo("##DealerRulesCombo", ref dealerRule, rules, rules.Length))
         {

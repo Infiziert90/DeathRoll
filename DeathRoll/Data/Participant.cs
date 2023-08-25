@@ -27,7 +27,7 @@ public class Participants
     public List<Participant> DealerCards = new();
     public Dictionary<string, Player> PlayerBets = new();
     public List<Cards.Card> SplitDraw = new();
-    private int currentIndex;
+    private int CurrentIndex;
 
     public Participants(Configuration configuration)
     {
@@ -98,7 +98,7 @@ public class Participants
 
         DealerCards.Clear();
         PlayerBets.Clear();
-        currentIndex = 0;
+        CurrentIndex = 0;
         DealerAction = "";
         SplitDraw.Clear();
     }
@@ -117,19 +117,19 @@ public class Participants
         }
     }
 
-    public int GetCurrentIndex() => currentIndex;
+    public int GetCurrentIndex() => CurrentIndex;
 
-    public Participant GetParticipant() => PList[currentIndex];
+    public Participant GetParticipant() => PList[CurrentIndex];
 
-    public string GetParticipantName() => PlayerNameList[currentIndex];
+    public string GetParticipantName() => PlayerNameList[CurrentIndex];
 
-    public List<Participant> FindAllWithIndex() => FindAll(PList[currentIndex].Name);
+    public List<Participant> FindAllWithIndex() => FindAll(PList[CurrentIndex].Name);
 
-    public void NextParticipant() => currentIndex++;
+    public void NextParticipant() => CurrentIndex++;
 
-    public void ResetParticipant() => currentIndex = 0;
+    public void ResetParticipant() => CurrentIndex = 0;
 
-    public bool HasMoreParticipants() => currentIndex < PlayerNameList.Count;
+    public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
 
     public void SetLastPlayerAction(string action) => PlayerBets[GetParticipant().Name].LastAction = action;
 }

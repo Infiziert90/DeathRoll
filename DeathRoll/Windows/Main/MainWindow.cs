@@ -1,6 +1,7 @@
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Interface.Windowing;
 using DeathRoll.Data;
+using DeathRoll.Logic;
 
 namespace DeathRoll.Windows.Main;
 
@@ -19,8 +20,8 @@ public partial class MainWindow : Window, IDisposable
 
         Plugin = plugin;
         Configuration = plugin.Configuration;
-        Backend = Plugin.RollManager.Blackjack;
-        SimpleTournament = Plugin.RollManager.SimpleTournament;
+        Blackjack = Plugin.RollManager.Blackjack;
+        Tournament = Plugin.RollManager.SimpleTournament;
 
         RestoreTimerDefaults();
     }
@@ -35,16 +36,16 @@ public partial class MainWindow : Window, IDisposable
         switch (Configuration.GameMode)
         {
             case GameModes.Venue:
-                Venue();
+                VenueMode();
                 break;
             case GameModes.DeathRoll:
-                DeathRoll();
+                DeathRollMode();
                 break;
             case GameModes.Tournament:
-                Tournament();
+                TournamentMode();
                 break;
             case GameModes.Blackjack:
-                Blackjack();
+                BlackjackMode();
                 break;
             default:
                 ImGui.Text("Not Implemented!");
@@ -57,10 +58,25 @@ public partial class MainWindow : Window, IDisposable
         ImGuiHelpers.ScaledDummy(5.0f);
         if (ImGui.Button("Add Target"))
         {
-            var result = SimpleTournament.TargetRegistration();
+            var result = TargetRegistration();
             if (result != string.Empty)
                 Plugin.PluginInterface.UiBuilder.AddNotification(result, "DeathRoll Helper", NotificationType.Error);
         }
         ImGuiHelpers.ScaledDummy(10.0f);
+    }
+
+    private string TargetRegistration()
+    {
+        var name = Plugin.GetTargetName();
+        if (name == string.Empty)
+            return "Target not found.";
+
+        if (Plugin.Participants.PlayerNameList.Exists(x => x == name))
+            return "Target already registered.";
+
+        Plugin.Participants.Add(new Participant(Roll.Dummy(name)));
+        Plugin.Participants.PlayerBets[name] = new Participants.Player(Plugin.Configuration.DefaultBet, true);
+
+        return string.Empty;
     }
 }

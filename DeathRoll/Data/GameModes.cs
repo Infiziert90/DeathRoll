@@ -10,6 +10,8 @@ public enum GameModes
 
 public static class GameModeUtils
 {
+    public static readonly string[] ListOfNames = Enum.GetValues<GameModes>().Select(n => n.GetName()).ToArray();
+
     public static string GetName(this GameModes n)
     {
         return n switch
@@ -20,10 +22,5 @@ public static class GameModeUtils
             GameModes.Blackjack => "Blackjack",
             _ => "Unknown"
         };
-    }
-
-    public static string[] ListOfNames()
-    {
-        return Enum.GetValues<GameModes>().Select(n => n.GetName()).ToArray();
     }
 }

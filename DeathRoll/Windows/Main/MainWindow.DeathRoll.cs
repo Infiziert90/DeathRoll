@@ -15,7 +15,7 @@ public partial class MainWindow
                                      "\nPlayer 2: /random 12 (Result 1)" +
                                      "\n\nPlayer 2 lost";
 
-    private void DeathRoll()
+    private void DeathRollMode()
     {
         DeathRollPanel();
 

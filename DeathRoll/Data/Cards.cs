@@ -40,7 +40,6 @@ public static class Cards
     public static string ShowCardSimple(Card card)
     {
         var (rank, suit) = ParseRankAndSuit(card);
-
         return !card.IsHidden ? $"{rank} {suit}" : "Hidden";
     }
 
@@ -68,11 +67,12 @@ public static class Cards
 
     public class Card
     {
-        public int Rank;
-        public int Value;
-        public int Suit;
+        public readonly int Rank;
+        public readonly int Value;
+        public readonly int Suit;
+        public readonly bool IsAce;
+
         public bool IsHidden;
-        public bool IsAce;
 
         public Card (int rank, int suit, bool isHidden = false)
         {

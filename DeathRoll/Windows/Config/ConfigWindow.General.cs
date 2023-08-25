@@ -26,7 +26,7 @@ public partial class ConfigWindow
                                        "\nTournament: 1 vs 1 DeathRoll with a bracket system");
 
             var gameMode = (int) Configuration.GameMode;
-            var gameModes = GameModeUtils.ListOfNames();
+            var gameModes = GameModeUtils.ListOfNames;
             if (ImGui.Combo("##GameModeCombo", ref gameMode, gameModes, gameModes.Length))
             {
                 changed = true;

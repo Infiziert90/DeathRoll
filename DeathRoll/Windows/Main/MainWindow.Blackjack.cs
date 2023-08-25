@@ -6,7 +6,7 @@ namespace DeathRoll.Windows.Main;
 
 public partial class MainWindow
 {
-    private readonly Blackjack Backend;
+    private readonly Blackjack Blackjack;
     private const string HelpText = "- Hit: Player draws a card," +
                                     "\n- Stay: Player holds hand as it is" +
                                     "\n- Surrender: Player drops out of round and loses half the bet" +
@@ -15,10 +15,10 @@ public partial class MainWindow
                                     "\n    > Player opens a new hand with one card in each hand, puts another bet of same amount, and draws with both hands a card" +
                                     "\n    > Round continues as before, with the split hands turn happening later";
 
-    private void Blackjack()
+    private void BlackjackMode()
     {
         BlackjackControlPanel();
-        ImGuiHelpers.ScaledDummy(new Vector2(5.0f));
+        ImGuiHelpers.ScaledDummy(5.0f);
 
         switch (Plugin.State)
         {
@@ -113,7 +113,7 @@ public partial class MainWindow
         if (ImGui.Button("Play Again"))
         {
             Plugin.ClosePlayWindows();
-            Backend.TakePeopleIntoNextRound();
+            Blackjack.TakePeopleIntoNextRound();
         }
 
         // Copy out all winnings to a single string to show all players the final standings (and leave a record if a player wants to play their push/winnings into the next round)
@@ -134,7 +134,7 @@ public partial class MainWindow
         ImGui.TextColored(Helper.Yellow, $"The dealer is not allowed to hit anymore!");
         ImGui.TextColored(Helper.Yellow, $"Please proceed by pressing 'Calculate Winnings' below.");
         if (ImGui.Button("Calculate Winnings"))
-            Backend.EndMatch();
+            Blackjack.EndMatch();
 
         DealerCardButton();
     }
@@ -143,16 +143,16 @@ public partial class MainWindow
     {
         if (ImGui.Button("Copy Dealer"))
         {
-            var cards = Logic.Blackjack.CalculateCardValues(Plugin.Participants.DealerCards);
+            var cards = Blackjack.CalculateCardValues(Plugin.Participants.DealerCards);
             ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", Plugin.Participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}");
         }
     }
 
     private void DealerDrawRender()
     {
-        if (!Backend.DealerCheckHand())
+        if (!Blackjack.DealerCheckHand())
         {
-            Backend.DealerRound();
+            Blackjack.DealerRound();
             if (Plugin.State == GameState.Done)
                 return;
 
@@ -172,7 +172,7 @@ public partial class MainWindow
     {
         ImGui.TextColored(Helper.Yellow, $"All players done!");
         if (ImGui.Button("Begin Dealer Round"))
-            Backend.DealerAction();
+            Blackjack.DealerAction();
 
         ImGuiHelpers.ScaledDummy(5.0f);
         DealerCardButton();
@@ -192,7 +192,7 @@ public partial class MainWindow
         if (Plugin.Participants.SplitDraw.Count != 2)
             return;
 
-        Backend.Split();
+        Blackjack.Split();
     }
 
     private void PlayerRoundPanel()
@@ -202,22 +202,22 @@ public partial class MainWindow
         ImGuiComponents.HelpMarker(HelpText);
 
         if (ImGui.Button("Hit"))
-            Plugin.SwitchState(GameState.Hit); Backend.PlayerAction();
+            Plugin.SwitchState(GameState.Hit); Blackjack.PlayerAction();
 
         if (ImGui.Button("Stay"))
-            Backend.Stay();
+            Blackjack.Stay();
 
         if (ImGui.Button("Surrender"))
-            Backend.Surrender();
+            Blackjack.Surrender();
 
         if (ImGui.Button("Double Down"))
-            Plugin.SwitchState(GameState.DoubleDown); Backend.PlayerAction();
+            Plugin.SwitchState(GameState.DoubleDown); Blackjack.PlayerAction();
 
         if (!Plugin.Participants.GetParticipant().CanSplit)
             return;
 
         if (ImGui.Button("Split"))
-            Backend.Split();
+            Blackjack.Split();
     }
 
     private void CardDeckRender()
@@ -238,7 +238,7 @@ public partial class MainWindow
             foreach (var player in Plugin.Participants.PlayerNameList.Select(value => value))
             {
                 var p = Plugin.Participants.FindAll(player);
-                var cards = Logic.Blackjack.CalculateCardValues(p);
+                var cards = Blackjack.CalculateCardValues(p);
 
                 // Feature by request so a player's hand can always be copied out
                 ImGui.TableNextColumn();
@@ -299,14 +299,23 @@ public partial class MainWindow
         var currentPlayer = Plugin.Participants.GetCurrentIndex();
         if (currentPlayer >= Plugin.Participants.PlayerNameList.Count)
         {
+            var cardList = Plugin.Participants.FindAll(Plugin.Participants.PlayerNameList.Last()).Skip(1).ToList();
             switch (Plugin.State)
             {
                 case GameState.DrawFirstCards:
-                    Backend.FinishDrawingRound(GameState.DrawSecondCards);
+                    if (cardList.Count >= 2)
+                    {
+                        Blackjack.FinishDrawingRound(GameState.PrepareRound);
+                        Blackjack.PreparePlayers();
+                        if (Plugin.Configuration.AutoOpenField)
+                            Plugin.OpenCardField();
+                        return;
+                    }
+                    Blackjack.FinishDrawingRound(GameState.DrawSecondCards);
                     return;
                 case GameState.DrawSecondCards:
-                    Backend.FinishDrawingRound(GameState.PrepareRound);
-                    Backend.PreparePlayers();
+                    Blackjack.FinishDrawingRound(GameState.PrepareRound);
+                    Blackjack.PreparePlayers();
                     if (Plugin.Configuration.AutoOpenField)
                         Plugin.OpenCardField();
                     return;
@@ -322,7 +331,7 @@ public partial class MainWindow
             else
                 ImGui.Text($"{Plugin.Participants.FindPlayer(name).GetDisplayName()}");
 
-            var playerCards = Plugin.Participants.FindAll(name);
+            var playerCards = Plugin.Participants.FindAll(name).Skip(1).ToList();
             ImGui.PushFont(Plugin.FontManager.Font2);
             ImGui.SameLine();
             ImGui.Text($"{(playerCards.Count > 0 ? Cards.ShowCardSimple(playerCards[0].Card) : "?")} {(playerCards.Count > 1 ? Cards.ShowCardSimple(playerCards[1].Card) : "?")}");
@@ -332,8 +341,8 @@ public partial class MainWindow
 
     private void MatchBeginningPanel()
     {
-        Backend.StartRound();
-        Backend.PreparePlayers();
+        Blackjack.StartRound();
+        Blackjack.PreparePlayers();
         if (Plugin.Configuration.AutoOpenField)
             Plugin.OpenCardField();
     }
@@ -343,11 +352,11 @@ public partial class MainWindow
         switch (Plugin.State)
         {
             case GameState.DealerFirstCards when Plugin.Participants.DealerCards.Any():
-                Backend.SetDrawingRound();
+                Blackjack.SetDrawingRound();
                 break;
             case GameState.DealerSecondCards when Plugin.Participants.DealerCards.Count == 2:
                 Plugin.SwitchState(GameState.DealerRound);
-                Backend.CheckForRemainingPlayers();
+                Blackjack.CheckForRemainingPlayers();
                 break;
         }
 
@@ -364,7 +373,7 @@ public partial class MainWindow
                 if (Plugin.Configuration.VenueDealer)
                     Plugin.SwitchState(GameState.DealerFirstCards);
                 else
-                    Backend.SetDrawingRound();
+                    Blackjack.SetDrawingRound();
 
                 return;
             }
@@ -374,7 +383,7 @@ public partial class MainWindow
         ImGui.TextColored(Helper.Green,$"Awaiting more players ...");
         ImGuiHelpers.ScaledDummy(5.0f);
         ImGui.TextWrapped("Players can automatically enter by typing /random or /dice respectively while round registration is active.");
-        ImGui.TextWrapped("Alternatively players can be manually entered by targetting the character and pressing 'Add Target' below.");
+        ImGui.TextWrapped("Alternatively players can be manually entered by targeting the character and pressing 'Add Target' below.");
         AddTargetButton();
         TableBetRender();
     }
@@ -407,15 +416,15 @@ public partial class MainWindow
 
                 ImGui.TableNextColumn();
                 var p = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(p.X, p.Y-3));
+                ImGui.SetCursorPos(p with { Y = p.Y - 3 });
                 ImGui.PushItemWidth(100);
                 ImGui.InputInt($"##playerBet{name}", ref currentBet, 0);
 
-                if (currentBet != player.Bet)
-                {
-                    newBet = currentBet;
-                    updateName = name;
-                }
+                if (currentBet == player.Bet)
+                    continue;
+
+                newBet = currentBet;
+                updateName = name;
             }
 
             if (updateName != string.Empty)

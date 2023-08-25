@@ -251,6 +251,7 @@ public sealed class Plugin : IDalamudPlugin
             Participants.Reset();
     }
 
+    #region UI Toggles
     private void DrawUI() => WindowSystem.Draw();
     public void OpenMain() => MainWindow.IsOpen = true;
     public void OpenConfig() => ConfigWindow.IsOpen = true;
@@ -266,4 +267,5 @@ public sealed class Plugin : IDalamudPlugin
         BracketWindow.IsOpen = false;
         CardFieldWindow.IsOpen = false;
     }
+    #endregion
 }

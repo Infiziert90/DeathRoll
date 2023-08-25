@@ -5,12 +5,12 @@ namespace DeathRoll.Windows.Main;
 
 public partial class MainWindow
 {
-    public readonly SimpleTournament SimpleTournament;
+    public readonly SimpleTournament Tournament;
 
     private bool Shuffled;
     private int DebugNumber = 8;
 
-    private void Tournament()
+    private void TournamentMode()
     {
         RenderControlPanel();
         ImGui.Dummy(new Vector2(0.0f, 10.0f));
@@ -61,19 +61,19 @@ public partial class MainWindow
             case GameState.NotRunning:
                 if (!ImGui.Button("Start Tournament"))
                     return;
-                SimpleTournament.Reset();
+                Tournament.Reset();
                 Plugin.SwitchState(GameState.Registration);
                 break;
             case GameState.Crash:
                 if (!ImGui.Button("Force Stop Tournament"))
                     return;
-                SimpleTournament.Reset();
+                Tournament.Reset();
                 Plugin.ClosePlayWindows();
                 break;
             default:
                 if (!ImGui.Button("Stop Tournament"))
                     return;
-                SimpleTournament.Reset();
+                Tournament.Reset();
                 Plugin.ClosePlayWindows();
                 break;
         }
@@ -84,10 +84,10 @@ public partial class MainWindow
         if (ImGui.Button("Show Bracket"))
             Plugin.OpenBracket();
 
-        if (SimpleTournament.Player2.Name != "Byes")
+        if (Tournament.Player2.Name != "Byes")
         {
             ImGui.TextUnformatted("Next Match:");
-            ImGui.TextUnformatted($"{SimpleTournament.Player1.GetDisplayName()} vs {(SimpleTournament.Player2.GetDisplayName())}");
+            ImGui.TextUnformatted($"{Tournament.Player1.GetDisplayName()} vs {(Tournament.Player2.GetDisplayName())}");
 
             if (ImGui.Button("Begin Match"))
             {
@@ -98,21 +98,21 @@ public partial class MainWindow
             if (Configuration.Debug)
             {
                 if (ImGui.Button("Auto Win Match"))
-                    SimpleTournament.AutoWin();
+                    Tournament.AutoWin();
             }
         }
         else
         {
-            ImGui.Text($"{SimpleTournament.Player1.GetDisplayName()} got lucky and automatically won~");
+            ImGui.Text($"{Tournament.Player1.GetDisplayName()} got lucky and automatically won~");
 
             if (ImGui.Button("Continue to next Round"))
-                SimpleTournament.ForfeitWin(SimpleTournament.Player1);
+                Tournament.ForfeitWin(Tournament.Player1);
         }
     }
 
     public void VsPanel()
     {
-        Helper.SetTextCenter($"{SimpleTournament.Player1.GetDisplayName()} vs {SimpleTournament.Player2.GetDisplayName()}");
+        Helper.SetTextCenter($"{Tournament.Player1.GetDisplayName()} vs {Tournament.Player2.GetDisplayName()}");
     }
 
     private void ShufflingPreviewPanel()
@@ -120,7 +120,7 @@ public partial class MainWindow
         ImGui.TextColored(Helper.Green,$"Pls shuffle at least once~");
         if (ImGui.Button("Shuffle"))
         {
-            SimpleTournament.Shuffle();
+            Tournament.Shuffle();
             Shuffled = true;
         }
 
@@ -131,15 +131,15 @@ public partial class MainWindow
         if (ImGui.Button("Begin Tournament"))
         {
             Shuffled = false;
-            SimpleTournament.GenerateBrackets();
-            SimpleTournament.CalculateNextMatch();
+            Tournament.GenerateBrackets();
+            Tournament.CalculateNextMatch();
             return;
         }
 
         ImGuiHelpers.ScaledDummy(10.0f);
         if (ImGui.CollapsingHeader("Shuffled Entry List", ImGuiTreeNodeFlags.DefaultOpen))
         {
-            foreach (var name in SimpleTournament.InternalParticipants.PlayerNameList.Select(playerName => SimpleTournament.InternalParticipants.LookupDisplayName(playerName)))
+            foreach (var name in Tournament.InternalParticipants.PlayerNameList.Select(playerName => Tournament.InternalParticipants.LookupDisplayName(playerName)))
                 ImGui.Selectable($"{name}");
         }
     }
@@ -164,7 +164,7 @@ public partial class MainWindow
             ImGuiHelpers.ScaledDummy(5.0f);
             if (ImGui.Button("Auto"))
             {
-                SimpleTournament.AutoRegistration(DebugNumber);
+                Tournament.AutoRegistration(DebugNumber);
                 Plugin.SwitchState(GameState.Shuffling);
             }
         }

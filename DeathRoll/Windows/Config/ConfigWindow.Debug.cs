@@ -13,9 +13,9 @@ public partial class ConfigWindow
             ImGui.TextColored(Helper.Red,"Please do not run debug all the time!");
             ImGui.TextColored(Helper.Red,"This will bloat your log.");
 
-            ImGuiHelpers.ScaledDummy(5);
+            ImGuiHelpers.ScaledDummy(5.0f);
             ImGui.Separator();
-            ImGuiHelpers.ScaledDummy(5);
+            ImGuiHelpers.ScaledDummy(5.0f);
 
             if (ImGui.Checkbox("Debug", ref Configuration.Debug))
             {
