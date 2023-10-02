@@ -1,3 +1,4 @@
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRoll.Data;
 
@@ -7,9 +8,7 @@ public class CardFieldWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    private bool UsedNameSetting;
-
-    public CardFieldWindow(Plugin plugin) : base("Card Field")
+    public CardFieldWindow(Plugin plugin) : base("Card Field###DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -30,7 +29,7 @@ public class CardFieldWindow : Window, IDisposable
         if (Plugin.Participants.PList.Count == 0)
             return;
 
-        ImGui.Text($"Dealer: ");
+        ImGui.Text("Dealer: ");
         var orgCursor = ImGui.GetCursorPos();
         foreach (var card in Plugin.Participants.DealerCards.Select(x => x.Card))
         {

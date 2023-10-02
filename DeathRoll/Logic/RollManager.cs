@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Dalamud.Logging;
+
 using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
@@ -21,8 +21,8 @@ public class RollManager
     {
         if (Plugin.Configuration.Debug)
         {
-            PluginLog.Information($"Extracted Player Name: {roll.PlayerName}.");
-            PluginLog.Information($"Regex: Roll {roll.Result} OutOf {roll.OutOf}");
+            Plugin.Log.Information($"Extracted Player Name: {roll.PlayerName}.");
+            Plugin.Log.Information($"Regex: Roll {roll.Result} OutOf {roll.OutOf}");
         }
 
         try
@@ -48,7 +48,7 @@ public class RollManager
         catch (FormatException e)
         {
             Plugin.Chat.PrintError("Unable to parse roll.");
-            PluginLog.Error(e.ToString());
+            Plugin.Log.Error(e.ToString());
         }
     }
 
@@ -60,7 +60,7 @@ public class RollManager
             case false when exists:
             {
                 if (Plugin.Configuration.Debug)
-                    PluginLog.Information("Player already rolled, no reroll allowed.");
+                    Plugin.Log.Information("Player already rolled, no reroll allowed.");
                 return;
             }
             case true when exists:

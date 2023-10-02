@@ -1,4 +1,4 @@
-using Dalamud.Logging;
+
 using DeathRoll.Data;
 
 namespace DeathRoll.Windows;
@@ -42,7 +42,7 @@ public static class Helper
         }
         catch (NullReferenceException e)
         {
-            PluginLog.Error(e.Message);
+            Plugin.Log.Error(e.Message);
             return true;
         }
 

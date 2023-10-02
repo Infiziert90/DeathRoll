@@ -1,4 +1,6 @@
-﻿namespace DeathRoll.Windows.Config;
+﻿using Dalamud.Interface.Utility;
+
+namespace DeathRoll.Windows.Config;
 
 public partial class ConfigWindow
 {

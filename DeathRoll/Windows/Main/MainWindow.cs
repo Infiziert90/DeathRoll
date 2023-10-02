@@ -1,4 +1,5 @@
 using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRoll.Data;
 using DeathRoll.Logic;
@@ -10,7 +11,7 @@ public partial class MainWindow : Window, IDisposable
     private readonly Plugin Plugin;
     private readonly Configuration Configuration;
 
-    public MainWindow(Plugin plugin) : base("Main")
+    public MainWindow(Plugin plugin) : base("Main###DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {

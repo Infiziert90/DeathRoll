@@ -1,6 +1,5 @@
 using System.IO;
 using System.Reflection;
-using Dalamud.Logging;
 
 namespace DeathRoll;
 
@@ -71,8 +70,8 @@ public class FontManager
             Font1 = ImGui.GetIO().Fonts.AddFontFromFileTTF(path1, 36, FontConfig, Ranges.Data);
             Font2 = ImGui.GetIO().Fonts.AddFontFromFileTTF(path1, 20, FontConfig, Ranges.Data);
         } catch (Exception ex) {
-            PluginLog.Log($"Font failed to load. {path}");
-            PluginLog.Log(ex.ToString());
+            Plugin.Log.Error($"Font failed to load. {path}");
+            Plugin.Log.Error(ex.ToString());
         }
     }
 }

@@ -1,3 +1,4 @@
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DeathRoll.Data;
 
@@ -7,7 +8,7 @@ public class MatchWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public MatchWindow(Plugin plugin) : base("Match")
+    public MatchWindow(Plugin plugin) : base("Match###DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {

@@ -9,7 +9,7 @@ public class BracketWindow : Window, IDisposable
 
     private bool UsedNameSetting;
 
-    public BracketWindow(Plugin plugin) : base("Bracket")
+    public BracketWindow(Plugin plugin) : base("Bracket###DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {

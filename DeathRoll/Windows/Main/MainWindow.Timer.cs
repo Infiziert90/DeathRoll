@@ -1,7 +1,6 @@
 using System.Diagnostics;
-using Dalamud.Game;
 using Dalamud.Interface.Components;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using DeathRoll.Data;
 
 namespace DeathRoll.Windows.Main;
@@ -87,7 +86,7 @@ public partial class MainWindow
         Plugin.SwitchState(GameState.Done);
 
         if (Configuration.Debug)
-            PluginLog.Information("Timer stopped.");
+            Plugin.Log.Information("Timer stopped.");
     }
 
     private void StartTimer()
@@ -101,10 +100,10 @@ public partial class MainWindow
         Plugin.SwitchState(GameState.Match);
 
         if (Configuration.Debug)
-            PluginLog.Information("Timer started.");
+            Plugin.Log.Information("Timer started.");
     }
 
-    private void OnFrameworkUpdate(Framework _)
+    private void OnFrameworkUpdate(IFramework _)
     {
         if (WantedTime < Stopwatch.Elapsed)
             StopTimer();

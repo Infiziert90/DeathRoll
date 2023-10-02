@@ -1,4 +1,4 @@
-using Dalamud.Logging;
+
 using DeathRoll.Data;
 
 namespace DeathRoll.Logic;
@@ -170,8 +170,8 @@ public class SimpleTournament
         }
         catch (Exception e)
         {
-            PluginLog.Error("Exception triggered.");
-            PluginLog.Error(e.Message);
+            Plugin.Log.Error("Exception triggered.");
+            Plugin.Log.Error(e.Message);
             Reset();
         }
     }
@@ -197,8 +197,8 @@ public class SimpleTournament
         }
         catch (Exception e)
         {
-            PluginLog.Error("Exception triggered.");
-            PluginLog.Error(e.Message);
+            Plugin.Log.Error("Exception triggered.");
+            Plugin.Log.Error(e.Message);
             Reset(true);
         }
     }

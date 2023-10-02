@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Dalamud.Game.Command;
+using Dalamud.Plugin.Services;
 using DeathRoll.Attributes;
 using static Dalamud.Game.Command.CommandInfo;
 
@@ -7,11 +8,11 @@ namespace DeathRoll;
 
 public class PluginCommandManager<THost> : IDisposable
 {
-    private readonly CommandManager commandManager;
+    private readonly ICommandManager commandManager;
     private readonly THost host;
     private readonly (string, CommandInfo)[] pluginCommands;
 
-    public PluginCommandManager(THost host, CommandManager commandManager)
+    public PluginCommandManager(THost host, ICommandManager commandManager)
     {
         this.commandManager = commandManager;
         this.host = host;

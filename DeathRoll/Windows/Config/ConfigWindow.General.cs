@@ -1,4 +1,5 @@
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using DeathRoll.Data;
 
 namespace DeathRoll.Windows.Config;

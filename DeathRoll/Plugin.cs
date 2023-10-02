@@ -1,17 +1,13 @@
 ﻿using System.Reflection;
-using Dalamud.Game;
-using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using DeathRoll.Attributes;
 using DeathRoll.Data;
 using DeathRoll.Logic;
@@ -25,14 +21,13 @@ namespace DeathRoll;
 
 public sealed class Plugin : IDalamudPlugin
 {
-    [PluginService] public static Framework Framework { get; private set; } = null!;
-    [PluginService] public static CommandManager Commands { get; private set; } = null!;
+    [PluginService] public static IFramework Framework { get; private set; } = null!;
+    [PluginService] public static ICommandManager Commands { get; private set; } = null!;
     [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] public static ClientState ClientState { get; private set; } = null!;
-    [PluginService] public static ChatGui Chat { get; private set; } = null!;
-    [PluginService] public static TargetManager TargetManager { get; private set; } = null!;
-
-    public string Name => "Death Roll Helper";
+    [PluginService] public static IClientState ClientState { get; private set; } = null!;
+    [PluginService] public static IChatGui Chat { get; private set; } = null!;
+    [PluginService] public static ITargetManager TargetManager { get; private set; } = null!;
+    [PluginService] public static IPluginLog Log { get; private set; } = null!;
 
     public const string Authors = "Infi";
     public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
@@ -151,11 +146,11 @@ public sealed class Plugin : IDalamudPlugin
 
         if (Configuration.Debug)
         {
-            PluginLog.Information("Chat Event fired.");
-            PluginLog.Information($"Sender: {sender}.");
-            PluginLog.Information($"Content: {message}.");
-            PluginLog.Information($"ChatType: {type} Unmasked Channel: {channel}.");
-            PluginLog.Information($"Language: {ClientState.ClientLanguage}.");
+            Log.Information("Chat Event fired.");
+            Log.Information($"Sender: {sender}.");
+            Log.Information($"Content: {message}.");
+            Log.Information($"ChatType: {type} Unmasked Channel: {channel}.");
+            Log.Information($"Language: {ClientState.ClientLanguage}.");
         }
 
         // 2122 = Random Roll 8266 = different Player Random roll?
@@ -177,7 +172,7 @@ public sealed class Plugin : IDalamudPlugin
         var local = ClientState.LocalPlayer;
         if (local == null || local.HomeWorld.GameData?.Name == null)
         {
-            PluginLog.Error("Unable to fetch character name.");
+            Log.Error("Unable to fetch character name.");
             return;
         }
 
@@ -191,7 +186,7 @@ public sealed class Plugin : IDalamudPlugin
             foreach (var payload in message.Payloads) // try to get name and check for dice cheating
             {
                 if (Configuration.Debug)
-                    PluginLog.Information($"message: {payload}");
+                    Log.Information($"message: {payload}");
                 switch (payload)
                 {
                     case PlayerPayload playerPayload:
@@ -216,7 +211,7 @@ public sealed class Plugin : IDalamudPlugin
                 foreach (var payload in sender.Payloads)
                 {
                     if (Configuration.Debug)
-                        PluginLog.Information($"Sender: {payload}");
+                        Log.Information($"Sender: {payload}");
                     playerName = payload switch
                     {
                         PlayerPayload playerPayload => $"{playerPayload.PlayerName}\uE05D{playerPayload.World.Name}",
@@ -228,7 +223,7 @@ public sealed class Plugin : IDalamudPlugin
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
         {
             if (Configuration.Debug)
-                PluginLog.Information("Blocked player tried to roll.");
+                Log.Information("Blocked player tried to roll.");
             return;
         }
 
