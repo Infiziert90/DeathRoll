@@ -8,7 +8,7 @@ public partial class ConfigWindow : Window, IDisposable
     private Configuration Configuration;
     // private RollTable RollTable;
 
-    public ConfigWindow(Plugin plugin) : base("Configuration###DeathRoll")
+    public ConfigWindow(Plugin plugin) : base("Configuration##DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {

@@ -8,7 +8,7 @@ public class CardFieldWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public CardFieldWindow(Plugin plugin) : base("Card Field###DeathRoll")
+    public CardFieldWindow(Plugin plugin) : base("Card Field##DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {

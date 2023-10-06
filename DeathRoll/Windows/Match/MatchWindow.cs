@@ -8,7 +8,7 @@ public class MatchWindow : Window, IDisposable
 {
     private readonly Plugin Plugin;
 
-    public MatchWindow(Plugin plugin) : base("Match###DeathRoll")
+    public MatchWindow(Plugin plugin) : base("Match##DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {

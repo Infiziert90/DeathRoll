@@ -11,7 +11,7 @@ public partial class MainWindow : Window, IDisposable
     private readonly Plugin Plugin;
     private readonly Configuration Configuration;
 
-    public MainWindow(Plugin plugin) : base("Main###DeathRoll")
+    public MainWindow(Plugin plugin) : base("Main##DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
         {
