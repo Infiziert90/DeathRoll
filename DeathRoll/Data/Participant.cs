@@ -119,11 +119,11 @@ public class Participants
 
     public int GetCurrentIndex() => CurrentIndex;
 
-    public Participant GetParticipant() => PList[CurrentIndex];
+    public Participant GetParticipant(bool skipTwo = false) => PList[CurrentIndex + (skipTwo ? 1 : 0)];
 
     public string GetParticipantName() => PlayerNameList[CurrentIndex];
 
-    public List<Participant> FindAllWithIndex() => FindAll(PList[CurrentIndex].Name);
+    public List<Participant> FindAllWithIndex(bool skipTwo = false) => FindAll(PList[CurrentIndex + (skipTwo ? 1 : 0)].Name);
 
     public void NextParticipant() => CurrentIndex++;
 
@@ -131,7 +131,7 @@ public class Participants
 
     public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
 
-    public void SetLastPlayerAction(string action) => PlayerBets[GetParticipant().Name].LastAction = action;
+    public void SetLastPlayerAction(string action, bool skipTwo = false) => PlayerBets[GetParticipant(skipTwo).Name].LastAction = action;
 }
 
 public class Participant

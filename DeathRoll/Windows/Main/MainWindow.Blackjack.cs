@@ -181,7 +181,7 @@ public partial class MainWindow
 
     private void WaitForRollPanel()
     {
-        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Participants.GetParticipant().GetDisplayName()}");
+        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).GetDisplayName()}");
         ImGui.TextColored(Helper.Green, $"Waiting for player roll ...");
         ImGui.TextColored(Helper.Green, $"Player must draw a card with either /random 13 or /dice 13 respectively.");
 
@@ -198,7 +198,7 @@ public partial class MainWindow
 
     private void PlayerRoundPanel()
     {
-        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Participants.GetParticipant().GetDisplayName()}");
+        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).GetDisplayName()}");
         ImGui.Text("Player Options:");
         ImGuiComponents.HelpMarker(HelpText);
 
@@ -214,7 +214,7 @@ public partial class MainWindow
         if (ImGui.Button("Double Down"))
             Plugin.SwitchState(GameState.DoubleDown); Blackjack.PlayerAction();
 
-        if (!Plugin.Participants.GetParticipant().CanSplit)
+        if (!Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).CanSplit)
             return;
 
         if (ImGui.Button("Split"))

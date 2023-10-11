@@ -247,8 +247,8 @@ public class Blackjack
 
     private void Hit(Cards.Card card)
     {
-        var currentPlayer = Plugin.Participants.GetParticipant().Name;
-        Plugin.Participants.SetLastPlayerAction("Hit");
+        var currentPlayer = Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).Name;
+        Plugin.Participants.SetLastPlayerAction("Hit", Plugin.Configuration.StartingDraw);
 
         Plugin.Participants.Add(new Participant(currentPlayer, card));
         if (!CheckPlayerCards())
@@ -261,9 +261,9 @@ public class Blackjack
 
     private void DoubleDown(Cards.Card card)
     {
-        var currentPlayer = Plugin.Participants.GetParticipant().Name;
+        var currentPlayer = Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).Name;
         Plugin.Participants.PlayerBets[currentPlayer].Bet *= 2;
-        Plugin.Participants.SetLastPlayerAction("Double Down");
+        Plugin.Participants.SetLastPlayerAction("Double Down", Plugin.Configuration.StartingDraw);
 
         Plugin.Participants.Add(new Participant(currentPlayer, card));
         CheckPlayerCards();
@@ -284,8 +284,8 @@ public class Blackjack
             return;
         }
 
-        var cards = Plugin.Participants.FindAllWithIndex();
-        var currentPlayer = Plugin.Participants.GetParticipant().Name;
+        var cards = Plugin.Participants.FindAllWithIndex(Plugin.Configuration.StartingDraw);
+        var currentPlayer = Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).Name;
         var splitName = $"{currentPlayer} Split";
 
         var card1 = Plugin.Participants.SplitDraw[0];
@@ -305,21 +305,21 @@ public class Blackjack
 
         Plugin.Participants.PlayerBets[splitName] = new Participants.Player(player.Bet, true);
 
-        Plugin.Participants.GetParticipant().CanSplit = false;
+        Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).CanSplit = false;
         Plugin.Participants.SplitDraw.Clear();
         Plugin.SwitchState(GameState.PlayerRound);
     }
 
     public void Stay()
     {
-        Plugin.Participants.SetLastPlayerAction("Stay");
+        Plugin.Participants.SetLastPlayerAction("Stay", Plugin.Configuration.StartingDraw);
 
         NextPlayer();
     }
 
     public void Surrender()
     {
-        var currentPlayer = Plugin.Participants.GetParticipant().Name;
+        var currentPlayer = Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).Name;
         var player = Plugin.Participants.PlayerBets[currentPlayer];
         player.Bet = (player.Bet / 2) * -1;
         player.IsAlive = false;
@@ -337,6 +337,7 @@ public class Blackjack
             Plugin.SwitchState(GameState.PlayerRound);
             if (CheckPlayerCards())
                 return;
+
             NextPlayer();
             return;
         }
@@ -365,7 +366,7 @@ public class Blackjack
 
     private bool CheckPlayerCards()
     {
-        var currentPlayer = Plugin.Participants.FindAll(Plugin.Participants.GetParticipant().Name);
+        var currentPlayer = Plugin.Participants.FindAll(Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).Name);
         var cards = CalculateCardValues(currentPlayer);
 
         var player = Plugin.Participants.PlayerBets[currentPlayer[0].Name];
