@@ -22,7 +22,7 @@ public partial class MainWindow
 
         if (Plugin.State is GameState.Match)
         {
-            if (ImGui.Button(IsTimerActive() ? "Stop Round" : "Stop Timer"))
+            if (ImGui.Button(IsTimerActive() ? "Stop Timer" : "Stop Round"))
             {
                 StopTimer();
                 Plugin.SwitchState(GameState.Done);

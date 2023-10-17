@@ -8,6 +8,7 @@ public enum DeathRollChatTypes : ushort
 
     // Dice
     Party = 14,
+    Alliance = 15,
     Ls1 = 16,
     Ls2 = 17,
     Ls3 = 18,

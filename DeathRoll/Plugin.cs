@@ -154,7 +154,7 @@ public sealed class Plugin : IDalamudPlugin
         }
 
         // 2122 = Random Roll 8266 = different Player Random roll?
-        // Dice Roll: FC, LS, CWLS, Party
+        // Dice Roll: FC, LS, CWLS, Party, Alliance
         if (!Enum.IsDefined(typeof(DeathRollChatTypes), xivChatType) && channel != 74)
             return;
 
