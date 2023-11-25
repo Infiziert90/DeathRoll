@@ -32,16 +32,19 @@ More features are planned, following user feedback.
 ## Screenshots
 
 ### Venue
-![](pics/RollTable.png)
+![venue](pics/RollTable.png)
 
 ### Tournament Bracket
-![](pics/Tournament.png)
+![tournament](pics/Tournament.png)
 
 ### Blackjack Cards
-![](pics/Blackjack.png)
+![card](pics/Blackjack.png)
+
+### Tic-Tac-Toe
+![tictactoe](pics/TripleT.gif)
 
 ### Highlight Config UI
-![](pics/Highlighting.png)
+![highlight](pics/Highlighting.png)
 
 ## Thanks to
 BluBb_mADe, JudgeZarbi

@@ -48,6 +48,9 @@ public partial class MainWindow : Window, IDisposable
             case GameModes.Blackjack:
                 BlackjackMode();
                 break;
+            case GameModes.TripleT:
+                TripleTMode();
+                break;
             default:
                 ImGui.Text("Not Implemented!");
                 break;

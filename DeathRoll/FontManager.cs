@@ -5,9 +5,9 @@ namespace DeathRoll;
 
 public class FontManager
 {
-    public ImFontPtr Font;
-    public ImFontPtr Font1;
-    public ImFontPtr Font2;
+    public ImFontPtr Jetbrains22;
+    public ImFontPtr SourceCode36;
+    public ImFontPtr SourceCode20;
 
     private ImVector Ranges;
     private ImFontConfigPtr FontConfig;
@@ -62,15 +62,15 @@ public class FontManager
     public void BuildFonts()
     {
         SetUpRanges();
-        var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\JetBrainsMono-Medium.ttf");
-        var path1 = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\SourceCodePro-Medium.ttf");
+        var jetbrains = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\JetBrainsMono-Medium.ttf");
+        var sourcecode = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\SourceCodePro-Medium.ttf");
         try
         {
-            Font = ImGui.GetIO().Fonts.AddFontFromFileTTF(path, 22, FontConfig, Ranges.Data);
-            Font1 = ImGui.GetIO().Fonts.AddFontFromFileTTF(path1, 36, FontConfig, Ranges.Data);
-            Font2 = ImGui.GetIO().Fonts.AddFontFromFileTTF(path1, 20, FontConfig, Ranges.Data);
+            Jetbrains22 = ImGui.GetIO().Fonts.AddFontFromFileTTF(jetbrains, 22, FontConfig, Ranges.Data);
+            SourceCode36 = ImGui.GetIO().Fonts.AddFontFromFileTTF(sourcecode, 36, FontConfig, Ranges.Data);
+            SourceCode20 = ImGui.GetIO().Fonts.AddFontFromFileTTF(sourcecode, 20, FontConfig, Ranges.Data);
         } catch (Exception ex) {
-            Plugin.Log.Error($"Font failed to load. {path}");
+            Plugin.Log.Error($"Font failed to load. {jetbrains}");
             Plugin.Log.Error(ex.ToString());
         }
     }

@@ -6,6 +6,7 @@ public enum GameModes
     DeathRoll = 1,
     Tournament = 2,
     Blackjack = 3,
+    TripleT = 4,
 }
 
 public static class GameModeUtils
@@ -20,6 +21,7 @@ public static class GameModeUtils
             GameModes.DeathRoll => "DeathRoll",
             GameModes.Tournament => "Tournament",
             GameModes.Blackjack => "Blackjack",
+            GameModes.TripleT => "Tic-Tac-Toe",
             _ => "Unknown"
         };
     }

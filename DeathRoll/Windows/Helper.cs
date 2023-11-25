@@ -59,4 +59,22 @@ public static class Helper
         else
             ImGui.TextColored(color, text);
     }
+
+    public static void TableCenterText(string text, Vector4 color = new())
+    {
+        var pos = ImGui.GetCursorPos();
+        ImGui.SetCursorPos(pos with { X = pos.X + (ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(text).X) * 0.5f });
+        // Alpha 0 means empty color
+        if (color.W == 0)
+            ImGui.TextUnformatted(text);
+        else
+            ImGui.TextColored(color, text);
+    }
+
+    public static void TableDummy(string text)
+    {
+        var pos = ImGui.GetCursorPos();
+        ImGui.SetCursorPos(pos with { X = pos.X + (ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize(text).X)});
+        ImGui.Dummy(ImGui.CalcTextSize(text));
+    }
 }

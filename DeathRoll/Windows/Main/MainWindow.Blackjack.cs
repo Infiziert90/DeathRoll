@@ -253,7 +253,7 @@ public partial class MainWindow
                 ImGui.PopStyleColor();
 
                 ImGui.TableNextColumn();
-                ImGui.PushFont(Plugin.FontManager.Font2);
+                ImGui.PushFont(Plugin.FontManager.SourceCode20);
                 ImGui.Text(string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card))));
                 ImGui.PopFont();
 
@@ -279,7 +279,7 @@ public partial class MainWindow
             }
 
             ImGui.TableNextColumn();
-            ImGui.PushFont(Plugin.FontManager.Font2);
+            ImGui.PushFont(Plugin.FontManager.SourceCode20);
             ImGui.Text(string.Join(" ", Plugin.Participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card))));
             ImGui.PopFont();
 
@@ -333,7 +333,7 @@ public partial class MainWindow
                 ImGui.Text($"{Plugin.Participants.FindPlayer(name).GetDisplayName()}");
 
             var playerCards = Plugin.Participants.FindAll(name).Skip(1).ToList();
-            ImGui.PushFont(Plugin.FontManager.Font2);
+            ImGui.PushFont(Plugin.FontManager.SourceCode20);
             ImGui.SameLine();
             ImGui.Text($"{(playerCards.Count > 0 ? Cards.ShowCardSimple(playerCards[0].Card) : "?")} {(playerCards.Count > 1 ? Cards.ShowCardSimple(playerCards[1].Card) : "?")}");
             ImGui.PopFont();

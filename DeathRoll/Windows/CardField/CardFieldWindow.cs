@@ -57,7 +57,7 @@ public class CardFieldWindow : Window, IDisposable
     private void GameCardRender(Cards.Card card)
     {
         var s = Cards.ShowCard(card);
-        ImGui.PushFont(Plugin.FontManager.Font);
+        ImGui.PushFont(Plugin.FontManager.Jetbrains22);
         ImGui.Text(s[0]);
         ImGui.PopFont();
 
@@ -65,7 +65,7 @@ public class CardFieldWindow : Window, IDisposable
 
         var p = ImGui.GetCursorPos();
         ImGui.SetCursorPos(new Vector2(p.X - 70 * ImGuiHelpers.GlobalScale, p.Y + 100 * ImGuiHelpers.GlobalScale));
-        ImGui.PushFont(Plugin.FontManager.Font1);
+        ImGui.PushFont(Plugin.FontManager.SourceCode36);
         ImGui.Text(s[1]);
         ImGui.PopFont();
     }

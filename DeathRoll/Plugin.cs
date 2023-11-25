@@ -46,6 +46,7 @@ public sealed class Plugin : IDalamudPlugin
     public string LocalPlayer = string.Empty;
     public readonly Participants Participants;
     public GameState State = GameState.NotRunning;
+    public RoundInfo TripleT;
 
     private readonly PluginCommandManager<Plugin> CommandManager;
 
@@ -58,6 +59,7 @@ public sealed class Plugin : IDalamudPlugin
 
         Participants = new Participants(Configuration);
         RollManager = new RollManager(this);
+        TripleT = new RoundInfo(Configuration);
 
         MainWindow = new MainWindow(this);
         ConfigWindow = new ConfigWindow(this);
@@ -95,6 +97,8 @@ public sealed class Plugin : IDalamudPlugin
 
         PluginInterface.UiBuilder.BuildFonts -= FontManager.BuildFonts;
         PluginInterface.UiBuilder.RebuildFonts();
+
+        TripleT.Dispose();
     }
 
     [Command("/drh")]

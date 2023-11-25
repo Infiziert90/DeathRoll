@@ -50,6 +50,10 @@ public class Configuration : IPluginConfiguration
     public int DefaultBet = 250000;
     public DealerRules DealerRule = DealerRules.DealerHard16;
 
+    public int FieldSize = 3;
+    public Difficulty Difficulty = Difficulty.Easy;
+    public string Username = "Anon";
+
     [NonSerialized] private DalamudPluginInterface? PluginInterface;
     [NonSerialized] public bool AcceptNewPlayers = false;
 
