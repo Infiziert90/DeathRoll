@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace DeathRoll.Data;
 
@@ -27,6 +28,16 @@ public enum Difficulty : byte
     Easy = 0,
     Medium = 1,
     Hard = 2
+}
+
+public enum OnlineAwait
+{
+    None = 0,
+
+    Join = 1,
+    Move = 2,
+    Start = 3,
+    Replay = 4,
 }
 
 public class Player
@@ -197,7 +208,7 @@ public class Board
 
 public class RoundInfo
 {
-    public CancellationTokenSource CancellationToken = new();
+    private CancellationTokenSource CancellationToken = new();
     private static readonly Random Rng = new();
 
     public Winner? Winner;
@@ -208,6 +219,14 @@ public class RoundInfo
     private Difficulty Difficulty;
     private Player[] Players;
     private int CurrentPlayerIndex;
+
+    // Online
+    public OnlineRoom? Room;
+    public OnlineAwait Awaiting;
+    public long LastMove;
+    public PlayerSymbol MySymbol;
+    public bool IsPrivate;
+    public bool IsHost;
 
     public Player CurrentPlayer => Players[CurrentPlayerIndex];
     private static PlayerSymbol GetOpposite(PlayerSymbol p) => p == PlayerSymbol.X ? PlayerSymbol.O : PlayerSymbol.X;
@@ -258,15 +277,8 @@ public class RoundInfo
 
     public void NewRound(Configuration config)
     {
-        try
-        {
-            CancellationToken.Cancel();
-            CancellationToken = new CancellationTokenSource();
-        }
-        catch (ObjectDisposedException)
-        {
-            return;
-        }
+        TryCancel();
+        CancellationToken = new CancellationTokenSource();
 
         Difficulty = config.Difficulty;
         Board.Empty(config.FieldSize);
@@ -278,6 +290,346 @@ public class RoundInfo
         CheckIfAIMove();
     }
 
+    private void TryCancel()
+    {
+        try
+        {
+            CancellationToken.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Ignored
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            CancellationToken.Cancel();
+            CancellationToken.Dispose();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Ignored
+        }
+    }
+
+    #region Online
+
+    public void CreateRoom(Configuration config, bool isPrivate)
+    {
+        TryCancel();
+        CancellationToken = new CancellationTokenSource();
+
+        IsHost = true;
+        IsPrivate = isPrivate;
+        Winner = null;
+        Board.Empty(config.FieldSizeOnline);
+        CurrentPlayerIndex = 0;
+        Players = new[] { new Player { Playername = config.Username, Symbol = PlayerSymbol.X } };
+        MySymbol = PlayerSymbol.X;
+        LastMove = 0;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                var response = await Uploader.UploadNewEntry(new NewRoom(config.Username, config.FieldSizeOnline, isPrivate));
+                Room = JsonConvert.DeserializeObject<OnlineRoom>(response[1..^1]);
+
+                await AwaitPlayerJoining(CancellationToken.Token);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.Error(e, "Creating a room failed.");
+                Room = null;
+            }
+        });
+    }
+
+    public void JoinRoom(Configuration config, bool isPrivate, string identifier = "")
+    {
+        IsHost = false;
+        IsPrivate = isPrivate;
+        Winner = null;
+        CurrentPlayerIndex = 0;
+        LastMove = 0;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                var response = isPrivate ? await Uploader.FindPrivateRoom(identifier) : await Uploader.FindEmptyRoom();
+                var rooms = JsonConvert.DeserializeObject<OnlineRoom[]>(response);
+
+                if (rooms == null || rooms.Length == 0)
+                    return;
+
+                Room = rooms.First();
+                Room!.PlayerTwo = config.Username;
+                Board.Empty(Room.FieldSize);
+                Players = new[] { new Player { Playername = Room.PlayerOne, Symbol = PlayerSymbol.X }, new Player { Playername = Room.PlayerTwo, Symbol = PlayerSymbol.O } };
+                MySymbol = PlayerSymbol.O;
+
+                await Uploader.UpdateRoom(Room);
+                await StartingPlayer(CancellationToken.Token);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.Error(e, "Joining a room failed.");
+                Room = null;
+            }
+        });
+    }
+
+    private async Task AwaitPlayerJoining(CancellationToken token)
+    {
+        // Create a tmp copy, this prevents cases were Room would be null in finally
+        var tmpRoom = new OnlineRoom(Room);
+
+        Awaiting = OnlineAwait.Join;
+        try
+        {
+            while (Awaiting == OnlineAwait.Join)
+            {
+                await Task.Delay(1000, token);
+                if (Room == null)
+                    return;
+
+                var response = await Uploader.GetCurrentRoom(Room);
+                Room = JsonConvert.DeserializeObject<OnlineRoom>(response[1..^1]);
+
+                if (Room != null && Room.PlayerTwo != (IsPrivate ? "Private" : "Empty"))
+                {
+                    Players = new[] { Players[0], new Player { Playername = Room.PlayerTwo, Symbol = PlayerSymbol.O } };
+                    CurrentPlayerIndex = Rng.Next(0, 2);
+
+                    // Upload starting indicator
+                    await Uploader.UploadNewEntry(new NewMove(Room.Identifier, 0, 0, -1, CurrentPlayer.Symbol));
+
+                    Awaiting = OnlineAwait.None;
+                    break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e, "Couldn't receive another player joining.");
+            return;
+        }
+        finally
+        {
+            if (Room != null)
+                tmpRoom = new OnlineRoom(Room);
+
+            await Uploader.UpdateRoom(tmpRoom);
+        }
+
+        if (MySymbol != CurrentPlayer.Symbol)
+            await AwaitMove(token);
+    }
+
+    private async Task StartingPlayer(CancellationToken token)
+    {
+        Awaiting = OnlineAwait.Start;
+        try
+        {
+            while (Awaiting == OnlineAwait.Start)
+            {
+                await Task.Delay(1000, token);
+                if (Room == null)
+                    return;
+
+                var response = await Uploader.GetMoves(Room, LastMove);
+                var moves = JsonConvert.DeserializeObject<OldMove[]>(response);
+
+                if (moves == null || moves.Length == 0)
+                    continue;
+
+                var first = moves.First();
+                LastMove = first.ID;
+                CurrentPlayerIndex = Array.FindIndex(Players, player => player.Symbol == (PlayerSymbol) moves.First().Symbol);
+
+                Awaiting = OnlineAwait.None;
+                break;
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e, "Failed to receive the starting indicator.");
+            Room = null;
+
+            return;
+        }
+
+        if (MySymbol != CurrentPlayer.Symbol)
+            await AwaitMove(token);
+    }
+
+    private async Task AwaitMove(CancellationToken token)
+    {
+        Awaiting = OnlineAwait.Move;
+        try
+        {
+            while (Awaiting == OnlineAwait.Move)
+            {
+                await Task.Delay(1000, token);
+                if (Room == null)
+                    return;
+
+                var response = await Uploader.GetMoves(Room, LastMove);
+                var moves = JsonConvert.DeserializeObject<OldMove[]>(response);
+
+                if (moves == null || moves.Length == 0)
+                    continue;
+
+                // -1 is the starting decider
+                var last = moves.Last();
+                if (last.Turn != -1 && CurrentPlayer.Symbol == (PlayerSymbol) last.Symbol)
+                {
+                    LastMove = last.ID;
+                    ProcessOnlineMove(last.Row, last.Col);
+
+                    Awaiting = OnlineAwait.None;
+                    return;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e, "Awaiting the other players move failed.");
+            Room = null;
+        }
+    }
+
+    private async Task AwaitReplay(CancellationToken token)
+    {
+        Awaiting = OnlineAwait.Replay;
+        try
+        {
+            while (Awaiting == OnlineAwait.Replay)
+            {
+                await Task.Delay(1000, token);
+                if (Room == null)
+                    return;
+
+                var response = await Uploader.GetMoves(Room, LastMove);
+                var moves = JsonConvert.DeserializeObject<OldMove[]>(response);
+
+                if (moves == null || moves.Length == 0)
+                    continue;
+
+                // -2 is replay signal
+                var last = moves.Last();
+                if (last.Turn == -2)
+                {
+                    LastMove = last.ID;
+
+                    Winner = null;
+                    Board.Empty(Room.FieldSize);
+                    CurrentPlayerIndex = Array.FindIndex(Players, player => player.Symbol == (PlayerSymbol) last.Symbol);
+
+                    Awaiting = OnlineAwait.None;
+                    break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e, "Awaiting replay signal failed.");
+            Room = null;
+
+            return;
+        }
+
+        if (MySymbol != CurrentPlayer.Symbol)
+            await AwaitMove(token);
+    }
+
+    public void MakeOnlineMove(int row, int col)
+    {
+        if (!Board.IsMoveAllowed(row, col) || Room == null)
+            return;
+
+        Board.MakeMove(row, col, CurrentPlayer.Symbol);
+        Uploader.UploadNewEntry(new NewMove(Room.Identifier, row, col, (int) Board.Turn, CurrentPlayer.Symbol));
+
+        Winner = IsGameDone(row, col);
+        if (Winner != null)
+        {
+            Board.BoardDone = true;
+            if (!IsHost)
+                Task.Run(async () => await AwaitReplay(CancellationToken.Token));
+        }
+        else
+        {
+            NextPlayer();
+            Task.Run(async () => await AwaitMove(CancellationToken.Token));
+        }
+    }
+
+    private void ProcessOnlineMove(int row, int col)
+    {
+        Board.MakeMove(row, col, CurrentPlayer.Symbol);
+
+        Winner = IsGameDone(row, col);
+        if (Winner != null)
+        {
+            Board.BoardDone = true;
+            if (!IsHost)
+                Task.Run(async () => await AwaitReplay(CancellationToken.Token));
+        }
+        else
+        {
+            NextPlayer();
+        }
+    }
+
+    public async Task SendReplaySignal()
+    {
+        try
+        {
+            if (Room == null)
+                return;
+
+            Winner = null;
+            Board.Empty(Room.FieldSize);
+            CurrentPlayerIndex = Rng.Next(0, 2);
+            var response = await Uploader.UploadNewEntry(new NewMove(Room.Identifier, 0, 0, -2, CurrentPlayer.Symbol));
+            var move = JsonConvert.DeserializeObject<OldMove>(response[1..^1]);
+
+            if (move == null)
+            {
+                Plugin.Log.Error("Failed to send replay signal.");
+                Plugin.Log.Error(response);
+                return;
+            }
+
+            LastMove = move.ID;
+            if (MySymbol != CurrentPlayer.Symbol)
+                await AwaitMove(CancellationToken.Token);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e, "Sending replay signal failed.");
+            Room = null;
+        }
+    }
+
+    public void Reset()
+    {
+        TryCancel();
+        CancellationToken = new CancellationTokenSource();
+
+        Awaiting = OnlineAwait.None;
+        Winner = null;
+        Room = null;
+    }
+
+    #endregion
+
+    #region AI
     private void CheckIfAIMove()
     {
         if (Board.BoardDone || !CurrentPlayer.IsAI)
@@ -297,13 +649,6 @@ public class RoundInfo
         }, CancellationToken.Token);
     }
 
-    public void Dispose()
-    {
-        CancellationToken.Cancel();
-        CancellationToken.Dispose();
-    }
-
-    #region AI
     // From: http://www.wisamyacteen.com/2012/11/an-artificial-intelligence-example-tic-tac-toe-using-c/
     public class Evaluator
     {
@@ -624,6 +969,101 @@ public class RoundInfo
         return new Square(middle, middle);
     }
     #endregion
+}
+
+public class BaseRoom : Uploader.Upload
+{
+    [JsonProperty("player1")]
+    public string PlayerOne = string.Empty;
+
+    [JsonProperty("player2")]
+    public string PlayerTwo = string.Empty;
+
+    [JsonProperty("field_size")]
+    public int FieldSize;
+
+    public BaseRoom() : base("TripleT") {}
+}
+
+public class OnlineRoom : BaseRoom
+{
+    [JsonProperty("id")]
+    public ulong ID;
+
+    [JsonProperty("room")]
+    public string Identifier = string.Empty;
+
+    [JsonProperty("done")]
+    public bool IsDone;
+
+    [JsonConstructor]
+    public OnlineRoom() {}
+
+    public OnlineRoom(OnlineRoom? room)
+    {
+        if (room == null)
+            return;
+
+        ID = room.ID;
+        Identifier = room.Identifier;
+        IsDone = true;
+
+        PlayerOne = room.PlayerOne;
+        PlayerTwo = room.PlayerTwo;
+        FieldSize = room.FieldSize;
+    }
+}
+
+public class NewRoom : BaseRoom
+{
+    public NewRoom(string username, int fieldSize, bool isPrivate)
+    {
+        PlayerOne = username;
+        PlayerTwo = isPrivate ? "Private" : "Empty";
+        FieldSize = fieldSize;
+    }
+}
+
+public class BaseMove : Uploader.Upload
+{
+    [JsonProperty("row")]
+    public int Row;
+
+    [JsonProperty("col")]
+    public int Col;
+
+    [JsonProperty("turn")]
+    public int Turn;
+
+    [JsonProperty("player")]
+    public int Symbol;
+
+    [JsonConstructor]
+    public BaseMove() : base("TripleTMoves") {}
+}
+
+public class OldMove : BaseMove
+{
+    [JsonProperty("id")]
+    public long ID;
+
+    [JsonConstructor]
+    public OldMove() {}
+}
+
+public class NewMove : BaseMove
+{
+    [JsonProperty("room")]
+    public string Identifier;
+
+    public NewMove(string identifier, int row, int col, int turn, PlayerSymbol symbol)
+    {
+        Identifier = identifier;
+        Row = row;
+        Col = col;
+        Turn = turn;
+        Symbol = (int) symbol;
+    }
 }
 
 public static class PlayerTypeExtensions

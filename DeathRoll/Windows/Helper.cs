@@ -49,6 +49,12 @@ public static class Helper
         return false;
     }
 
+    public static void CenterNextButton(string text)
+    {
+        var buttonStyle = ImGui.GetStyle().ButtonTextAlign.X;
+        ImGui.SetCursorPosX((ImGui.GetWindowSize().X - ImGui.CalcTextSize(text).X - buttonStyle) * 0.5f);
+    }
+
     public static void SetTextCenter(string text, Vector4 color = new())
     {
         ImGui.SetCursorPosX((ImGui.GetWindowSize().X - ImGui.CalcTextSize(text).X) * 0.5f);

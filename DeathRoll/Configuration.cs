@@ -51,6 +51,8 @@ public class Configuration : IPluginConfiguration
     public DealerRules DealerRule = DealerRules.DealerHard16;
 
     public int FieldSize = 3;
+    public int FieldSizeOnline = 3;
+    public bool OnlineMode = false;
     public Difficulty Difficulty = Difficulty.Easy;
     public string Username = "Anon";
 
