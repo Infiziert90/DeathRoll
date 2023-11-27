@@ -11,25 +11,44 @@ public partial class MainWindow
 
     private void TripleTMode()
     {
-        if (Configuration.OnlineMode)
-            TripleTOnlinePanel();
-        else
-            TripleTPanel();
-
-        if (Plugin.TripleT.Winner != null)
+        var scaledSpacing = 20.0f * ImGuiHelpers.GlobalScale;
+        var letterHeight = ImGui.CalcTextSize("X").Y;
+        var buttonHeight = letterHeight + scaledSpacing;
+        if (ImGui.BeginChild("MainContent", new Vector2(0, -buttonHeight)))
         {
-            ImGuiHelpers.ScaledDummy(10.0f);
-            TripleTWinnerPanel();
-        }
+            if (Configuration.OnlineMode)
+                TripleTOnlinePanel();
+            else
+                TripleTPanel();
 
-        var textHeight = ImGui.CalcTextSize("XXXX").Y * 3.0f; // giving space for 6.0 lines
-        var optionHeight = (HeaderOpen ? -65 : 0) * ImGuiHelpers.GlobalScale;
-        if (ImGui.BeginChild("GameField", new Vector2(0, -textHeight + optionHeight)))
-            TripleTFieldPanel();
+            if (Plugin.TripleT.Winner != null)
+            {
+                ImGuiHelpers.ScaledDummy(10.0f);
+                TripleTWinnerPanel();
+            }
+
+            var headerHeight = letterHeight + scaledSpacing;
+            var textHeight = letterHeight * 4.5f; // giving space for 3 lines
+
+            var spaceNeeded = headerHeight + (HeaderOpen ? textHeight : 0);
+            if (ImGui.BeginChild("GameField", new Vector2(0, -spaceNeeded)))
+                TripleTFieldPanel();
+            ImGui.EndChild();
+
+            if (ImGui.BeginChild("GameOptions", new Vector2(0, 0)))
+                TripleTOptions();
+            ImGui.EndChild();
+        }
         ImGui.EndChild();
 
-        if (ImGui.BeginChild("GameOptions", new Vector2(0,0)))
-            TripleTOptions();
+        ImGui.Separator();
+        ImGuiHelpers.ScaledDummy(1.0f);
+
+        if (ImGui.BeginChild("BottomBar", new Vector2(0, 0), false, 0))
+        {
+            Plugin.TripleT.GetEmptyRoomCount();
+            ImGui.TextUnformatted($"Empty Rooms: {Plugin.TripleT.OpenRooms}");
+        }
         ImGui.EndChild();
     }
 
@@ -78,11 +97,19 @@ public partial class MainWindow
             if (ImGui.Button("Leave Room"))
                 Plugin.TripleT.Reset();
 
-            if (Plugin.TripleT.IsHost && Plugin.TripleT.Board.BoardDone)
+            if (Plugin.TripleT is { IsHost: true, Board.BoardDone: true })
             {
-                ImGui.SameLine();
-                if (ImGui.Button("Replay"))
-                    Task.Run(async() => { await Plugin.TripleT.SendReplaySignal(); });
+                if (Plugin.TripleT.TimeLeft > 0)
+                {
+                    ImGui.SameLine();
+                    if (ImGui.Button("Replay"))
+                        Task.Run(async() => { await Plugin.TripleT.SendReplaySignal(); });
+                }
+                else
+                {
+                    // Trigger a timeout for the host
+                    Plugin.TripleT.Reset();
+                }
             }
         }
 
@@ -112,7 +139,7 @@ public partial class MainWindow
             return;
 
         if (Configuration.OnlineMode && Plugin.TripleT.Awaiting == OnlineAwait.Replay)
-            ImGui.TextColored(ImGuiColors.DalamudViolet, "Waiting for replay indicator ...");
+            ImGui.TextColored(ImGuiColors.DalamudViolet, $"Waiting for replay indicator (Timeout in {Plugin.TripleT.TimeLeft} seconds)");
 
         var currentPlayer = Plugin.TripleT.CurrentPlayer;
         if (Plugin.TripleT.Winner == null)
@@ -228,6 +255,7 @@ public partial class MainWindow
         var longText = "Username";
         var width = ImGui.CalcTextSize(longText).X + (20.0f * ImGuiHelpers.GlobalScale);
 
+        ImGui.AlignTextToFramePadding();
         ImGui.TextColored(ImGuiColors.DalamudViolet, "Online");
         ImGui.SameLine(width);
         if (ImGui.Checkbox("##OnlineCheckbox", ref Configuration.OnlineMode))
@@ -238,6 +266,7 @@ public partial class MainWindow
 
         if (!Configuration.OnlineMode)
         {
+            ImGui.AlignTextToFramePadding();
             ImGui.TextColored(ImGuiColors.DalamudViolet, "Difficulty");
             ImGui.SameLine(width);
             if (ImGui.BeginCombo($"##DifficultyCombo", Configuration.Difficulty.Name()))
@@ -256,10 +285,12 @@ public partial class MainWindow
         }
         else
         {
+            ImGui.AlignTextToFramePadding();
             ImGui.TextColored(ImGuiColors.DalamudViolet, longText);
             ImGui.SameLine(width);
             save |= ImGui.InputTextWithHint("##UsernameInput", "Your Username ...", ref Configuration.Username, 32);
 
+            ImGui.AlignTextToFramePadding();
             ImGui.TextColored(ImGuiColors.DalamudViolet, "Field Size");
             ImGui.SameLine(width);
             save |= ImGui.SliderInt("##FieldSizeSlider", ref Configuration.FieldSizeOnline, 3, 5);

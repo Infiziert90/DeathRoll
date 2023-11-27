@@ -45,11 +45,25 @@ public static class Uploader
         }
     }
 
+    public static async Task<string> GetEmptyCount()
+    {
+        try
+        {
+            var response = await Client.GetAsync($"{BaseUrl}TripleT?player2=eq.Empty&full=is.false&done=is.false&select=id");
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error(e, "Get rooms failed");
+            return string.Empty;
+        }
+    }
+
     public static async Task<string> FindEmptyRoom()
     {
         try
         {
-            var response = await Client.GetAsync($"{BaseUrl}TripleT?player2=eq.Empty&full=is.false&select=*");
+            var response = await Client.GetAsync($"{BaseUrl}TripleT?player2=eq.Empty&full=is.false&done=is.false&select=*");
             return await response.Content.ReadAsStringAsync();
         }
         catch (Exception e)
@@ -63,7 +77,7 @@ public static class Uploader
     {
         try
         {
-            var response = await Client.GetAsync($"{BaseUrl}TripleT?room=eq.{identifier}&player2=eq.Private&full=is.false&select=*");
+            var response = await Client.GetAsync($"{BaseUrl}TripleT?room=eq.{identifier}&player2=eq.Private&full=is.false&done=is.false&select=*");
             return await response.Content.ReadAsStringAsync();
         }
         catch (Exception e)

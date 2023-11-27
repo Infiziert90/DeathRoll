@@ -3,7 +3,7 @@
     <PropertyGroup>
         <Authors>Infi</Authors>
         <AssemblyName>DeathRoll</AssemblyName>
-        <Version>1.4.1.0</Version>
+        <Version>1.4.1.1</Version>
         <Description>Easy to use deathroll/roll game helper with functions to hightlight or block players.</Description>
         <PackageProjectUrl>https://github.com/Infiziert90/DeathRoll</PackageProjectUrl>
     </PropertyGroup>

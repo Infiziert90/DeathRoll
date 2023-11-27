@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Timer = System.Timers.Timer;
 
 namespace DeathRoll.Data;
 
@@ -208,6 +210,7 @@ public class Board
 
 public class RoundInfo
 {
+    private const int TimeoutAfter = 120 * 1000; // 2 Minutes
     private CancellationTokenSource CancellationToken = new();
     private static readonly Random Rng = new();
 
@@ -223,16 +226,25 @@ public class RoundInfo
     // Online
     public OnlineRoom? Room;
     public OnlineAwait Awaiting;
-    public long LastMove;
     public PlayerSymbol MySymbol;
-    public bool IsPrivate;
     public bool IsHost;
+    public int OpenRooms;
+
+    private long LastMove;
+    private bool IsPrivate;
+    private bool Refresh = true;
+    private readonly Stopwatch Timeout = new();
+    private readonly Timer RefreshTimer = new(30 * 1000);
 
     public Player CurrentPlayer => Players[CurrentPlayerIndex];
+    public int TimeLeft => (int) ((TimeoutAfter - Timeout.ElapsedMilliseconds) / 1000);
     private static PlayerSymbol GetOpposite(PlayerSymbol p) => p == PlayerSymbol.X ? PlayerSymbol.O : PlayerSymbol.X;
 
     public RoundInfo(Configuration config)
     {
+        RefreshTimer.Elapsed += (_, _) => Refresh = true;
+        RefreshTimer.Start();
+
         Difficulty = config.Difficulty;
         Board.Empty(config.FieldSize);
         Players = new[] { new Player { Playername = config.Username, Symbol = PlayerSymbol.X }, new Player { Playername = Difficulty.String(), Symbol = PlayerSymbol.O, IsAI = true } };
@@ -368,6 +380,7 @@ public class RoundInfo
 
                 Room = rooms.First();
                 Room!.PlayerTwo = config.Username;
+                Room.IsFull = true;
                 Board.Empty(Room.FieldSize);
                 Players = new[] { new Player { Playername = Room.PlayerOne, Symbol = PlayerSymbol.X }, new Player { Playername = Room.PlayerTwo, Symbol = PlayerSymbol.O } };
                 MySymbol = PlayerSymbol.O;
@@ -510,6 +523,9 @@ public class RoundInfo
         {
             while (Awaiting == OnlineAwait.Replay)
             {
+                if (Timeout.ElapsedMilliseconds > TimeoutAfter)
+                    throw new TimeoutException();
+
                 await Task.Delay(1000, token);
                 if (Room == null)
                     return;
@@ -526,24 +542,31 @@ public class RoundInfo
                 {
                     LastMove = last.ID;
 
-                    Winner = null;
                     Board.Empty(Room.FieldSize);
-                    CurrentPlayerIndex = Array.FindIndex(Players, player => player.Symbol == (PlayerSymbol) last.Symbol);
+                    CurrentPlayerIndex = Array.FindIndex(Players, player => player.Symbol == (PlayerSymbol)last.Symbol);
 
                     Awaiting = OnlineAwait.None;
                     break;
                 }
             }
         }
+        catch (TimeoutException e)
+        {
+            Plugin.Log.Warning(e, "Awaiting replay signal failed, timeout got triggered.");
+            Room = null;
+        }
         catch (Exception e)
         {
             Plugin.Log.Error(e, "Awaiting replay signal failed.");
             Room = null;
-
-            return;
+        }
+        finally
+        {
+            Winner = null;
+            Timeout.Stop();
         }
 
-        if (MySymbol != CurrentPlayer.Symbol)
+        if (Room != null && MySymbol != CurrentPlayer.Symbol)
             await AwaitMove(token);
     }
 
@@ -558,6 +581,7 @@ public class RoundInfo
         Winner = IsGameDone(row, col);
         if (Winner != null)
         {
+            Timeout.Restart();
             Board.BoardDone = true;
             if (!IsHost)
                 Task.Run(async () => await AwaitReplay(CancellationToken.Token));
@@ -576,6 +600,7 @@ public class RoundInfo
         Winner = IsGameDone(row, col);
         if (Winner != null)
         {
+            Timeout.Restart();
             Board.BoardDone = true;
             if (!IsHost)
                 Task.Run(async () => await AwaitReplay(CancellationToken.Token));
@@ -617,11 +642,33 @@ public class RoundInfo
         }
     }
 
+    public void GetEmptyRoomCount()
+    {
+        if (!Refresh)
+            return;
+
+        Refresh = false;
+        Task.Run(async () =>
+        {
+            try
+            {
+                var response = await Uploader.GetEmptyCount();
+                OpenRooms = JsonConvert.DeserializeObject<SimpleRoom[]>(response)?.Length ?? 0;
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.Error(e, "Unable to retrieve empty room count.");
+            }
+
+        });
+    }
+
     public void Reset()
     {
         TryCancel();
         CancellationToken = new CancellationTokenSource();
 
+        Timeout.Stop();
         Awaiting = OnlineAwait.None;
         Winner = null;
         Room = null;
@@ -996,6 +1043,9 @@ public class OnlineRoom : BaseRoom
     [JsonProperty("done")]
     public bool IsDone;
 
+    [JsonProperty("full")]
+    public bool IsFull;
+
     [JsonConstructor]
     public OnlineRoom() {}
 
@@ -1006,6 +1056,7 @@ public class OnlineRoom : BaseRoom
 
         ID = room.ID;
         Identifier = room.Identifier;
+        IsFull = room.IsFull;
         IsDone = true;
 
         PlayerOne = room.PlayerOne;
@@ -1022,6 +1073,12 @@ public class NewRoom : BaseRoom
         PlayerTwo = isPrivate ? "Private" : "Empty";
         FieldSize = fieldSize;
     }
+}
+
+public class SimpleRoom
+{
+    [JsonProperty("id")]
+    public ulong ID;
 }
 
 public class BaseMove : Uploader.Upload
