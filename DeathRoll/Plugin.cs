@@ -46,7 +46,9 @@ public sealed class Plugin : IDalamudPlugin
     public string LocalPlayer = string.Empty;
     public readonly Participants Participants;
     public GameState State = GameState.NotRunning;
-    public RoundInfo TripleT;
+
+    public readonly RoundInfo TripleT;
+    public Minesweeper Minesweeper;
 
     private readonly PluginCommandManager<Plugin> CommandManager;
 
@@ -60,6 +62,7 @@ public sealed class Plugin : IDalamudPlugin
         Participants = new Participants(Configuration);
         RollManager = new RollManager(this);
         TripleT = new RoundInfo(Configuration);
+        Minesweeper = new Minesweeper(Configuration.MinesweeperDif.GridSizes()[0]);
 
         MainWindow = new MainWindow(this);
         ConfigWindow = new ConfigWindow(this);

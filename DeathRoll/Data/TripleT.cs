@@ -25,13 +25,6 @@ public enum WinType : byte
     Anti = 5
 }
 
-public enum Difficulty : byte
-{
-    Easy = 0,
-    Medium = 1,
-    Hard = 2
-}
-
 public enum OnlineAwait
 {
     None = 0,
@@ -1133,28 +1126,6 @@ public static class PlayerTypeExtensions
             PlayerSymbol.X => "X",
             PlayerSymbol.O => "O",
             _ => "U"
-        };
-    }
-
-    public static string String(this Difficulty difficulty)
-    {
-        return difficulty switch
-        {
-            Difficulty.Easy => "Easy AI",
-            Difficulty.Medium => "Medium AI",
-            Difficulty.Hard => "Hard AI",
-            _ => "Unknown"
-        };
-    }
-
-    public static string Name(this Difficulty difficulty)
-    {
-        return difficulty switch
-        {
-            Difficulty.Easy => "Easy",
-            Difficulty.Medium => "Medium",
-            Difficulty.Hard => "Hard",
-            _ => "Unknown"
         };
     }
 }

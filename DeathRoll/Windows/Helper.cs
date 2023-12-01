@@ -12,6 +12,17 @@ public static class Helper
     public static readonly Vector4 SoftBlue = new(0.031f, 0.376f, 0.768f, 1.0f);
     public static readonly Vector4 KofiColor = new(0.12549f, 0.74902f, 0.33333f, 0.6f);
 
+    // Minesweeper
+    public static readonly Vector4 Black = new(0, 0, 0, 1);
+    public static readonly Vector4 LighterGrey = new(0.8f, 0.8f, 0.8f, 1.0f);
+    public static readonly Vector4 DarkBlue = new(0.0f, 0.431f, 0.722f, 1.0f);
+    public static readonly Vector4 DarkGreen = new(0.059f, 0.49f, 0.0f, 1.0f);
+    public static readonly Vector4 DarkViolet = new(0.541f, 0.173f, 0.788f, 1.0f);
+    public static readonly Vector4 DarkBrown = new(0.659f, 0.376f, 0.0f, 1.0f);
+    public static readonly Vector4 DarkCyan = new(0.0f, 0.49f, 0.49f, 1.0f);
+    public static readonly Vector4 DarkGrey = new(0.5f, 0.5f, 0.5f, 1.0f);
+    public static readonly Vector4 DarkRed = new(0.722f, 0.169f, 0.169f, 1.0f);
+
     public static bool SelectableDelete(Participant participant, Participants participants, int idx = 0, Vector4 color = new())
     {
         var deletion = "";

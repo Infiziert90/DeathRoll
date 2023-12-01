@@ -50,11 +50,16 @@ public class Configuration : IPluginConfiguration
     public int DefaultBet = 250000;
     public DealerRules DealerRule = DealerRules.DealerHard16;
 
+
+    // Tic-Tac-Toe
     public int FieldSize = 3;
     public int FieldSizeOnline = 3;
     public bool OnlineMode = false;
     public Difficulty Difficulty = Difficulty.Easy;
     public string Username = "Anon";
+
+    // Minesweeper
+    public Difficulty MinesweeperDif = Difficulty.Easy;
 
     [NonSerialized] private DalamudPluginInterface? PluginInterface;
     [NonSerialized] public bool AcceptNewPlayers = false;

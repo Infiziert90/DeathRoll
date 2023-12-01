@@ -15,7 +15,7 @@ public partial class MainWindow : Window, IDisposable
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(375, 480),
+            MinimumSize = new Vector2(400, 540),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
@@ -50,6 +50,9 @@ public partial class MainWindow : Window, IDisposable
                 break;
             case GameModes.TripleT:
                 TripleTMode();
+                break;
+            case GameModes.Minesweeper:
+                MinesweeperMode();
                 break;
             default:
                 ImGui.Text("Not Implemented!");
