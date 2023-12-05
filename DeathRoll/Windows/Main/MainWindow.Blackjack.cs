@@ -1,13 +1,12 @@
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Interface.Utility;
 using DeathRoll.Data;
-using DeathRoll.Logic;
 
 namespace DeathRoll.Windows.Main;
 
 public partial class MainWindow
 {
-    private readonly Blackjack Blackjack;
     private const string HelpText = "- Hit: Player draws a card," +
                                     "\n- Stay: Player holds hand as it is" +
                                     "\n- Surrender: Player drops out of round and loses half the bet" +
@@ -38,7 +37,7 @@ public partial class MainWindow
             case GameState.PlayerRound:
                 PlayerRoundPanel();
                 break;
-            case GameState.Hit or GameState.DoubleDown or GameState.DrawSplit:
+            case GameState.Hit or GameState.DoubleDown or GameState.DrawSplit or GameState.FillDraw:
                 WaitForRollPanel();
                 break;
             case GameState.DealerRound:
@@ -85,21 +84,21 @@ public partial class MainWindow
             case GameState.NotRunning:
                 if (!ImGui.Button("Start Round"))
                     return;
-                Plugin.Participants.Reset();
+                Plugin.Blackjack.Reset();
                 Plugin.ClosePlayWindows();
                 Plugin.SwitchState(GameState.Registration);
                 return;
             case GameState.Crash:
                 if (!ImGui.Button("Force Stop Round"))
                     return;
-                Plugin.Participants.Reset();
+                Plugin.Blackjack.Reset();
                 Plugin.ClosePlayWindows();
                 Plugin.SwitchState(GameState.NotRunning);
                 return;
             default:
                 if (!ImGui.Button("Stop Round"))
                     return;
-                Plugin.Participants.Reset();
+                Plugin.Blackjack.Reset();
                 Plugin.ClosePlayWindows();
                 Plugin.SwitchState(GameState.NotRunning);
                 return;
@@ -114,19 +113,22 @@ public partial class MainWindow
         if (ImGui.Button("Play Again"))
         {
             Plugin.ClosePlayWindows();
-            Blackjack.TakePeopleIntoNextRound();
+            Plugin.Blackjack.TakePeopleIntoNextRound();
         }
+
+        ImGui.SameLine();
 
         // Copy out all winnings to a single string to show all players the final standings (and leave a record if a player wants to play their push/winnings into the next round)
         if (ImGui.Button("Copy Payout"))
         {
             var finalPayout = "Payouts: | ";
-            foreach (var (name, player) in Plugin.Participants.PlayerBets)
-                finalPayout += $"{name.Split()[0]} -> {(player.Bet < 1 ? "Lost!" : $"{player.Bet:N0}")} | ";
+            foreach (var player in Plugin.Blackjack.Players)
+                finalPayout += $"{player.Name.Split()[0]} -> {(player.Bet < 1 ? "Lost!" : $"{player.Bet:N0}")} | ";
             ImGui.SetClipboardText(finalPayout);
         }
 
         // Let's allow 'Copy Dealer' everywhere so newbies can be shown the dealer's hand (especially if it resolves on the first two cards)
+        ImGui.SameLine();
         DealerCardButton();
     }
 
@@ -135,7 +137,7 @@ public partial class MainWindow
         ImGui.TextColored(Helper.Yellow, $"The dealer is not allowed to hit anymore!");
         ImGui.TextColored(Helper.Yellow, $"Please proceed by pressing 'Calculate Winnings' below.");
         if (ImGui.Button("Calculate Winnings"))
-            Blackjack.EndMatch();
+            Plugin.Blackjack.EndMatch();
 
         DealerCardButton();
     }
@@ -144,26 +146,27 @@ public partial class MainWindow
     {
         if (ImGui.Button("Copy Dealer"))
         {
-            var cards = Blackjack.CalculateCardValues(Plugin.Participants.DealerCards);
-            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", Plugin.Participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}");
+            var cards = Plugin.Blackjack.Dealer.CalculateCardValues();
+            ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", Plugin.Blackjack.Dealer.Cards.Select(Cards.ShowCardSimple))} -- Total: {cards}");
         }
     }
 
     private void DealerDrawRender()
     {
-        if (!Blackjack.DealerCheckHand())
+        if (!Plugin.Blackjack.IsDealerDone())
         {
-            Blackjack.DealerRound();
+            Plugin.Blackjack.DealerRound();
             if (Plugin.State == GameState.Done)
                 return;
 
-            Plugin.Participants.DealerAction = "End";
+            Plugin.Blackjack.Dealer.LastAction = BlackjackActions.None;
             Plugin.SwitchState(GameState.DealerDone);
             return;
         }
 
-        ImGui.TextColored(Helper.Green, $"Waiting for dealer roll ...");
-        ImGui.TextColored(Helper.Green, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
+        ImGui.TextColored(Helper.Green, "Waiting for dealer roll ...");
+        ImGui.TextColored(Helper.Green, "Dealer must draw a card with /random 13 or /dice 13");
+        ImGui.TextColored(Helper.Green, $"The cards have currently a value of {Plugin.Blackjack.Dealer.CalculateCardValues()}");
 
         ImGuiHelpers.ScaledDummy(5.0f);
         DealerCardButton();
@@ -171,9 +174,9 @@ public partial class MainWindow
 
     private void DealerRoundPanel()
     {
-        ImGui.TextColored(Helper.Yellow, $"All players done!");
+        ImGui.TextColored(Helper.Yellow, "All players done!");
         if (ImGui.Button("Begin Dealer Round"))
-            Blackjack.DealerAction();
+            Plugin.Blackjack.DealerAction();
 
         ImGuiHelpers.ScaledDummy(5.0f);
         DealerCardButton();
@@ -181,44 +184,39 @@ public partial class MainWindow
 
     private void WaitForRollPanel()
     {
-        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).GetDisplayName()}");
-        ImGui.TextColored(Helper.Green, $"Waiting for player roll ...");
-        ImGui.TextColored(Helper.Green, $"Player must draw a card with either /random 13 or /dice 13 respectively.");
-
-        if (Plugin.State != GameState.DrawSplit)
-            return;
-
-        ImGui.TextColored(Helper.Green, $"Player has drawn: {Plugin.Participants.SplitDraw.Count} out of 2 cards");
-
-        if (Plugin.Participants.SplitDraw.Count != 2)
-            return;
-
-        Blackjack.Split();
+        ImGui.TextColored(Helper.Green, $"Awaiting {Plugin.Blackjack.CurrentPlayer.DisplayName}'s roll ...");
+        ImGui.TextColored(Helper.Green, $"{(Plugin.Configuration.DealerDrawsAll ? "Dealer" : "Player")} must draw a card with /random 13 or /dice 13");
     }
 
     private void PlayerRoundPanel()
     {
-        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).GetDisplayName()}");
+        ImGui.TextColored(Helper.Yellow, $"Current Player: {Plugin.Blackjack.CurrentPlayer.DisplayName}");
         ImGui.Text("Player Options:");
         ImGuiComponents.HelpMarker(HelpText);
 
         if (ImGui.Button("Hit"))
-            Plugin.SwitchState(GameState.Hit); Blackjack.PlayerAction();
+        {
+            Plugin.SwitchState(GameState.Hit);
+            Plugin.Blackjack.PlayerAction();
+        }
 
         if (ImGui.Button("Stay"))
-            Blackjack.Stay();
+            Plugin.Blackjack.Stay();
 
         if (ImGui.Button("Surrender"))
-            Blackjack.Surrender();
+            Plugin.Blackjack.Surrender();
 
         if (ImGui.Button("Double Down"))
-            Plugin.SwitchState(GameState.DoubleDown); Blackjack.PlayerAction();
+        {
+            Plugin.SwitchState(GameState.DoubleDown);
+            Plugin.Blackjack.PlayerAction();
+        }
 
-        if (!Plugin.Participants.GetParticipant(Plugin.Configuration.StartingDraw).CanSplit)
-            return;
-
-        if (ImGui.Button("Split"))
-            Blackjack.Split();
+        if (Plugin.Blackjack.CurrentPlayer.CanSplit)
+        {
+            if (ImGui.Button("Split"))
+                Plugin.Blackjack.Split();
+        }
     }
 
     private void CardDeckRender()
@@ -236,51 +234,48 @@ public partial class MainWindow
             ImGui.TableSetupColumn("Last Action", 0, 0.3f);
 
             ImGui.TableHeadersRow();
-            foreach (var player in Plugin.Participants.PlayerNameList.Select(value => value))
+            foreach (var player in Plugin.Blackjack.Players)
             {
-                var p = Plugin.Participants.FindAll(player);
-                var cards = Blackjack.CalculateCardValues(p);
+                var cards = player.CalculateCardValues();
 
                 // Feature by request so a player's hand can always be copied out
                 ImGui.TableNextColumn();
                 ImGui.PushStyleColor(ImGuiCol.Button, Helper.SoftBlue);
-                var pFlavor = $"{p[0].GetDisplayName().Split("\uE05D ").First()}";
-                if (ImGui.Button($"{pFlavor}##{p[0].GetDisplayName()}"))
+                var pFlavor = $"{player.DisplayName.Split("\uE05D ").First()}";
+                if (ImGui.Button($"{pFlavor}##{player.DisplayName}"))
                 {
-                    var participantsString = $"{pFlavor}'s hand: {string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card)))} -- Total: {cards}";
+                    var participantsString = $"{pFlavor}'s hand: {string.Join(" ", player.Cards.Select(Cards.ShowCardSimple))} -- Total: {cards}";
                     ImGui.SetClipboardText(participantsString);
                 }
                 ImGui.PopStyleColor();
 
                 ImGui.TableNextColumn();
                 ImGui.PushFont(Plugin.FontManager.SourceCode20);
-                ImGui.Text(string.Join(" ", p.Select(x => Cards.ShowCardSimple(x.Card))));
+                ImGui.Text(string.Join(" ", player.Cards.Select(Cards.ShowCardSimple)));
                 ImGui.PopFont();
 
                 ImGui.TableNextColumn();
                 ImGui.Text($"{cards}");
 
                 ImGui.TableNextColumn();
-                ImGui.Text($"{Plugin.Participants.PlayerBets[player].Bet:N0}");
+                ImGui.Text($"{player.Bet:N0}");
 
                 ImGui.TableNextColumn();
-                ImGui.Text(Plugin.Participants.PlayerBets[player].LastAction);
+                ImGui.Text(player.LastAction.Name());
             }
 
             ImGui.TableNextRow();
             ImGui.TableNextRow();
 
-            var dcards = Logic.Blackjack.CalculateCardValues(Plugin.Participants.DealerCards);
+            var dcards = Plugin.Blackjack.Dealer.CalculateCardValues();
 
             ImGui.TableNextColumn();
             if (ImGui.Button($"Dealer"))
-            {
-                ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", Plugin.Participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card)))}");
-            }
+                ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", Plugin.Blackjack.Dealer.Cards.Select(Cards.ShowCardSimple))}");
 
             ImGui.TableNextColumn();
             ImGui.PushFont(Plugin.FontManager.SourceCode20);
-            ImGui.Text(string.Join(" ", Plugin.Participants.DealerCards.Select(x => Cards.ShowCardSimple(x.Card))));
+            ImGui.Text(string.Join(" ", Plugin.Blackjack.Dealer.Cards.Select(Cards.ShowCardSimple)));
             ImGui.PopFont();
 
             ImGui.TableNextColumn();
@@ -289,7 +284,7 @@ public partial class MainWindow
             ImGui.TableNextColumn();
 
             ImGui.TableNextColumn();
-            ImGui.Text(Plugin.Participants.DealerAction);
+            ImGui.Text(Plugin.Blackjack.Dealer.LastAction.Name());
 
             ImGui.EndTable();
         }
@@ -297,53 +292,55 @@ public partial class MainWindow
 
     private void MatchBeginDraw()
     {
-        var currentPlayer = Plugin.Participants.GetCurrentIndex();
-        if (currentPlayer >= Plugin.Participants.PlayerNameList.Count)
+        if (Plugin.Blackjack.CurrentPlayerIndex >= Plugin.Blackjack.Players.Count)
         {
-            var cardList = Plugin.Participants.FindAll(Plugin.Participants.PlayerNameList.Last()).Skip(1).ToList();
             switch (Plugin.State)
             {
                 case GameState.DrawFirstCards:
-                    if (cardList.Count >= 2)
+                    if (Plugin.Blackjack.Players.Last().Cards.Count >= 2)
                     {
-                        Blackjack.FinishDrawingRound(GameState.PrepareRound);
-                        Blackjack.PreparePlayers();
+                        Plugin.Blackjack.FinishDrawingRound(GameState.PrepareRound);
+                        Plugin.Blackjack.PreparePlayers();
                         if (Plugin.Configuration.AutoOpenField)
                             Plugin.OpenCardField();
                         return;
                     }
-                    Blackjack.FinishDrawingRound(GameState.DrawSecondCards);
+
+                    Plugin.Blackjack.FinishDrawingRound(GameState.DrawSecondCards);
                     return;
                 case GameState.DrawSecondCards:
-                    Blackjack.FinishDrawingRound(GameState.PrepareRound);
-                    Blackjack.PreparePlayers();
+                    Plugin.Blackjack.FinishDrawingRound(GameState.PrepareRound);
+                    Plugin.Blackjack.PreparePlayers();
                     if (Plugin.Configuration.AutoOpenField)
                         Plugin.OpenCardField();
                     return;
             }
         }
 
-        ImGui.TextWrapped($"To begin the round, players must draw their cards with either /random 13 or /dice 13 respectively.");
-        ImGui.Text("The draw order is:");
-        foreach (var (name, i) in Plugin.Participants.PlayerNameList.Select((value, i) => (value, i)))
-        {
-            if (currentPlayer == i)
-                ImGui.TextColored(Helper.Green, $"{Plugin.Participants.FindPlayer(name).GetDisplayName()}");
-            else
-                ImGui.Text($"{Plugin.Participants.FindPlayer(name).GetDisplayName()}");
 
-            var playerCards = Plugin.Participants.FindAll(name).Skip(1).ToList();
+        ImGui.TextWrapped($"To begin the round, players must draw their cards with either /random 13 or /dice 13 respectively.");
+        if (Plugin.Configuration.DealerDrawsAll)
+            ImGui.TextUnformatted($"Dealer draws all");
+
+        ImGui.TextUnformatted("The draw order is:");
+        foreach (var (player, idx) in Plugin.Blackjack.Players.Select((var, i) => (var, i)))
+        {
+            if (Plugin.Blackjack.CurrentPlayerIndex == idx)
+                ImGui.TextColored(Helper.Green, $"{player.DisplayName}");
+            else
+                ImGui.TextUnformatted($"{player.DisplayName}");
+
             ImGui.PushFont(Plugin.FontManager.SourceCode20);
             ImGui.SameLine();
-            ImGui.Text($"{(playerCards.Count > 0 ? Cards.ShowCardSimple(playerCards[0].Card) : "?")} {(playerCards.Count > 1 ? Cards.ShowCardSimple(playerCards[1].Card) : "?")}");
+            ImGui.TextUnformatted($"{(player.Cards.Count > 0 ? Cards.ShowCardSimple(player.Cards[0]) : "?")} {(player.Cards.Count > 1 ? Cards.ShowCardSimple(player.Cards[1]) : "?")}");
             ImGui.PopFont();
         }
     }
 
     private void MatchBeginningPanel()
     {
-        Blackjack.StartRound();
-        Blackjack.PreparePlayers();
+        Plugin.Blackjack.StartRound();
+        Plugin.Blackjack.PreparePlayers();
         if (Plugin.Configuration.AutoOpenField)
             Plugin.OpenCardField();
     }
@@ -352,29 +349,29 @@ public partial class MainWindow
     {
         switch (Plugin.State)
         {
-            case GameState.DealerFirstCards when Plugin.Participants.DealerCards.Any():
-                Blackjack.SetDrawingRound();
+            case GameState.DealerFirstCards when Plugin.Blackjack.Dealer.Cards.Any():
+                Plugin.Blackjack.SetDrawingRound();
                 break;
-            case GameState.DealerSecondCards when Plugin.Participants.DealerCards.Count == 2:
+            case GameState.DealerSecondCards when Plugin.Blackjack.Dealer.Cards.Count == 2:
                 Plugin.SwitchState(GameState.DealerRound);
-                Blackjack.CheckForRemainingPlayers();
+                Plugin.Blackjack.CheckForRemainingPlayers();
                 break;
         }
 
         ImGui.TextColored(Helper.Green, $"Waiting for dealer roll ...");
-        ImGui.TextColored(Helper.Green, $"Dealer must draw a card with either /random 13 or /dice 13 respectively.");
+        ImGui.TextColored(Helper.Green, $"Dealer must draw a starting card with /random 13 or /dice 13");
     }
 
     private void BlackjackRegistrationPanel()
     {
-        if (Plugin.Participants.PlayerNameList.Any())
+        if (Plugin.Blackjack.Players.Any())
         {
             if (ImGui.Button("Close Registration"))
             {
                 if (Plugin.Configuration.VenueDealer)
                     Plugin.SwitchState(GameState.DealerFirstCards);
                 else
-                    Blackjack.SetDrawingRound();
+                    Plugin.Blackjack.SetDrawingRound();
 
                 return;
             }
@@ -383,53 +380,77 @@ public partial class MainWindow
         ImGuiHelpers.ScaledDummy(10.0f);
         ImGui.TextColored(Helper.Green,$"Awaiting more players ...");
         ImGuiHelpers.ScaledDummy(5.0f);
-        ImGui.TextWrapped("Players can automatically enter by typing /random or /dice respectively while round registration is active.");
+        ImGui.TextWrapped("Players can automatically enter by typing /random or /dice.");
         ImGui.TextWrapped("Alternatively players can be manually entered by targeting the character and pressing 'Add Target' below.");
-        AddTargetButton();
+        BlackjackAddTargetButton();
         TableBetRender();
+    }
+
+    private void BlackjackAddTargetButton()
+    {
+        ImGuiHelpers.ScaledDummy(5.0f);
+        if (ImGui.Button("Add Target"))
+        {
+            var result = BlackjackTargetRegistration();
+            if (result != string.Empty)
+                Plugin.PluginInterface.UiBuilder.AddNotification(result, "DeathRoll Helper", NotificationType.Error);
+        }
+        ImGuiHelpers.ScaledDummy(10.0f);
+    }
+
+    private string BlackjackTargetRegistration()
+    {
+        var name = Plugin.GetTargetName();
+        if (name == string.Empty)
+            return "Target not found";
+
+        if (Plugin.Blackjack.Players.Exists(p => p.Name == name))
+            return "Target already registered";
+
+        Plugin.Blackjack.Players.Add(new BlackjackPlayer(name, Plugin.Configuration.DefaultBet));
+        return string.Empty;
     }
 
     private void TableBetRender()
     {
-        if (!Plugin.Participants.PlayerBets.Any())
+        if (!Plugin.Blackjack.Players.Any())
             return;
 
         ImGui.TextColored(Helper.Yellow, "Player Bets:");
         if (ImGui.BeginTable("##BlackjackBetTable", 3))
         {
-            ImGui.TableSetupColumn("##bj_name", ImGuiTableColumnFlags.None, 0.65f);
-            ImGui.TableSetupColumn("##bj_formatted", ImGuiTableColumnFlags.None, 0.3f);
-            ImGui.TableSetupColumn("##bj_bet", ImGuiTableColumnFlags.None, 0.5f);
+            ImGui.TableSetupColumn("##Name", ImGuiTableColumnFlags.None, 0.65f);
+            ImGui.TableSetupColumn("##Number", ImGuiTableColumnFlags.None, 0.3f);
+            ImGui.TableSetupColumn("##Input", ImGuiTableColumnFlags.None, 0.5f);
 
-            var newBet = -1;
-            var updateName = string.Empty;
-            foreach (var (name, player) in Plugin.Participants.PlayerBets)
+            foreach (var (player, idx) in Plugin.Blackjack.Players.Select((var, i) => (var, i)))
             {
                 var currentBet = player.Bet;
-                var participant = Plugin.Participants.FindPlayer(name);
+                ImGui.TableNextColumn();
+                ImGui.AlignTextToFramePadding();
+                ImGui.Selectable($"{player.DisplayName}##Selectable{idx}");
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
+                {
+                    Plugin.Blackjack.Players.RemoveAt(idx);
+                    break;
+                }
+
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Hold Shift and right-click to delete.");
 
                 ImGui.TableNextColumn();
-                if (Helper.SelectableDelete(participant, Plugin.Participants))
-                    break; // break because we deleted an entry
-
-                ImGui.TableNextColumn();
+                ImGui.AlignTextToFramePadding();
                 ImGui.Text($"{currentBet:N0}");
 
                 ImGui.TableNextColumn();
-                var p = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(p with { Y = p.Y - 3 });
                 ImGui.PushItemWidth(100);
-                ImGui.InputInt($"##playerBet{name}", ref currentBet, 0);
+                ImGui.InputInt($"##playerBet{idx}", ref currentBet, 0);
 
                 if (currentBet == player.Bet)
                     continue;
 
-                newBet = currentBet;
-                updateName = name;
+                player.Bet = currentBet;
             }
-
-            if (updateName != string.Empty)
-                Plugin.Participants.PlayerBets[updateName].Bet = newBet;
 
             ImGui.EndTable();
         }

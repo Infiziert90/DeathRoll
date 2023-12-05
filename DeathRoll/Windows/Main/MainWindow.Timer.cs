@@ -85,7 +85,7 @@ public partial class MainWindow
 
         Plugin.SwitchState(GameState.Done);
 
-        if (Configuration.Debug)
+        if (DebugConfig.Debug)
             Plugin.Log.Information("Timer stopped.");
     }
 
@@ -99,7 +99,7 @@ public partial class MainWindow
         Configuration.Save();
         Plugin.SwitchState(GameState.Match);
 
-        if (Configuration.Debug)
+        if (DebugConfig.Debug)
             Plugin.Log.Information("Timer started.");
     }
 

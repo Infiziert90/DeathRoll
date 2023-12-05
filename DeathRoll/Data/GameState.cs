@@ -25,4 +25,5 @@ public enum GameState
     DealerSecondCards = 209,
     DrawDealerCard = 210,
     DealerDone = 211,
+    FillDraw = 212
 }

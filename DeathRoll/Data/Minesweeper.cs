@@ -120,11 +120,11 @@ public class Minesweeper
         }
     }
 
-    private IEnumerable<(int Row, int Col)> ForGenerator()
+    public IEnumerable<(int Row, int Col)> ForGenerator()
     {
         for (var row = 0; row < Rows; row++)
-        for (var col = 0; col < Cols; col++)
-            yield return (row, col);
+            for (var col = 0; col < Cols; col++)
+                yield return (row, col);
     }
 
     private IEnumerable<(int aRow, int aCol)> AdjacentGenerator(int row, int col)

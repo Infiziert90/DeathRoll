@@ -18,7 +18,7 @@ public partial class ConfigWindow
             ImGui.Separator();
             ImGuiHelpers.ScaledDummy(5.0f);
 
-            if (ImGui.Checkbox("Debug", ref Configuration.Debug))
+            if (ImGui.Checkbox("Debug", ref DebugConfig.Debug))
             {
                 DebugConfig.AllowDiceCheat = false;
                 DebugConfig.RandomizeNames = false;
@@ -26,12 +26,12 @@ public partial class ConfigWindow
                 Configuration.Save();
             }
 
-            if (Configuration.Debug)
+            if (DebugConfig.Debug)
             {
-                ImGui.Indent(15.0f);
+                ImGuiHelpers.ScaledIndent(10.0f);
                 ImGui.Checkbox("Randomize Names", ref DebugConfig.RandomizeNames);
                 ImGui.Checkbox("Allow Dice Cheat", ref DebugConfig.AllowDiceCheat);
-                ImGui.Unindent(15.0f);
+                ImGuiHelpers.ScaledIndent(-10.0f);
             }
 
             ImGui.EndTabItem();

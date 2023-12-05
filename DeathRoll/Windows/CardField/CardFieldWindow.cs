@@ -31,7 +31,7 @@ public class CardFieldWindow : Window, IDisposable
 
         ImGui.Text("Dealer: ");
         var orgCursor = ImGui.GetCursorPos();
-        foreach (var card in Plugin.Participants.DealerCards.Select(x => x.Card))
+        foreach (var card in Plugin.Blackjack.Dealer.Cards)
         {
             var cursor = ImGui.GetCursorPos();
             GameCardRender(card);
@@ -39,13 +39,14 @@ public class CardFieldWindow : Window, IDisposable
         }
 
         var currentX = orgCursor.X;
-        foreach (var name in Plugin.Participants.PlayerNameList)
+        foreach (var (player, idx) in Plugin.Blackjack.Players.Select((var, i) => (var, i)))
         {
-            if (Plugin.Participants.PlayerNameList.First() != name)
+            if (idx != 0)
                 currentX += 30 * ImGuiHelpers.GlobalScale;
+
             ImGui.SetCursorPos(new Vector2(currentX, orgCursor.Y + 250 * ImGuiHelpers.GlobalScale));
-            ImGui.Text($"{Plugin.Participants.FindPlayer(name).GetDisplayName()}: ");
-            foreach (var card in Plugin.Participants.FindAll(name).Select(x => x.Card))
+            ImGui.Text($"{player.DisplayName}: ");
+            foreach (var card in player.Cards)
             {
                 ImGui.SetCursorPos(new Vector2(currentX, orgCursor.Y + 280 * ImGuiHelpers.GlobalScale));
                 GameCardRender(card);

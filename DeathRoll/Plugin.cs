@@ -47,6 +47,7 @@ public sealed class Plugin : IDalamudPlugin
     public readonly Participants Participants;
     public GameState State = GameState.NotRunning;
 
+    public readonly Blackjack Blackjack;
     public readonly RoundInfo TripleT;
     public Minesweeper Minesweeper;
 
@@ -61,6 +62,7 @@ public sealed class Plugin : IDalamudPlugin
 
         Participants = new Participants(Configuration);
         RollManager = new RollManager(this);
+        Blackjack = new Blackjack(this);
         TripleT = new RoundInfo(Configuration);
         Minesweeper = new Minesweeper(Configuration.MinesweeperDif.GridSizes()[0]);
 
@@ -151,7 +153,7 @@ public sealed class Plugin : IDalamudPlugin
         var xivChatType = (ushort) type;
         var channel = xivChatType & 0x7F;
 
-        if (Configuration.Debug)
+        if (DebugConfig.Debug)
         {
             Log.Information("Chat Event fired.");
             Log.Information($"Sender: {sender}.");
@@ -192,8 +194,9 @@ public sealed class Plugin : IDalamudPlugin
             var found = isLocalPlayer;
             foreach (var payload in message.Payloads) // try to get name and check for dice cheating
             {
-                if (Configuration.Debug)
+                if (DebugConfig.Debug)
                     Log.Information($"message: {payload}");
+
                 switch (payload)
                 {
                     case PlayerPayload playerPayload:
@@ -217,8 +220,9 @@ public sealed class Plugin : IDalamudPlugin
             if (!found) // get playerName from payload
                 foreach (var payload in sender.Payloads)
                 {
-                    if (Configuration.Debug)
+                    if (DebugConfig.Debug)
                         Log.Information($"Sender: {payload}");
+
                     playerName = payload switch
                     {
                         PlayerPayload playerPayload => $"{playerPayload.PlayerName}\uE05D{playerPayload.World.Name}",
@@ -229,7 +233,7 @@ public sealed class Plugin : IDalamudPlugin
 
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(playerName))
         {
-            if (Configuration.Debug)
+            if (DebugConfig.Debug)
                 Log.Information("Blocked player tried to roll.");
             return;
         }

@@ -8,6 +8,17 @@ public partial class MainWindow
     private bool MHeaderOpen;
     private int FieldSizeSelection;
 
+    private uint DarkRed;
+    private uint DarkGrey;
+    private uint LightGrey;
+
+    private void MinesweeperInit()
+    {
+        DarkRed = ImGui.GetColorU32(Helper.DarkRed);
+        DarkGrey = ImGui.GetColorU32(ImGuiColors.DalamudGrey3);
+        LightGrey = ImGui.GetColorU32(ImGuiColors.DalamudGrey);
+    }
+
     private void MinesweeperMode()
     {
         MinesweeperPanel();
@@ -55,7 +66,7 @@ public partial class MainWindow
         ImGui.PushFont(Plugin.FontManager.Jetbrains22);
         SetCursorStart();
         var startPos = ImGui.GetCursorScreenPos();
-        ImGui.TextUnformatted($"{Plugin.Minesweeper.MinesLeft:0#0}");
+        ImGui.TextUnformatted($"{Plugin.Minesweeper.MinesLeft:000}");
 
         if (Plugin.Minesweeper.GameOver)
         {
@@ -67,36 +78,34 @@ public partial class MainWindow
         var text = $"{Plugin.Minesweeper.Time:000}";
         var textWidth = ImGui.CalcTextSize(text).X;
         SetCursorEnd(startPos, textWidth);
-        ImGui.TextUnformatted($"{Plugin.Minesweeper.Time:000}");
+        ImGui.TextUnformatted(text);
         ImGui.PopFont();
     }
 
     private void MinesweeperFieldPanel()
     {
+        var drawList = ImGui.GetWindowDrawList();
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0,0));
-        for (var row = 0; row < Plugin.Minesweeper.Rows; row++)
+        foreach (var (row, col) in Plugin.Minesweeper.ForGenerator())
         {
-            for (var col = 0; col < Plugin.Minesweeper.Cols; col++)
-            {
-                if (col > 0)
-                    ImGui.SameLine(0,0);
-                else
-                    SetCursorStart();
+            if (col > 0)
+                ImGui.SameLine(0,0);
+            else
+                SetCursorStart();
 
-                var clicked = CreateSquare(row, col);
-                if (Plugin.Minesweeper.GameOver)
-                    continue;
+            var clicked = CreateSquare(row, col, drawList);
+            if (Plugin.Minesweeper.GameOver)
+                continue;
 
-                if (clicked && ImGui.GetIO().MouseClicked[0])
-                    Plugin.Minesweeper.ProcessLeftClick(row, col);
+            if (clicked && ImGui.GetIO().MouseClicked[0])
+                Plugin.Minesweeper.ProcessLeftClick(row, col);
 
-                // We do not allow flags before first click happened
-                if (Plugin.Minesweeper.FirstClick)
-                    continue;
+            // We do not allow flags before first click happened
+            if (Plugin.Minesweeper.FirstClick)
+                continue;
 
-                if (clicked && ImGui.GetIO().MouseClicked[1])
-                    Plugin.Minesweeper.ProcessRightClick(row, col);
-            }
+            if (clicked && ImGui.GetIO().MouseClicked[1])
+                Plugin.Minesweeper.ProcessRightClick(row, col);
         }
         ImGui.PopStyleVar();
     }
@@ -164,14 +173,15 @@ public partial class MainWindow
         ImGui.SetCursorScreenPos(startPos with { X = startPos.X + sizeNeeded - textSize});
     }
 
-    private bool CreateSquare(int row, int col)
+    private bool CreateSquare(int row, int col, ImDrawListPtr drawList)
     {
         var min = ImGui.GetCursorScreenPos();
         var squareSize = 32 * ImGuiHelpers.GlobalScale;
         var max = new Vector2(min.X + squareSize, min.Y + squareSize);
+        var size = max - min;
 
         ImGui.PushID($"{row}{col}");
-        ImGui.Dummy(max - min);
+        ImGui.Dummy(size);
         var clicked = ImGui.IsItemClicked(ImGuiMouseButton.Left) || ImGui.IsItemClicked(ImGuiMouseButton.Right);
         var hovered = ImGui.IsItemHovered();
         ImGui.PopID();
@@ -179,29 +189,20 @@ public partial class MainWindow
         ImGui.SetCursorScreenPos(min);
 
         var square = Plugin.Minesweeper.Board[row, col];
-        var darkRed = ImGui.GetColorU32(Helper.DarkRed);
-        var lightGrey = ImGui.GetColorU32(ImGuiColors.DalamudGrey);
-        var darkGrey = ImGui.GetColorU32(ImGuiColors.DalamudGrey3);
         if (square.State == Minesweeper.SquareState.Hidden)
         {
             if (hovered)
-            {
-                DrawRect(min, max, darkGrey, lightGrey);
-            }
+                DrawRect(min, max, DarkGrey, LightGrey, drawList);
             else
-            {
-                DrawRect(min, max, lightGrey, darkGrey);
-            }
+                DrawRect(min, max, LightGrey, DarkGrey, drawList);
         }
         else
         {
-            DrawRect(min, max, !square.Exploded ? lightGrey : darkRed, darkGrey);
-            ImGui.SetCursorScreenPos(min);
-
-            var text = square.Symbol;
+            DrawRect(min, max, !square.Exploded ? LightGrey : DarkRed, DarkGrey, drawList);
 
             ImGui.PushStyleColor(ImGuiCol.Text, square.NumberColor());
             ImGui.PushFont(square.UsesIconFont ? UiBuilder.IconFont : Plugin.FontManager.Jetbrains22);
+            var text = square.Symbol;
             var textSize = ImGui.CalcTextSize(text);
             ImGui.SetCursorScreenPos(new Vector2(min.X + (squareSize - textSize.X) * 0.5f, min.Y + (squareSize - textSize.Y) * 0.5f));
             ImGui.TextUnformatted(text);
@@ -210,14 +211,13 @@ public partial class MainWindow
         }
 
         ImGui.SetCursorScreenPos(min);
-        ImGui.Dummy(max - min);
+        ImGui.Dummy(size);
 
         return clicked;
     }
 
-    private void DrawRect(Vector2 min, Vector2 max, uint fillColor, uint borderColor)
+    private static void DrawRect(Vector2 min, Vector2 max, uint fillColor, uint borderColor, ImDrawListPtr drawList)
     {
-        var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(min, max, fillColor);
         drawList.AddRect(min, max, borderColor);
     }

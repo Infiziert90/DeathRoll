@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using DeathRoll.Logic;
 
 namespace DeathRoll.Data;
@@ -22,13 +20,6 @@ public class Participants
     public List<string> NextRound = new();
     public bool RoundDone;
 
-    // blackjack
-    public string DealerAction = "";
-    public List<Participant> DealerCards = new();
-    public Dictionary<string, Player> PlayerBets = new();
-    public List<Cards.Card> SplitDraw = new();
-    private int CurrentIndex;
-
     public Participants(Configuration configuration)
     {
         Configuration = configuration;
@@ -48,8 +39,6 @@ public class Participants
     {
         PList.RemoveAll(x => x.Name == name);
         PlayerNameList.RemoveAll(x => x == name);
-
-        PlayerBets.Remove(name);
     }
 
     public void UpdateSorting()
@@ -85,8 +74,6 @@ public class Participants
 
     public string LookupDisplayName(string playerName) => FindPlayer(playerName).GetDisplayName();
 
-    public void DeleteRangeFromStart(int range) => PList.RemoveRange(0, range);
-
     public void Reset()
     {
         PList.Clear();
@@ -95,43 +82,7 @@ public class Participants
 
         IsOutOfUsed = false;
         RoundDone = false;
-
-        DealerCards.Clear();
-        PlayerBets.Clear();
-        CurrentIndex = 0;
-        DealerAction = "";
-        SplitDraw.Clear();
     }
-
-    // blackjack
-    public class Player
-    {
-        public int Bet;
-        public bool IsAlive;
-        public string LastAction = "";
-
-        public Player(int bet, bool isAlive)
-        {
-            Bet = bet;
-            IsAlive = isAlive;
-        }
-    }
-
-    public int GetCurrentIndex() => CurrentIndex;
-
-    public Participant GetParticipant(bool skipTwo = false) => PList[CurrentIndex + (skipTwo ? 1 : 0)];
-
-    public string GetParticipantName() => PlayerNameList[CurrentIndex];
-
-    public List<Participant> FindAllWithIndex(bool skipTwo = false) => FindAll(PList[CurrentIndex + (skipTwo ? 1 : 0)].Name);
-
-    public void NextParticipant() => CurrentIndex++;
-
-    public void ResetParticipant() => CurrentIndex = 0;
-
-    public bool HasMoreParticipants() => CurrentIndex < PlayerNameList.Count;
-
-    public void SetLastPlayerAction(string action, bool skipTwo = false) => PlayerBets[GetParticipant(skipTwo).Name].LastAction = action;
 }
 
 public class Participant
@@ -142,10 +93,6 @@ public class Participant
 
     public bool HasHighlight;
     public Vector4 HighlightColor = new(0, 0, 0, 0);
-
-    //blackjack
-    public readonly Cards.Card Card = new(1, 1);
-    public bool CanSplit = false;
 
     public Participant(Roll newRoll, Highlight? highlight = null)
     {
@@ -160,30 +107,13 @@ public class Participant
         HighlightColor = highlight.Color;
     }
 
-    public Participant(string name, Cards.Card card)
-    {
-        Name = name;
-        Card = card;
-    }
-
     public void UpdateColor(bool hasHl, Vector4 hlColor = new())
     {
         HasHighlight = hasHl;
         HighlightColor = hlColor;
     }
 
-    private string GenerateHashedName()
-    {
-        var hash = SHA1.HashData(Encoding.UTF8.GetBytes(Name));
-        var sb = new StringBuilder(hash.Length * 2);
-
-        foreach (var b in hash)
-            sb.Append(b.ToString("X2"));
-
-        return $"Player {sb.ToString()[..10]}";
-    }
-
-    public string GetDisplayName() => !DebugConfig.RandomizeNames ? FName : GenerateHashedName();
+    public string GetDisplayName() => !DebugConfig.RandomizeNames ? FName : Utils.GenerateHashedName(Name);
 
     private string FName => Name.Replace("\uE05D", "\uE05D ");
 }

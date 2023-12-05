@@ -11,6 +11,8 @@ public partial class MainWindow : Window, IDisposable
     private readonly Plugin Plugin;
     private readonly Configuration Configuration;
 
+    private bool NeedsInit = true;
+
     public MainWindow(Plugin plugin) : base("Main##DeathRoll")
     {
         SizeConstraints = new WindowSizeConstraints
@@ -21,7 +23,6 @@ public partial class MainWindow : Window, IDisposable
 
         Plugin = plugin;
         Configuration = plugin.Configuration;
-        Blackjack = Plugin.RollManager.Blackjack;
         Tournament = Plugin.RollManager.SimpleTournament;
 
         RestoreTimerDefaults();
@@ -30,6 +31,15 @@ public partial class MainWindow : Window, IDisposable
     public void Dispose()
     {
         StopTimer();
+    }
+
+    public override void OnOpen()
+    {
+        if (!NeedsInit)
+            return;
+
+        NeedsInit = false;
+        MinesweeperInit();
     }
 
     public override void Draw()
@@ -82,8 +92,6 @@ public partial class MainWindow : Window, IDisposable
             return "Target already registered.";
 
         Plugin.Participants.Add(new Participant(Roll.Dummy(name)));
-        Plugin.Participants.PlayerBets[name] = new Participants.Player(Plugin.Configuration.DefaultBet, true);
-
         return string.Empty;
     }
 }

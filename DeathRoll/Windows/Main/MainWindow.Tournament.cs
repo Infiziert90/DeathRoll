@@ -96,7 +96,7 @@ public partial class MainWindow
                 Plugin.SwitchState(GameState.Match);
             }
 
-            if (Configuration.Debug)
+            if (DebugConfig.Debug)
             {
                 if (ImGui.Button("Auto Win Match"))
                     Tournament.AutoWin();
@@ -151,7 +151,7 @@ public partial class MainWindow
             if (ImGui.Button("Close Registration"))
                 Plugin.SwitchState(GameState.Shuffling);
 
-        if (Configuration.Debug)
+        if (DebugConfig.Debug)
         {
             ImGuiHelpers.ScaledDummy(5.0f);
             ImGui.Text("Number of players to generate:");

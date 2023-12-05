@@ -8,18 +8,16 @@ public class RollManager
 {
     private readonly Plugin Plugin;
     public readonly SimpleTournament SimpleTournament;
-    public readonly Blackjack Blackjack;
 
     public RollManager(Plugin plugin)
     {
         Plugin = plugin;
         SimpleTournament = new SimpleTournament(plugin);
-        Blackjack = new Blackjack(plugin);
     }
 
     public void ParseRoll(Roll roll)
     {
-        if (Plugin.Configuration.Debug)
+        if (DebugConfig.Debug)
         {
             Plugin.Log.Information($"Extracted Player Name: {roll.PlayerName}.");
             Plugin.Log.Information($"Regex: Roll {roll.Result} OutOf {roll.OutOf}");
@@ -39,7 +37,7 @@ public class RollManager
                     SimpleTournament.Parser(roll);
                     break;
                 case GameModes.Blackjack:
-                    Blackjack.Parser(roll);
+                    Plugin.Blackjack.Parser(roll);
                     break;
                 default:
                     return;
@@ -59,7 +57,7 @@ public class RollManager
         {
             case false when exists:
             {
-                if (Plugin.Configuration.Debug)
+                if (DebugConfig.Debug)
                     Plugin.Log.Information("Player already rolled, no reroll allowed.");
                 return;
             }
