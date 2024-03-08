@@ -40,12 +40,15 @@ public static class Helper
             ImGui.Selectable($"{participant.GetDisplayName()}##selectable{idx}");
             if (ImGui.IsItemClicked(ImGuiMouseButton.Right) && ImGui.GetIO().KeyShift)
                 deletion = participant.Name;
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+                ImGui.SetClipboardText(participant.Name);
             if (color.W != 0) ImGui.PopStyleColor();
 
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
                 ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
+                ImGui.TextUnformatted("Left-click to copy name.");
                 ImGui.TextUnformatted("Hold Shift and right-click to delete.");
                 ImGui.PopTextWrapPos();
                 ImGui.EndTooltip();
