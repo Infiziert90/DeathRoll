@@ -21,6 +21,13 @@ public partial class ConfigWindow
             if (ImGui.Button("Show UI"))
                 Plugin.OpenMain();
 
+            if (ImGui.Button("Start Bahamood"))
+            {
+                Plugin.Bahamood.Running ^= true;
+                Plugin.Bahamood.Window.IsOpen ^= true;
+                Plugin.Bahamood.DebugWindow.IsOpen ^= true;
+            }
+
             ImGuiHelpers.ScaledDummy(5.0f);
             ImGui.TextColored(ImGuiColors.DalamudViolet, "Game Mode:");
             ImGuiComponents.HelpMarker("Venue: Useful for games like Truth&Dare" +

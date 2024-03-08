@@ -1,7 +1,7 @@
 {
   "Author": "Infi",
   "Name": "Death Roll Helper",
-  "Punchline": "Plugin to help with a number of dice games. Also offers games like Tic-Tac-Toe and Minesweeper.",
+  "Punchline": "Plugin to help with a number of dice games. Also offers games like Tic-Tac-Toe, Minesweeper and Bahamood.",
   "Description": "## Modes\n### Venue:\n- Concise display of all concurrent players in a list-based format\n- Supports multiple sorting types (min, max, nearest to)\n- Highlight numbers based on regex matching\n\n### DeathRoll:\n- Supports multiple players\n- Automatic checks to prevent number skipping\n\n### Tournament (1v1 DeathRoll):\n- Automatic bracket generation with byes to fill uneven\n- Forfeit functionality if a player needs to leave\n\n### Blackjack:\n- Automatic reward calculation based on common rules\n- Simplistic, or visual view of cards in play\n- Automatic or manual player-based draw for cards\n\n### Extra Features:\n- Block or prevent players from partaking in any game\n- Accept only /random or /dice commands\n\n## Games\n### Tic-Tac-Toe\n- Play against your friends, or AI\n- Easy, Medium, Hard\n- 3x3, 4x4, 5x5\n\n### Minesweeper\n- Easy, Medium, Hard\n- 8x8, 9x9, 16x16, 18x30\n- Custom Games (planned)\n\nMore features are planned, following user feedback.",
   "InternalName": "DeathRoll",
   "RepoUrl": "https://github.com/Infiziert90/DeathRoll",
@@ -14,6 +14,7 @@
     "highlight",
     "blocklist",
     "blackjack",
-    "tournament"
+    "tournament",
+    "bahamood"
   ]
 }

@@ -15,6 +15,9 @@ public static class Utils
 
         return $"Player {sb.ToString()[..10]}";
     }
+
+    public static float Mod(float k, int n) { return (k %= n) < 0 ? k + n : k;  }
+    public static double Mod(double k, double n) { return (k %= n) < 0 ? k + n : k;  }
 }
 
 static class ListExtension

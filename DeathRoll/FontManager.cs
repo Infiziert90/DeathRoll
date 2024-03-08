@@ -1,13 +1,15 @@
 using System.IO;
-using System.Reflection;
 
 namespace DeathRoll;
 
 public class FontManager
 {
     public ImFontPtr Jetbrains22;
-    public ImFontPtr SourceCode36;
     public ImFontPtr SourceCode20;
+    public ImFontPtr SourceCode36;
+
+    public ImFontPtr AmazDooMLeft;
+    public ImFontPtr AmazDooMRight;
 
     private ImVector Ranges;
     private ImFontConfigPtr FontConfig;
@@ -62,16 +64,21 @@ public class FontManager
     public void BuildFonts()
     {
         SetUpRanges();
-        var jetbrains = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\JetBrainsMono-Medium.ttf");
-        var sourcecode = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "Fonts\\SourceCodePro-Medium.ttf");
+
+        var jetbrains = Path.Combine(Plugin.PluginDir, @"Resources\Fonts\JetBrainsMono-Medium.ttf");
+        var sourcecode = Path.Combine(Plugin.PluginDir, @"Resources\Fonts\SourceCodePro-Medium.ttf");
+        var amazDoomL = Path.Combine(Plugin.PluginDir, @"Resources\Fonts\AmazDooMLeft.ttf");
+        var amazDoomR = Path.Combine(Plugin.PluginDir, @"Resources\Fonts\AmazDooMRight.ttf");
         try
         {
             Jetbrains22 = ImGui.GetIO().Fonts.AddFontFromFileTTF(jetbrains, 22, FontConfig, Ranges.Data);
-            SourceCode36 = ImGui.GetIO().Fonts.AddFontFromFileTTF(sourcecode, 36, FontConfig, Ranges.Data);
             SourceCode20 = ImGui.GetIO().Fonts.AddFontFromFileTTF(sourcecode, 20, FontConfig, Ranges.Data);
-        } catch (Exception ex) {
-            Plugin.Log.Error($"Font failed to load. {jetbrains}");
-            Plugin.Log.Error(ex.ToString());
+            SourceCode36 = ImGui.GetIO().Fonts.AddFontFromFileTTF(sourcecode, 36, FontConfig, Ranges.Data);
+
+            AmazDooMLeft = ImGui.GetIO().Fonts.AddFontFromFileTTF(amazDoomL, 142, FontConfig, Ranges.Data);
+            AmazDooMRight = ImGui.GetIO().Fonts.AddFontFromFileTTF(amazDoomR, 142, FontConfig, Ranges.Data);
+        } catch (Exception e) {
+            Plugin.Log.Error(e, $"Font failed to load.");
         }
     }
 }

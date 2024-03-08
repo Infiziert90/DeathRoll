@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.IO;
+using System.Reflection;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.Text;
@@ -28,9 +29,13 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] public static IChatGui Chat { get; private set; } = null!;
     [PluginService] public static ITargetManager TargetManager { get; private set; } = null!;
     [PluginService] public static IPluginLog Log { get; private set; } = null!;
+    [PluginService] public static ITextureProvider TextureProvider { get; private set; } = null!;
+    [PluginService] public static IDataManager Data { get; private set; } = null!;
 
     public const string Authors = "Infi";
     public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
+
+    public static readonly string PluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 
     private readonly WindowSystem WindowSystem = new("DeathRoll Helper");
     public MainWindow MainWindow { get; init; }
@@ -50,6 +55,7 @@ public sealed class Plugin : IDalamudPlugin
     public readonly Blackjack Blackjack;
     public readonly RoundInfo TripleT;
     public Minesweeper Minesweeper;
+    public readonly Bahamood.Bahamood Bahamood;
 
     private readonly PluginCommandManager<Plugin> CommandManager;
 
@@ -65,6 +71,7 @@ public sealed class Plugin : IDalamudPlugin
         Blackjack = new Blackjack(this);
         TripleT = new RoundInfo(Configuration);
         Minesweeper = new Minesweeper(Configuration.MinesweeperDif.GridSizes()[0]);
+        Bahamood = new Bahamood.Bahamood(this);
 
         MainWindow = new MainWindow(this);
         ConfigWindow = new ConfigWindow(this);
@@ -78,6 +85,11 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.AddWindow(BracketWindow);
         WindowSystem.AddWindow(CardFieldWindow);
 
+        WindowSystem.AddWindow(Bahamood.Window);
+        #if DEBUG
+        WindowSystem.AddWindow(Bahamood.DebugWindow);
+        #endif
+
         CommandManager = new PluginCommandManager<Plugin>(this, Commands);
 
         Chat.ChatMessage += OnChatMessage;
@@ -85,10 +97,20 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
         PluginInterface.UiBuilder.BuildFonts += FontManager.BuildFonts;
         PluginInterface.UiBuilder.RebuildFonts();
+
+        Framework.Update += GameUpdate;
+    }
+
+    private void GameUpdate(IFramework framework)
+    {
+        Bahamood.Run();
     }
 
     public void Dispose()
     {
+        Bahamood.Dispose();
+        Framework.Update -= GameUpdate;
+
         WindowSystem.RemoveAllWindows();
 
         ConfigWindow.Dispose();
@@ -129,6 +151,11 @@ public sealed class Plugin : IDalamudPlugin
                     MainWindow.StopTimer();
                 else
                     MainWindow.BeginTimer();
+                break;
+            case "bahamood":
+                Bahamood.Running ^= true;
+                Bahamood.Window.IsOpen ^= true;
+                Bahamood.DebugWindow.IsOpen ^= true;
                 break;
             default:
                 MainWindow.IsOpen = true;

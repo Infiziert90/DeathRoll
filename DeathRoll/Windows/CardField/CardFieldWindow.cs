@@ -26,7 +26,7 @@ public class CardFieldWindow : Window, IDisposable
         if (Plugin.State is GameState.NotRunning or GameState.Crash)
             return;
 
-        if (Plugin.Participants.PList.Count == 0)
+        if (!Plugin.Blackjack.Players.Any())
             return;
 
         ImGui.Text("Dealer: ");
