@@ -175,6 +175,16 @@ public class Renderer
             Game.CurrentState = State.Credits;
         }
 
+        var textSize = ImGui.CalcTextSize("ESC - Shutdown Game");
+        var heightSpacing = textSize.Y * 6.0f; // 5 line height
+        var widthSpacing = textSize.X * 1.2f;
+        var rightCorner = new Vector2(fullSize.X - widthSpacing, fullSize.Y - heightSpacing);
+        drawlist.AddText(rightCorner, Helper.RaycastWhite, "Special Keys:");
+        rightCorner.Y += textSize.Y;
+        drawlist.AddText(rightCorner, Helper.RaycastWhite, "ALT - Show Mouse");
+        rightCorner.Y += textSize.Y;
+        drawlist.AddText(rightCorner, Helper.RaycastWhite, "ESC - Shutdown Game");
+
         ImGui.PopFont();
     }
 
