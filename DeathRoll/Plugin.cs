@@ -61,8 +61,6 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
-        FontManager = new FontManager();
-
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.Initialize(PluginInterface);
 
@@ -72,6 +70,8 @@ public sealed class Plugin : IDalamudPlugin
         TripleT = new RoundInfo(Configuration);
         Minesweeper = new Minesweeper(Configuration.MinesweeperDif.GridSizes()[0]);
         Bahamood = new Bahamood.Bahamood(this);
+
+        FontManager = new FontManager();
 
         MainWindow = new MainWindow(this);
         ConfigWindow = new ConfigWindow(this);
@@ -95,8 +95,6 @@ public sealed class Plugin : IDalamudPlugin
         Chat.ChatMessage += OnChatMessage;
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
-        PluginInterface.UiBuilder.BuildFonts += FontManager.BuildFonts;
-        PluginInterface.UiBuilder.RebuildFonts();
 
         Framework.Update += GameUpdate;
     }
@@ -120,10 +118,8 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
         Chat.ChatMessage -= OnChatMessage;
 
+        FontManager.Dispose();
         CommandManager.Dispose();
-
-        PluginInterface.UiBuilder.BuildFonts -= FontManager.BuildFonts;
-        PluginInterface.UiBuilder.RebuildFonts();
 
         TripleT.Dispose();
     }

@@ -58,16 +58,16 @@ public class CardFieldWindow : Window, IDisposable
     private void GameCardRender(Cards.Card card)
     {
         var s = Cards.ShowCard(card);
-        ImGui.PushFont(Plugin.FontManager.Jetbrains22);
+        Plugin.FontManager.Jetbrains22.Push();
         ImGui.Text(s[0]);
-        ImGui.PopFont();
+        Plugin.FontManager.Jetbrains22.Pop();
 
         ImGui.SameLine();
 
         var p = ImGui.GetCursorPos();
         ImGui.SetCursorPos(new Vector2(p.X - 70 * ImGuiHelpers.GlobalScale, p.Y + 100 * ImGuiHelpers.GlobalScale));
-        ImGui.PushFont(Plugin.FontManager.SourceCode36);
+        Plugin.FontManager.SourceCode36.Push();
         ImGui.Text(s[1]);
-        ImGui.PopFont();
+        Plugin.FontManager.SourceCode36.Pop();
     }
 }

@@ -112,7 +112,7 @@ public class Renderer
         var spacing = 40.0f * ImGuiHelpers.GlobalScale;
         var pos = new Vector2(p.X + spacing, p.Y + spacing);
 
-        ImGui.PushFont(Game.Plugin.FontManager.AmazDooMLeft);
+        Game.Plugin.FontManager.AmazDooMLeft.Push();
         foreach (var digit in Game.Player.Health.ToString().Select(d => d - '0'))
         {
             var digitSize = ImGui.CalcTextSize(digit.ToString()).X;
@@ -121,7 +121,7 @@ public class Renderer
         }
 
         drawlist.AddText(pos, Helper.NumberRed, "HP");
-        ImGui.PopFont();
+        Game.Plugin.FontManager.AmazDooMLeft.Pop();
     }
 
     public void DrawGameOver()
@@ -142,12 +142,12 @@ public class Renderer
         var fullSize = new Vector2(p.X + Settings.Width, p.Y + Settings.Height);
         drawlist.AddRectFilled(p, fullSize, Helper.Background);
 
-        ImGui.PushFont(Game.Plugin.FontManager.AmazDooMLeft);
+        Game.Plugin.FontManager.AmazDooMLeft.Push();
         var text = "Victory";
         var height = Settings.HalfHeight - (ImGui.CalcTextSize(text).Y / 2);
         ImGuiHelpers.ScaledDummy(height);
         Helper.SetTextCenter(text);
-        ImGui.PopFont();
+        Game.Plugin.FontManager.AmazDooMLeft.Pop();
     }
 
     public void DrawMainMenu()
@@ -160,7 +160,7 @@ public class Renderer
 
         TitleRender();
 
-        ImGui.PushFont(Game.Plugin.FontManager.SourceCode36);
+        Game.Plugin.FontManager.SourceCode36.Push();
         ImGuiHelpers.ScaledDummy(20.0f);
         if (Helper.CenterButton("Play"))
         {
@@ -185,7 +185,7 @@ public class Renderer
         rightCorner.Y += textSize.Y;
         drawlist.AddText(rightCorner, Helper.RaycastWhite, "ESC - Shutdown Game");
 
-        ImGui.PopFont();
+        Game.Plugin.FontManager.SourceCode36.Pop();
     }
 
     public void DrawCredits()
@@ -254,22 +254,22 @@ public class Renderer
         var fullSize = new Vector2(p.X + Settings.Width, p.Y + Settings.Height);
         drawlist.AddRectFilled(p, fullSize, Helper.Background);
 
-        ImGui.PushFont(Game.Plugin.FontManager.AmazDooMLeft);
+        Game.Plugin.FontManager.AmazDooMLeft.Push();
         var text = Game.CurrentLevel?.LevelName ?? "Loading ...";
         var height = Settings.HalfHeight - (ImGui.CalcTextSize(text).Y / 2);
         ImGuiHelpers.ScaledDummy(height);
         Helper.SetTextCenter(text);
-        ImGui.PopFont();
+        Game.Plugin.FontManager.AmazDooMLeft.Pop();
     }
 
     private void RenderUIText(Vector2 p)
     {
-        ImGui.PushFont(Game.Plugin.FontManager.AmazDooMLeft);
+        Game.Plugin.FontManager.AmazDooMLeft.Push();
         var text = "Open Door [F]";
         var height = Settings.HalfHeight - (ImGui.CalcTextSize(text).Y / 2);
         ImGuiHelpers.ScaledDummy(height);
         Helper.SetTextCenter(text);
-        ImGui.PopFont();
+        Game.Plugin.FontManager.AmazDooMLeft.Pop();
 
         ImGui.SetCursorScreenPos(p);
     }
@@ -277,14 +277,16 @@ public class Renderer
     private void TitleRender()
     {
         ImGuiHelpers.ScaledDummy(50.0f);
-        ImGui.PushFont(Game.Plugin.FontManager.AmazDooMLeft);
+        Game.Plugin.FontManager.AmazDooMLeft.Push();
         ImGui.SetCursorPosX((ImGui.GetWindowSize().X - ImGui.CalcTextSize("BAHAMOOD").X + 5.0f) * 0.5f);
         ImGui.TextUnformatted("BAHA");
-        ImGui.PopFont();
+        Game.Plugin.FontManager.AmazDooMLeft.Pop();
+
         ImGui.SameLine(0, 5.0f);
-        ImGui.PushFont(Game.Plugin.FontManager.AmazDooMRight);
+
+        Game.Plugin.FontManager.AmazDooMRight.Push();
         ImGui.TextUnformatted("MOOD");
-        ImGui.PopFont();
+        Game.Plugin.FontManager.AmazDooMRight.Pop();
     }
 
     private Dictionary<int, TextureCollection> LoadWallTexture()

@@ -181,7 +181,7 @@ public partial class MainWindow
                 for (var col = 0; col < fieldSize; col++)
                 {
                     ImGui.TableNextColumn();
-                    ImGui.PushFont(Plugin.FontManager.SourceCode36);
+                    Plugin.FontManager.SourceCode36.Push();
                     try
                     {
                         var field = Plugin.TripleT.Board.GameField.Field[row, col];
@@ -234,7 +234,7 @@ public partial class MainWindow
                         ImGui.TextUnformatted("Error");
                         Plugin.Log.Error(e, "Something went wrong in UI draw");
                     }
-                    ImGui.PopFont();
+                    Plugin.FontManager.SourceCode36.Pop();
 
                     if (row < fieldSize - 1)
                         ImGui.Separator();

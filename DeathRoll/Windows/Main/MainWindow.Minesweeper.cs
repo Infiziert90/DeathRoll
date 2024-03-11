@@ -63,7 +63,7 @@ public partial class MainWindow
 
     private void MinesweeperWinnerPanel()
     {
-        ImGui.PushFont(Plugin.FontManager.Jetbrains22);
+        Plugin.FontManager.Jetbrains22.Push();
         SetCursorStart();
         var startPos = ImGui.GetCursorScreenPos();
         ImGui.TextUnformatted($"{Plugin.Minesweeper.MinesLeft:000}");
@@ -79,7 +79,7 @@ public partial class MainWindow
         var textWidth = ImGui.CalcTextSize(text).X;
         SetCursorEnd(startPos, textWidth);
         ImGui.TextUnformatted(text);
-        ImGui.PopFont();
+        Plugin.FontManager.Jetbrains22.Pop();
     }
 
     private void MinesweeperFieldPanel()
@@ -200,14 +200,15 @@ public partial class MainWindow
         {
             DrawRect(min, max, !square.Exploded ? LightGrey : DarkRed, DarkGrey, drawList);
 
-            ImGui.PushStyleColor(ImGuiCol.Text, square.NumberColor());
-            ImGui.PushFont(square.UsesIconFont ? UiBuilder.IconFont : Plugin.FontManager.Jetbrains22);
-            var text = square.Symbol;
-            var textSize = ImGui.CalcTextSize(text);
-            ImGui.SetCursorScreenPos(new Vector2(min.X + (squareSize - textSize.X) * 0.5f, min.Y + (squareSize - textSize.Y) * 0.5f));
-            ImGui.TextUnformatted(text);
-            ImGui.PopFont();
-            ImGui.PopStyleColor();
+            using ((square.UsesIconFont ? Plugin.PluginInterface.UiBuilder.IconFontHandle : Plugin.FontManager.Jetbrains22).Push())
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, square.NumberColor());
+                var text = square.Symbol;
+                var textSize = ImGui.CalcTextSize(text);
+                ImGui.SetCursorScreenPos(new Vector2(min.X + (squareSize - textSize.X) * 0.5f, min.Y + (squareSize - textSize.Y) * 0.5f));
+                ImGui.TextUnformatted(text);
+                ImGui.PopStyleColor();
+            }
         }
 
         ImGui.SetCursorScreenPos(min);

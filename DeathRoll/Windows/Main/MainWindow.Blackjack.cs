@@ -250,9 +250,9 @@ public partial class MainWindow
                 ImGui.PopStyleColor();
 
                 ImGui.TableNextColumn();
-                ImGui.PushFont(Plugin.FontManager.SourceCode20);
+                Plugin.FontManager.SourceCode20.Push();
                 ImGui.Text(string.Join(" ", player.Cards.Select(Cards.ShowCardSimple)));
-                ImGui.PopFont();
+                Plugin.FontManager.SourceCode20.Pop();
 
                 ImGui.TableNextColumn();
                 ImGui.Text($"{cards}");
@@ -274,9 +274,9 @@ public partial class MainWindow
                 ImGui.SetClipboardText($"Dealer's Hand: {string.Join(" ", Plugin.Blackjack.Dealer.Cards.Select(Cards.ShowCardSimple))}");
 
             ImGui.TableNextColumn();
-            ImGui.PushFont(Plugin.FontManager.SourceCode20);
+            Plugin.FontManager.SourceCode20.Push();
             ImGui.Text(string.Join(" ", Plugin.Blackjack.Dealer.Cards.Select(Cards.ShowCardSimple)));
-            ImGui.PopFont();
+            Plugin.FontManager.SourceCode20.Pop();
 
             ImGui.TableNextColumn();
             ImGui.Text($"{dcards}");
@@ -330,10 +330,10 @@ public partial class MainWindow
             else
                 ImGui.TextUnformatted($"{player.DisplayName}");
 
-            ImGui.PushFont(Plugin.FontManager.SourceCode20);
+            Plugin.FontManager.SourceCode20.Push();
             ImGui.SameLine();
             ImGui.TextUnformatted($"{(player.Cards.Count > 0 ? Cards.ShowCardSimple(player.Cards[0]) : "?")} {(player.Cards.Count > 1 ? Cards.ShowCardSimple(player.Cards[1]) : "?")}");
-            ImGui.PopFont();
+            Plugin.FontManager.SourceCode20.Pop();
         }
     }
 
