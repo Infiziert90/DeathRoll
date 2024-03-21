@@ -3,13 +3,13 @@
     <PropertyGroup>
         <Authors>Infi</Authors>
         <AssemblyName>DeathRoll</AssemblyName>
-        <Version>1.5.1.0</Version>
+        <Version>1.5.1.1</Version>
         <Description>Plugin to help with a number of dice games. Also offers games like Tic-Tac-Toe, Minesweeper and Bahamood.</Description>
         <PackageProjectUrl>https://github.com/Infiziert90/DeathRoll</PackageProjectUrl>
     </PropertyGroup>
 
     <PropertyGroup>
-        <TargetFramework>net7.0-windows</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <Platforms>x64</Platforms>
         <Nullable>enable</Nullable>
         <DebugSymbols>true</DebugSymbols>

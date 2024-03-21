@@ -34,8 +34,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public const string Authors = "Infi";
     public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
-
-    public static readonly string PluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+    public static string PluginDir = "";
 
     private readonly WindowSystem WindowSystem = new("DeathRoll Helper");
     public MainWindow MainWindow { get; init; }
@@ -61,6 +60,8 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
+        PluginDir = PluginInterface.AssemblyLocation.DirectoryName!;
+
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Configuration.Initialize(PluginInterface);
 
