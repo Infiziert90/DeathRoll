@@ -1,3 +1,4 @@
+using NAudio.Vorbis;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
@@ -32,7 +33,7 @@ internal class AudioPlaybackEngine : IDisposable
 
     public void PlaySound(string fileName)
     {
-        var input = new AudioFileReader(fileName);
+        var input = new VorbisWaveReader(fileName);
         AddMixerInput(new AutoDisposeFileReader(input));
     }
 
@@ -94,7 +95,7 @@ internal class CachedSound
 
     public CachedSound(string audioFileName)
     {
-        using var audioFileReader = new AudioFileReader(audioFileName);
+        using var audioFileReader = new VorbisWaveReader(audioFileName);
 
         // TODO: could add resampling in here if required
         WaveFormat = audioFileReader.WaveFormat;
@@ -135,10 +136,10 @@ internal class AutoDisposeFileReader : ISampleProvider
 {
     public WaveFormat WaveFormat { get; private set; }
 
-    private readonly AudioFileReader Reader;
+    private readonly VorbisWaveReader Reader;
     private bool IsDisposed;
 
-    public AutoDisposeFileReader(AudioFileReader reader)
+    public AutoDisposeFileReader(VorbisWaveReader reader)
     {
         Reader = reader;
         WaveFormat = reader.WaveFormat;

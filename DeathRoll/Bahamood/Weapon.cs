@@ -74,7 +74,7 @@ public class Shotgun : Weapon
         : base(game, game.SpriteManager.Shotgun, 0.4f, 0.0f, 130)
     {
         Damage = 50;
-        WeaponSound = new CachedSound(Path.Combine(Plugin.PluginDir, @"Resources\Sound\Shotgun.aac"));
+        WeaponSound = new CachedSound(Path.Combine(Plugin.PluginDir, @"Resources\Sound\Shotgun.ogg"));
     }
 }
 
@@ -84,6 +84,6 @@ public class Revolver : Weapon
         : base(game, game.SpriteManager.Revolver, 0.5f, 0.0f, 150)
     {
         Damage = 100;
-        WeaponSound = new CachedSound(Path.Combine(Plugin.PluginDir, @"Resources\Sound\Revolver.aac"));
+        WeaponSound = new CachedSound(Path.Combine(Plugin.PluginDir, @"Resources\Sound\Revolver.ogg"));
     }
 }

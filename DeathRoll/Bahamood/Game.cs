@@ -53,7 +53,7 @@ public class Bahamood
     public Bahamood(Plugin plugin)
     {
         Plugin = plugin;
-        MenuTheme = new CachedSound(Path.Combine(Plugin.PluginDir, @"Resources\Sound\MainMenu.aac"));
+        MenuTheme = new CachedSound(Path.Combine(Plugin.PluginDir, @"Resources\Sound\MainMenu.ogg"));
 
         Renderer = new(this);
         Raycasting = new(this);

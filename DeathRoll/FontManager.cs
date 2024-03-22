@@ -19,7 +19,9 @@ public class FontManager
         var amazDoomL = Path.Combine(Plugin.PluginDir, @"Resources\Fonts\AmazDooMLeft.ttf");
         var amazDoomR = Path.Combine(Plugin.PluginDir, @"Resources\Fonts\AmazDooMRight.ttf");
 
-        var range = "♠♥♦♣─＼～┐│┌┘└ςΔΗΓ╲╱∨∧←→↑↓《》■※☀★★☆♥♡ヅツッシ☀☁☂℃℉°♀♂♠♣♦♣♧®©™€$£♯♭♪✓√◎◆◇♦■□〇●△▽▼▲‹›≤≥<«“”─＼～".ToGlyphRange();
+        var range = "♠♥♦♣─＼～┐│┌┘└ςΔΗΓ╲╱∨∧←→↑↓《》■※☀★★☆♥♡ヅツッシ☀☁☂℃℉°♀♂♠♣♦♣♧®©™€$£♯♭♪✓√◎◆◇♦■□〇●△▽▼▲‹›≤≥<«“”─＼～"
+            .Concat(Enumerable.Range(20, 127).Select(x=>(char)x))
+            .ToGlyphRange();
         Jetbrains22 = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(
             e => e.OnPreBuild(
                 tk => tk.AddFontFromFile(jetbrains, new SafeFontConfig { SizePx = 22, GlyphRanges = range })
