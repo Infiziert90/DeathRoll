@@ -10,6 +10,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0-windows</TargetFramework>
+        <RuntimeFrameworkVersion>8.0.0</RuntimeFrameworkVersion>
         <Platforms>x64</Platforms>
         <Nullable>enable</Nullable>
         <DebugSymbols>true</DebugSymbols>
