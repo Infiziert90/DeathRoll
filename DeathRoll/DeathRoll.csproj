@@ -21,7 +21,6 @@
         <OutputType>Library</OutputType>
         <OutputPath>..\builds\$(Configuration)\</OutputPath>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
 
     <ItemGroup>
@@ -43,7 +42,11 @@
 
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="2.1.12" />
-        <PackageReference Include="NAudio" Version="2.2.1" />
+        <PackageReference Include="NAudio.Asio" Version="2.2.1" />
+        <PackageReference Include="NAudio.Core" Version="2.2.1" />
+        <PackageReference Include="NAudio.Extras" Version="2.2.1" />
+        <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+        <PackageReference Include="NAudio.WinMM" Version="2.2.1" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.3" />
         <Reference Include="FFXIVClientStructs">
             <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
