@@ -169,10 +169,10 @@ public sealed class Plugin : IDalamudPlugin
     public static string GetTargetName()
     {
         var target = TargetManager.SoftTarget ?? TargetManager.Target;
-        if (target is not IPlayerCharacter pc || pc.HomeWorld.GameData == null)
+        if (target is not IPlayerCharacter pc || pc.HomeWorld.ValueNullable == null)
             return string.Empty;
 
-        return $"{pc.Name}\uE05D{pc.HomeWorld.GameData.Name}";
+        return $"{pc.Name}\uE05D{pc.HomeWorld.Value.Name}";
     }
 
     public void ProcessIncomingMessage(string fullName, int roll, int outOf)
@@ -181,8 +181,8 @@ public sealed class Plugin : IDalamudPlugin
             return;
 
         var local = ClientState.LocalPlayer;
-        if (local?.HomeWorld.GameData?.Name != null)
-            LocalPlayer = $"{local.Name}\uE05D{local.HomeWorld.GameData.Name}";
+        if (local?.HomeWorld.ValueNullable?.Name != null)
+            LocalPlayer = $"{local.Name}\uE05D{local.HomeWorld.Value.Name}";
 
         if (Configuration.ActiveBlocklist && Configuration.SavedBlocklist.Contains(fullName.Replace("\uE05D", "@")))
         {
