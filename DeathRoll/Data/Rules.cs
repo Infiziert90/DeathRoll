@@ -18,8 +18,8 @@ public static class RuleUtils
         {
             DealerRules.DealerHard17 => "Hard17",
             DealerRules.DealerHard16 => "Hard16",
-            DealerRules.DealerSoft16 => "Soft17",
-            DealerRules.DealerSoft17 => "Soft16",
+            DealerRules.DealerSoft17 => "Soft17",
+            DealerRules.DealerSoft16 => "Soft16",
             _ => "Unknown"
         };
     }

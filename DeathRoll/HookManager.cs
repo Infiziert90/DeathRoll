@@ -48,11 +48,11 @@ public unsafe class HookManager
         try
         {
             var name = MemoryHelper.ReadStringNullTerminated((nint)playerName);
-            var world = Plugin.Data.GetExcelSheet<World>()!.GetRow(homeWorldId)!;
+            var world = Plugin.Data.GetExcelSheet<World>().GetRow(homeWorldId);
             var fullName = $"{name}\uE05D{world.Name}";
 
-            var roll = parameter->Get(1).IntValue;
-            var outOf = logMessageId == 3887 ? parameter->Get(2).IntValue : 0;
+            var roll = (*parameter)[1].IntValue;
+            var outOf = logMessageId == 3887 ? (*parameter)[2].IntValue : 0;
 
             Plugin.ProcessIncomingMessage(fullName, roll, outOf);
         }
@@ -69,7 +69,7 @@ public unsafe class HookManager
         try
         {
             var name = MemoryHelper.ReadStringNullTerminated((nint)playerName);
-            var world = Plugin.Data.GetExcelSheet<World>()!.GetRow(worldId)!;
+            var world = Plugin.Data.GetExcelSheet<World>().GetRow(worldId);
             var fullName = $"{name}\uE05D{world.Name}";
 
             Plugin.ProcessIncomingMessage(fullName, roll, outOf);
