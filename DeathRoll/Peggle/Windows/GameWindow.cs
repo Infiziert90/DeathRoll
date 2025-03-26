@@ -48,7 +48,9 @@ public class GameWindow : Window, IDisposable
         io.WantTextInput = true;
         io.WantCaptureMouse = true;
 
-        Flags = ImGuiWindowFlags.NoMove;
+        Flags = ImGuiWindowFlags.None;
+        if (Game.CurrentState is State.Playing)
+            Flags = ImGuiWindowFlags.NoMove;
     }
 
     public override void Draw()

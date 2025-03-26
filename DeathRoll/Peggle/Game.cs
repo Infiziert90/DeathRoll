@@ -24,8 +24,8 @@ public class Peggle
     public State CurrentState = State.Menu;
 
     public bool Running = true;
-    public static float DeltaTimeSec => ImGui.GetIO().DeltaTime * 1000;
     public static float DeltaTimeMil => ImGui.GetIO().DeltaTime;
+    public static float DeltaTimeSec => DeltaTimeMil * 1000;
 
     public double UpdateTime;
     public double DrawTime;
@@ -46,8 +46,11 @@ public class Peggle
     private void Update()
     {
         Watch.Restart();
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-            ObjectHandler.HandleMouseClick();
+        if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
+            ObjectHandler.HandleMouseDown();
+        
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+            ObjectHandler.HandleMouseReleased();
 
         ObjectHandler.Update();
         Watch.Stop();

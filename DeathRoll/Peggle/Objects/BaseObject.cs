@@ -1,6 +1,9 @@
 namespace DeathRoll.Peggle.Objects;
 
-public record Size(bool IsRadius, float Radius, Vector2 Lengths);
+public record Size(bool IsRadius, float Radius, Vector2 Lengths)
+{
+    public static Size DefaultCircle => new(true, 8.0f, Vector2.Zero);
+}
 
 public class BaseObject
 {
@@ -17,6 +20,7 @@ public class BaseObject
     {
         Position = position;
         Velocity = velocity;
+        Color = color;
 
         Size = size;
     }
@@ -26,10 +30,13 @@ public class BaseObject
         if (Size.IsRadius)
         {
             var radius = Size.Radius;
+            // Check left / right border
             if (Position.X < radius || Position.X > Settings.Width - radius)
                 Velocity.X = -Velocity.X;
+            // Check top border
             if (Position.Y < radius)
                 Velocity.Y = -Velocity.Y;
+            // Check bottom death border
             else if (Position.Y > Settings.Height + radius)
                 Alive = false;
         }

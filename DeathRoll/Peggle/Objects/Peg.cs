@@ -30,7 +30,20 @@ public class Peg : BaseObject
 {
     public PegType Type;
 
+    public Peg(Vector2 position) : base(position, Vector2.Zero, Size.DefaultCircle)
+    {
+        Type = PegType.Blue;
+        Color = Type.ToColor();
+        
+    }
+    
     public Peg(Vector2 position, Vector2 velocity, Size size, PegType type) : base(position, velocity, size)
+    {
+        Type = type;
+        Color = type.ToColor();
+    }
+
+    public void ChangeType(PegType type)
     {
         Type = type;
         Color = type.ToColor();
@@ -38,12 +51,18 @@ public class Peg : BaseObject
 
     public void Update(PlayBall ball)
     {
+        if (!Alive)
+            return;
+        
         if (CollisionCheck(ball))
             Alive = false;
     }
 
     public void Draw(ImDrawListPtr drawlist, Vector2 screenPos)
     {
+        if (!Alive)
+            return;
+        
         var top = new Vector2(Position.X - Size.Radius, Position.Y - Size.Radius);
         drawlist.AddCircleFilled(screenPos+top, Size.Radius, Color);
     }

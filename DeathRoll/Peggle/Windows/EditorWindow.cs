@@ -123,7 +123,8 @@ public class EditorWindow : Window, IDisposable
             ImGui.Dummy(new Vector2(300, 300));
             if (ImGui.IsItemHovered())
             {
-                if (ImGui.BeginDragDropTarget())
+                using var target = ImRaii.DragDropTarget();
+                if (target.Success)
                 {
                     Plugin.Log.Information($"Dropping");
                     var payload = ImGui.AcceptDragDropPayload("DragDropPegType", ImGuiDragDropFlags.SourceExtern);
@@ -142,8 +143,6 @@ public class EditorWindow : Window, IDisposable
 
                         Plugin.Log.Information($"Placing Peg at {peg.Position.X} {peg.Position.Y}");
                     }
-
-                    ImGui.EndDragDropTarget();
                 }
             }
         }

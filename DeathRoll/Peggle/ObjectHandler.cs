@@ -5,25 +5,49 @@ namespace DeathRoll.Peggle;
 public class ObjectHandler
 {
     private PlayBall Ball = PlayBall.CreateBall();
-    private readonly List<Peg> Targets = [
-        new Peg(new Vector2(300,300), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(315,315), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(330,330), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(345,345), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(360,360), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(375,375), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(390,390), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(405,405), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(420,420), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(600,500), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(200,400), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Blue),
-        new Peg(new Vector2(220,420), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Orange),
-        new Peg(new Vector2(320,350), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Green),
-        new Peg(new Vector2(370,410), Vector2.Zero, new Size(true, 8.0f, Vector2.Zero), PegType.Purple),
-    ];
+    private readonly List<Peg> Targets = [];
+
+    private bool HasMouseBeenDown;
+
+    public ObjectHandler()
+    {
+        var purplePegs = 2;
+        var orangePegs = 5;
+        var greenPegs = 10;
+
+        var pegDiameter = 8.0f * 2;
+        
+        var offsetX = 100f;
+        var offsetY = 200f;
+        for (var i = 0; i < 25; i++)
+        {
+            for (var j = 0; j < 40; j++)
+            {
+                Targets.Add(new Peg(new Vector2(offsetX, offsetY)));
+                offsetX += pegDiameter;
+            }
+
+            offsetX = 100f;
+            offsetY += pegDiameter;
+        }
+
+        var rng = new Random();
+        for (var i = 0; i < purplePegs; i++)
+            Targets[rng.Next(0, Targets.Count)].ChangeType(PegType.Purple);
+        
+        for (var i = 0; i < orangePegs; i++)
+            Targets[rng.Next(0, Targets.Count)].ChangeType(PegType.Orange);
+        
+        for (var i = 0; i < greenPegs; i++)
+            Targets[rng.Next(0, Targets.Count)].ChangeType(PegType.Green);
+    }
 
     public void Update()
     {
+        // No ball, so we don't need to update anything
+        if (!Ball.Alive)
+            return;
+        
         Ball.Update();
         foreach (var target in Targets)
             target.Update(Ball);
@@ -31,16 +55,36 @@ public class ObjectHandler
 
     public void Draw(ImDrawListPtr drawlist, Vector2 screenPos)
     {
-        Ball.Draw(drawlist, screenPos);
+        if (Ball.Alive)
+            Ball.Draw(drawlist, screenPos);
+        else
+            Ball.DeadBallDraw(drawlist, screenPos);
+        
         foreach (var target in Targets)
             target.Draw(drawlist, screenPos);
     }
 
-    public void HandleMouseClick()
+    public void HandleMouseReleased()
     {
+        if (!HasMouseBeenDown)
+            return;
+        
         if (!Ball.Alive)
+        {
             Ball = PlayBall.CreateBall();
+        }
         else if (!Ball.Fired)
+        {
+            HasMouseBeenDown = false;
             Ball.Fire();
+        }
+    }
+
+    public void HandleMouseDown()
+    {
+        HasMouseBeenDown = true;
+        
+        if (!Ball.Fired)
+            Ball.IncreaseVelocity();
     }
 }
