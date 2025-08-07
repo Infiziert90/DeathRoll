@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Dalamud.Game.ClientState.Objects;
+﻿using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -30,8 +29,6 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] public static INotificationManager Notification { get; private set; } = null!;
     [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
 
-    public const string Authors = "Infi";
-    public static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
     public static string PluginDir => PluginInterface.AssemblyLocation.DirectoryName!;
 
     private readonly WindowSystem WindowSystem = new("DeathRoll Helper");

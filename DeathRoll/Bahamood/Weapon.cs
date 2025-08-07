@@ -58,7 +58,7 @@ public class Weapon : AnimatedSpriteHandler
     {
         var drawX = p.X + WeaponPosition.X;
         var drawY = p.Y + WeaponPosition.Y;
-        drawlist.AddImage(Image.Tex.ImGuiHandle, new Vector2(drawX, drawY), new Vector2(drawX + ScaledWidth, drawY + ScaledHeight));
+        drawlist.AddImage(Image.Tex.Handle, new Vector2(drawX, drawY), new Vector2(drawX + ScaledWidth, drawY + ScaledHeight));
     }
 
     public override void Update()

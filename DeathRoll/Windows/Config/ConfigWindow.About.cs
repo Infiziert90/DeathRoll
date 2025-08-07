@@ -15,7 +15,7 @@ public partial class ConfigWindow
 
                 ImGui.TextUnformatted("Author:");
                 ImGui.SameLine();
-                ImGui.TextColored(ImGuiColors.ParsedGold, Plugin.Authors);
+                ImGui.TextColored(ImGuiColors.ParsedGold, Plugin.PluginInterface.Manifest.Author);
 
                 ImGui.TextUnformatted("Discord:");
                 ImGui.SameLine();
@@ -23,7 +23,7 @@ public partial class ConfigWindow
 
                 ImGui.TextUnformatted("Version:");
                 ImGui.SameLine();
-                ImGui.TextColored(ImGuiColors.ParsedOrange, Plugin.Version);
+                ImGui.TextColored(ImGuiColors.ParsedOrange, Plugin.PluginInterface.Manifest.AssemblyVersion.ToString());
             }
             ImGui.EndChild();
 

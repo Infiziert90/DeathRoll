@@ -57,11 +57,11 @@ public class Renderer
         SkyOffset = Utils.Mod(SkyOffset + 1.5f * Game.Player!.Rel, Settings.Width);
         var drawX = p.X + -SkyOffset;
         var drawY = p.Y;
-        drawlist.AddImage(TextureManager.SkyTexture.Tex.ImGuiHandle, new Vector2(drawX, drawY), new Vector2(drawX + TextureManager.SkyTexture.Width, drawY + TextureManager.SkyTexture.Height));
+        drawlist.AddImage(TextureManager.SkyTexture.Tex.Handle, new Vector2(drawX, drawY), new Vector2(drawX + TextureManager.SkyTexture.Width, drawY + TextureManager.SkyTexture.Height));
 
         drawX = p.X + -SkyOffset + Settings.Width;
         drawY = p.Y;
-        drawlist.AddImage(TextureManager.SkyTexture.Tex.ImGuiHandle, new Vector2(drawX, drawY), new Vector2(drawX + TextureManager.SkyTexture.Width, drawY + TextureManager.SkyTexture.Height));
+        drawlist.AddImage(TextureManager.SkyTexture.Tex.Handle, new Vector2(drawX, drawY), new Vector2(drawX + TextureManager.SkyTexture.Width, drawY + TextureManager.SkyTexture.Height));
 
         drawX = p.X + 0.0f;
         drawY = p.Y + Settings.HalfHeight;
@@ -78,7 +78,7 @@ public class Renderer
             {
                 if (texture.SimpleTexture)
                 {
-                    drawlist.AddImage(texture.Tex.ImGuiHandle, new Vector2(drawX, drawY), new Vector2(drawX + size.X, drawY + size.Y), uvMin, uvMax);
+                    drawlist.AddImage(texture.Tex.Handle, new Vector2(drawX, drawY), new Vector2(drawX + size.X, drawY + size.Y), uvMin, uvMax);
                 }
                 else
                 {
@@ -96,7 +96,7 @@ public class Renderer
                     var uMin = (uvMin.X - correctU) * Settings.Scale;
                     var uMax = uMin + (uvMax.X - uvMin.X);
 
-                    drawlist.AddImage(texture.Tex.ImGuiHandle, new Vector2(drawX, drawY), new Vector2(drawX + size.X, drawY + size.Y), new Vector2(uMin, 0), new Vector2(uMax, 1));
+                    drawlist.AddImage(texture.Tex.Handle, new Vector2(drawX, drawY), new Vector2(drawX + size.X, drawY + size.Y), new Vector2(uMin, 0), new Vector2(uMax, 1));
                 }
             }
         }
@@ -104,7 +104,7 @@ public class Renderer
 
     private void DrawPlayerDamage(ImDrawListPtr drawlist, Vector2 p)
     {
-        drawlist.AddImage(TextureManager.BloodScreen.Tex.ImGuiHandle, p, new Vector2(p.X + Settings.Width, p.Y + Settings.Height));
+        drawlist.AddImage(TextureManager.BloodScreen.Tex.Handle, p, new Vector2(p.X + Settings.Width, p.Y + Settings.Height));
     }
 
     private void DrawPlayerHealth(ImDrawListPtr drawlist, Vector2 p)
@@ -131,7 +131,7 @@ public class Renderer
 
         var fullSize = new Vector2(p.X + Settings.Width, p.Y + Settings.Height);
         drawlist.AddRectFilled(p, fullSize, Helper.Background);
-        drawlist.AddImage(TextureManager.GameOver.Tex.ImGuiHandle, p, fullSize);
+        drawlist.AddImage(TextureManager.GameOver.Tex.Handle, p, fullSize);
     }
 
     public void DrawVictory()

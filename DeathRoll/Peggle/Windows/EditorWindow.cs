@@ -48,7 +48,7 @@ public class EditorWindow : Window, IDisposable
             if (source)
             {
                 Plugin.Log.Information($"Mouse dragging from main");
-                ImGui.SetDragDropPayload("DragDropPegType", nint.Zero, 0);
+                ImGui.SetDragDropPayload("DragDropPegType", default, 0);
 
                 var previewDrawlist = ImGui.GetWindowDrawList();
                 var previewCursor = ImGui.GetCursorScreenPos();
@@ -128,7 +128,7 @@ public class EditorWindow : Window, IDisposable
                 {
                     Plugin.Log.Information($"Dropping");
                     var payload = ImGui.AcceptDragDropPayload("DragDropPegType", ImGuiDragDropFlags.SourceExtern);
-                    if (payload.NativePtr != null && DragDropSelection != null)
+                    if (payload.Handle != null && DragDropSelection != null)
                     {
                         var peg = DragDropSelection.Value;
                         peg.Position = ImGui.GetIO().MousePos - windowPos;

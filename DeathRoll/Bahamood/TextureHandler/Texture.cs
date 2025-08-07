@@ -85,7 +85,7 @@ public class Texture
         return new Texture(uld.LoadTexturePart(tex, index)!);
     }
 
-    public static implicit operator nint(Texture t) => t.Tex.ImGuiHandle;
+    public static implicit operator ImTextureID(Texture t) => t.Tex.Handle;
 }
 
 public class TextureCollection
